@@ -104,11 +104,28 @@ async function verificarProcessos() {
 
 app.get('/', function(req, res) { res.send('Sistema juridico rodando!'); });
 
+app.post('/auth/cadastro', async function(req, res) {
+  const { nome, email, senha, escritorio } = req.body;
+  if (!nome || !email || !senha || !escritorio) return res.status(400).json({ erro: 'Preencha todos os campos.' });
+  const { data: existe } = await supabase.from('usuarios').select('id').eq('email', email).single();
+  if (existe) return res.status(400).json({ erro: 'Email ja cadastrado.' });
+  const { data, error } = await supabase.from('usuarios').insert({ nome, email, senha, escritorio });
+  if (error) return res.status(400).json({ erro: error.message });
+  res.json({ sucesso: true });
+});
+
+app.post('/auth/login', async function(req, res) {
+  const { email, senha } = req.body;
+  const { data, error } = await supabase.from('usuarios').select('*').eq('email', email).eq('senha', senha).single();
+  if (error || !data) return res.status(401).json({ erro: 'Email ou senha incorretos.' });
+  res.json({ sucesso: true, usuario: { id: data.id, nome: data.nome, email: data.email, escritorio: data.escritorio } });
+});
+
 app.post('/processos', async function(req, res) {
   const { numero_processo, nome_cliente, telefone_cliente } = req.body;
-  const { data, error } = await supabase.from('processos').insert({ numero_processo: numero_processo, nome_cliente: nome_cliente, telefone_cliente: telefone_cliente });
+  const { data, error } = await supabase.from('processos').insert({ numero_processo, nome_cliente, telefone_cliente });
   if (error) return res.status(400).json({ erro: error.message });
-  res.json({ sucesso: true, data: data });
+  res.json({ sucesso: true, data });
 });
 
 app.get('/processos', async function(req, res) {
@@ -129,7 +146,7 @@ app.post('/verificar', async function(req, res) {
 app.post('/testar-whatsapp', async function(req, res) {
   const { telefone, nome } = req.body;
   try {
-    await enviarWhatsApp(telefone, 'Ola, ' + nome + '! Seu processo teve uma atualizacao: foi proferida uma decisao judicial no seu caso. Entre em contato com o escritorio para mais detalhes.');
+    await enviarWhatsApp(telefone, 'Ola, ' + nome + '! Seu processo teve uma atualizacao. Entre em contato com o escritorio para mais detalhes.');
     res.json({ sucesso: true, mensagem: 'WhatsApp enviado!' });
   } catch (err) {
     res.status(500).json({ erro: err.message });
@@ -139,12 +156,10 @@ app.post('/testar-whatsapp', async function(req, res) {
 app.post('/webhook', async function(req, res) {
   try {
     const body = req.body;
-    console.log('Webhook recebido:', JSON.stringify(body));
     if (!body || body.fromMe) return res.sendStatus(200);
     const telefone = body.phone ? body.phone.replace('55', '') : null;
     const mensagem = body.text && body.text.message ? body.text.message : null;
     if (!telefone || !mensagem) return res.sendStatus(200);
-    console.log('Mensagem recebida de ' + telefone + ': ' + mensagem);
     const { data: processos } = await supabase.from('processos').select('*').eq('telefone_cliente', telefone);
     if (!processos || !processos.length) {
       await enviarWhatsApp(telefone, 'Ola! Nao encontrei seu cadastro. Entre em contato com o escritorio.');
@@ -153,7 +168,6 @@ app.post('/webhook', async function(req, res) {
     const nomeCliente = processos[0].nome_cliente;
     const resposta = await gerarRespostaChatbot(mensagem, nomeCliente, processos);
     await enviarWhatsApp(telefone, resposta);
-    console.log('Resposta enviada para ' + nomeCliente);
     res.sendStatus(200);
   } catch (err) {
     console.error('Erro webhook:', err.message);

@@ -15,16 +15,23 @@ body{font-family:'Sora',sans-serif;background:#f4f6fb;color:var(--text);}
 .login-right h2{color:white;font-size:28px;font-weight:700;margin-bottom:16px;}
 .login-right p{color:rgba(255,255,255,0.8);font-size:15px;line-height:1.7;}
 .login-icon{font-size:48px;margin-bottom:20px;}
-.login-box{width:100%;max-width:380px;}
+.login-box{width:100%;max-width:400px;}
 .login-box h1{font-size:24px;font-weight:700;margin-bottom:6px;}
 .login-box .sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
-.field{margin-bottom:16px;}
+.tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--border);}
+.tab{padding:10px 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;}
+.tab.active{color:var(--blue);border-bottom:2px solid var(--blue);}
+.form-login,.form-cadastro{display:none;}
+.form-login.active,.form-cadastro.active{display:block;}
+.field{margin-bottom:14px;}
 .field label{display:block;font-size:12px;font-weight:500;margin-bottom:6px;}
 .field input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:'Sora',sans-serif;outline:none;transition:border-color 0.2s;}
 .field input:focus{border-color:var(--blue);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .btn-login{width:100%;padding:12px;background:var(--blue);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;margin-top:8px;}
 .btn-login:hover{background:var(--blue-dark);}
-.login-error{margin-top:12px;padding:10px 14px;background:#fee2e2;color:#dc2626;border-radius:8px;font-size:12px;display:none;}
+.auth-error{margin-top:12px;padding:10px 14px;background:#fee2e2;color:#dc2626;border-radius:8px;font-size:12px;display:none;}
+.auth-success{margin-top:12px;padding:10px 14px;background:var(--success-bg);color:var(--success);border-radius:8px;font-size:12px;display:none;}
 .app{display:none;}
 .topbar{background:white;border-bottom:1px solid var(--border);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
 .topbar-left{display:flex;align-items:center;gap:12px;}
@@ -32,6 +39,9 @@ body{font-family:'Sora',sans-serif;background:#f4f6fb;color:var(--text);}
 .topbar-name{font-size:15px;font-weight:600;}
 .topbar-sub{font-size:11px;color:var(--muted);}
 .topbar-right{display:flex;align-items:center;gap:10px;}
+.user-info{text-align:right;}
+.user-info .uname{font-size:13px;font-weight:500;}
+.user-info .uesc{font-size:11px;color:var(--muted);}
 .avatar{width:34px;height:34px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue);}
 .btn-sair{padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:none;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--muted);}
 .btn-sair:hover{border-color:var(--blue);color:var(--blue);}
@@ -86,18 +96,31 @@ tr:hover td{background:#f8faff;}
   <div class="login-left">
     <div class="login-box">
       <div class="login-icon">⚖️</div>
-      <h1>Bem-vindo de volta</h1>
-      <p class="sub">Acesse sua conta para continuar</p>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="email" placeholder="seu@email.com">
+      <h1>Praetor AI</h1>
+      <p class="sub">Gestão inteligente de processos jurídicos</p>
+      <div class="tabs">
+        <div class="tab active" id="tab-login" onclick="trocarTab('login')">Entrar</div>
+        <div class="tab" id="tab-cadastro" onclick="trocarTab('cadastro')">Criar conta</div>
       </div>
-      <div class="field">
-        <label>Senha</label>
-        <input type="password" id="senha" placeholder="••••••••">
+
+      <div class="form-login active" id="form-login">
+        <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="seu@email.com"></div>
+        <div class="field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••"></div>
+        <button class="btn-login" id="btn-entrar">Entrar</button>
+        <div class="auth-error" id="login-error">Email ou senha incorretos.</div>
       </div>
-      <button class="btn-login" id="btn-entrar">Entrar</button>
-      <div class="login-error" id="login-error">Email ou senha incorretos.</div>
+
+      <div class="form-cadastro" id="form-cadastro">
+        <div class="field-row">
+          <div class="field"><label>Seu nome</label><input type="text" id="cad-nome" placeholder="João Silva"></div>
+          <div class="field"><label>Nome do escritório</label><input type="text" id="cad-escritorio" placeholder="Silva Advocacia"></div>
+        </div>
+        <div class="field"><label>Email</label><input type="email" id="cad-email" placeholder="joao@escritorio.com.br"></div>
+        <div class="field"><label>Senha</label><input type="password" id="cad-senha" placeholder="mínimo 6 caracteres"></div>
+        <button class="btn-login" id="btn-cadastrar-conta">Criar conta</button>
+        <div class="auth-error" id="cad-error"></div>
+        <div class="auth-success" id="cad-success">Conta criada! Faça login para continuar.</div>
+      </div>
     </div>
   </div>
   <div class="login-right">
@@ -113,11 +136,15 @@ tr:hover td{background:#f8faff;}
       <div class="logo-box">⚖️</div>
       <div>
         <div class="topbar-name">Praetor AI</div>
-        <div class="topbar-sub">Gestão inteligente de processos</div>
+        <div class="topbar-sub" id="topbar-escritorio">Carregando...</div>
       </div>
     </div>
     <div class="topbar-right">
-      <div class="avatar">AG</div>
+      <div class="user-info">
+        <div class="uname" id="topbar-nome">—</div>
+        <div class="uesc" id="topbar-email">—</div>
+      </div>
+      <div class="avatar" id="topbar-avatar">—</div>
       <button class="btn-sair" id="btn-sair">Sair</button>
     </div>
   </div>
@@ -130,8 +157,8 @@ tr:hover td{background:#f8faff;}
     </div>
     <div class="main">
       <div class="page active" id="page-dashboard">
-        <div class="page-title">Dashboard</div>
-        <div class="page-sub">Visão geral do escritório</div>
+        <div class="page-title" id="dash-titulo">Dashboard</div>
+        <div class="page-sub" id="dash-sub">Visão geral do escritório</div>
         <div class="metrics">
           <div class="metric"><div class="metric-label">Processos ativos</div><div class="metric-value" id="total-processos">—</div></div>
           <div class="metric"><div class="metric-label">Mensagens enviadas</div><div class="metric-value" id="total-mensagens">—</div></div>
@@ -185,38 +212,83 @@ tr:hover td{background:#f8faff;}
 </div>
 
 <script>
-var API = 'http://localhost:3000';
-var USUARIO = { email: 'admin@praetor.ai', senha: 'praetor2024' };
+var API = 'https://juridico-mvp.onrender.com';
+var usuario = null;
+
+function trocarTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-cadastro').classList.toggle('active', tab === 'cadastro');
+  document.getElementById('form-login').classList.toggle('active', tab === 'login');
+  document.getElementById('form-cadastro').classList.toggle('active', tab === 'cadastro');
+}
 
 document.getElementById('btn-entrar').addEventListener('click', function() {
-  var email = document.getElementById('email').value.trim();
-  var senha = document.getElementById('senha').value;
-  if (email === USUARIO.email && senha === USUARIO.senha) {
-    document.getElementById('login-wrap').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    carregarDashboard();
-  } else {
+  var email = document.getElementById('login-email').value.trim();
+  var senha = document.getElementById('login-senha').value;
+  fetch(API + '/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, senha: senha })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.sucesso) {
+      usuario = data.usuario;
+      document.getElementById('login-wrap').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('topbar-nome').textContent = usuario.nome;
+      document.getElementById('topbar-email').textContent = usuario.email;
+      document.getElementById('topbar-escritorio').textContent = usuario.escritorio;
+      document.getElementById('topbar-avatar').textContent = usuario.nome.charAt(0).toUpperCase();
+      document.getElementById('dash-sub').textContent = 'Bem-vindo, ' + usuario.nome + ' — ' + usuario.escritorio;
+      carregarDashboard();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
+      document.getElementById('login-error').textContent = data.erro || 'Email ou senha incorretos.';
+    }
+  }).catch(function() {
     document.getElementById('login-error').style.display = 'block';
+    document.getElementById('login-error').textContent = 'Erro ao conectar. Tente novamente.';
+  });
+});
+
+document.getElementById('btn-cadastrar-conta').addEventListener('click', function() {
+  var nome = document.getElementById('cad-nome').value.trim();
+  var escritorio = document.getElementById('cad-escritorio').value.trim();
+  var email = document.getElementById('cad-email').value.trim();
+  var senha = document.getElementById('cad-senha').value;
+  var err = document.getElementById('cad-error');
+  var suc = document.getElementById('cad-success');
+  if (!nome || !escritorio || !email || !senha) {
+    err.style.display = 'block'; err.textContent = 'Preencha todos os campos.'; return;
   }
+  if (senha.length < 6) {
+    err.style.display = 'block'; err.textContent = 'Senha deve ter mínimo 6 caracteres.'; return;
+  }
+  fetch(API + '/auth/cadastro', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome: nome, escritorio: escritorio, email: email, senha: senha })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.sucesso) {
+      suc.style.display = 'block'; err.style.display = 'none';
+      setTimeout(function() { trocarTab('login'); }, 2000);
+    } else {
+      err.style.display = 'block'; err.textContent = data.erro || 'Erro ao criar conta.';
+    }
+  }).catch(function() {
+    err.style.display = 'block'; err.textContent = 'Erro ao conectar. Tente novamente.';
+  });
 });
 
 document.getElementById('btn-sair').addEventListener('click', function() {
+  usuario = null;
   document.getElementById('login-wrap').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 });
 
-document.getElementById('nav-dashboard').addEventListener('click', function() {
-  navegar('dashboard'); carregarDashboard();
-});
-document.getElementById('nav-processos').addEventListener('click', function() {
-  navegar('processos'); carregarProcessos();
-});
-document.getElementById('nav-cadastrar').addEventListener('click', function() {
-  navegar('cadastrar');
-});
-document.getElementById('nav-mensagens').addEventListener('click', function() {
-  navegar('mensagens'); carregarMensagens();
-});
+document.getElementById('nav-dashboard').addEventListener('click', function() { navegar('dashboard'); carregarDashboard(); });
+document.getElementById('nav-processos').addEventListener('click', function() { navegar('processos'); carregarProcessos(); });
+document.getElementById('nav-cadastrar').addEventListener('click', function() { navegar('cadastrar'); });
+document.getElementById('nav-mensagens').addEventListener('click', function() { navegar('mensagens'); carregarMensagens(); });
 
 document.getElementById('btn-limpar').addEventListener('click', function() {
   document.getElementById('numero').value = '';
@@ -247,9 +319,7 @@ document.getElementById('btn-cadastrar').addEventListener('click', function() {
     } else {
       document.getElementById('msg-erro').style.display = 'block';
     }
-  }).catch(function() {
-    document.getElementById('msg-erro').style.display = 'block';
-  });
+  }).catch(function() { document.getElementById('msg-erro').style.display = 'block'; });
 });
 
 function navegar(id) {
@@ -271,7 +341,6 @@ function carregarDashboard() {
         return '<tr><td style="font-family:monospace;font-size:12px;color:var(--blue)">' + p.numero_processo + '</td><td>' + p.nome_cliente + '</td><td>' + p.telefone_cliente + '</td><td>' + new Date(p.criado_em).toLocaleDateString('pt-BR') + '</td></tr>';
       }).join('') + '</tbody></table>';
   }).catch(function() {});
-
   fetch(API + '/movimentacoes').then(function(r) { return r.json(); }).then(function(movs) {
     document.getElementById('total-mensagens').textContent = (movs || []).length;
   }).catch(function() {});
