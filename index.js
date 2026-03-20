@@ -122,19 +122,27 @@ app.post('/auth/login', async function(req, res) {
 });
 
 app.post('/processos', async function(req, res) {
-  const { numero_processo, nome_cliente, telefone_cliente } = req.body;
-  const { data, error } = await supabase.from('processos').insert({ numero_processo, nome_cliente, telefone_cliente });
+  const { numero_processo, nome_cliente, telefone_cliente, usuario_id } = req.body;
+  if (!usuario_id) return res.status(400).json({ erro: 'usuario_id obrigatorio.' });
+  const { data, error } = await supabase.from('processos').insert({ numero_processo, nome_cliente, telefone_cliente, usuario_id });
   if (error) return res.status(400).json({ erro: error.message });
   res.json({ sucesso: true, data });
 });
 
 app.get('/processos', async function(req, res) {
-  const { data } = await supabase.from('processos').select('*');
+  const usuario_id = req.query.usuario_id;
+  if (!usuario_id) return res.status(400).json({ erro: 'usuario_id obrigatorio.' });
+  const { data } = await supabase.from('processos').select('*').eq('usuario_id', usuario_id);
   res.json(data);
 });
 
 app.get('/movimentacoes', async function(req, res) {
-  const { data } = await supabase.from('movimentacoes').select('*, processos(nome_cliente, numero_processo)').order('detectado_em', { ascending: false }).limit(20);
+  const usuario_id = req.query.usuario_id;
+  if (!usuario_id) return res.json([]);
+  const { data: processos } = await supabase.from('processos').select('id').eq('usuario_id', usuario_id);
+  if (!processos || !processos.length) return res.json([]);
+  const ids = processos.map(function(p) { return p.id; });
+  const { data } = await supabase.from('movimentacoes').select('*, processos(nome_cliente, numero_processo)').in('processo_id', ids).order('detectado_em', { ascending: false }).limit(20);
   res.json(data);
 });
 
