@@ -102,14 +102,12 @@ tr:hover td{background:#f8faff;}
         <div class="tab active" id="tab-login" onclick="trocarTab('login')">Entrar</div>
         <div class="tab" id="tab-cadastro" onclick="trocarTab('cadastro')">Criar conta</div>
       </div>
-
       <div class="form-login active" id="form-login">
         <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="seu@email.com"></div>
         <div class="field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••"></div>
         <button class="btn-login" id="btn-entrar">Entrar</button>
         <div class="auth-error" id="login-error">Email ou senha incorretos.</div>
       </div>
-
       <div class="form-cadastro" id="form-cadastro">
         <div class="field-row">
           <div class="field"><label>Seu nome</label><input type="text" id="cad-nome" placeholder="João Silva"></div>
@@ -136,7 +134,7 @@ tr:hover td{background:#f8faff;}
       <div class="logo-box">⚖️</div>
       <div>
         <div class="topbar-name">Praetor AI</div>
-        <div class="topbar-sub" id="topbar-escritorio">Carregando...</div>
+        <div class="topbar-sub" id="topbar-escritorio">—</div>
       </div>
     </div>
     <div class="topbar-right">
@@ -157,7 +155,7 @@ tr:hover td{background:#f8faff;}
     </div>
     <div class="main">
       <div class="page active" id="page-dashboard">
-        <div class="page-title" id="dash-titulo">Dashboard</div>
+        <div class="page-title">Dashboard</div>
         <div class="page-sub" id="dash-sub">Visão geral do escritório</div>
         <div class="metrics">
           <div class="metric"><div class="metric-label">Processos ativos</div><div class="metric-value" id="total-processos">—</div></div>
@@ -241,12 +239,14 @@ document.getElementById('btn-entrar').addEventListener('click', function() {
       document.getElementById('dash-sub').textContent = 'Bem-vindo, ' + usuario.nome + ' — ' + usuario.escritorio;
       carregarDashboard();
     } else {
-      document.getElementById('login-error').style.display = 'block';
-      document.getElementById('login-error').textContent = data.erro || 'Email ou senha incorretos.';
+      var err = document.getElementById('login-error');
+      err.style.display = 'block';
+      err.textContent = data.erro || 'Email ou senha incorretos.';
     }
   }).catch(function() {
-    document.getElementById('login-error').style.display = 'block';
-    document.getElementById('login-error').textContent = 'Erro ao conectar. Tente novamente.';
+    var err = document.getElementById('login-error');
+    err.style.display = 'block';
+    err.textContent = 'Erro ao conectar. Tente novamente.';
   });
 });
 
@@ -308,7 +308,7 @@ document.getElementById('btn-cadastrar').addEventListener('click', function() {
   fetch(API + '/processos', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ numero_processo: numero, nome_cliente: nome, telefone_cliente: telefone })
+    body: JSON.stringify({ numero_processo: numero, nome_cliente: nome, telefone_cliente: telefone, usuario_id: usuario.id })
   }).then(function(r) { return r.json(); }).then(function(data) {
     if (data.sucesso) {
       document.getElementById('msg-ok').style.display = 'block';
@@ -318,6 +318,7 @@ document.getElementById('btn-cadastrar').addEventListener('click', function() {
       document.getElementById('telefone').value = '';
     } else {
       document.getElementById('msg-erro').style.display = 'block';
+      document.getElementById('msg-erro').textContent = data.erro || 'Erro ao cadastrar.';
     }
   }).catch(function() { document.getElementById('msg-erro').style.display = 'block'; });
 });
@@ -330,7 +331,7 @@ function navegar(id) {
 }
 
 function carregarDashboard() {
-  fetch(API + '/processos').then(function(r) { return r.json(); }).then(function(processos) {
+  fetch(API + '/processos?usuario_id=' + usuario.id).then(function(r) { return r.json(); }).then(function(processos) {
     var lista = processos || [];
     document.getElementById('total-processos').textContent = lista.length;
     document.getElementById('total-clientes').textContent = lista.length;
@@ -341,14 +342,14 @@ function carregarDashboard() {
         return '<tr><td style="font-family:monospace;font-size:12px;color:var(--blue)">' + p.numero_processo + '</td><td>' + p.nome_cliente + '</td><td>' + p.telefone_cliente + '</td><td>' + new Date(p.criado_em).toLocaleDateString('pt-BR') + '</td></tr>';
       }).join('') + '</tbody></table>';
   }).catch(function() {});
-  fetch(API + '/movimentacoes').then(function(r) { return r.json(); }).then(function(movs) {
+  fetch(API + '/movimentacoes?usuario_id=' + usuario.id).then(function(r) { return r.json(); }).then(function(movs) {
     document.getElementById('total-mensagens').textContent = (movs || []).length;
   }).catch(function() {});
 }
 
 function carregarProcessos() {
   var container = document.getElementById('tabela-processos');
-  fetch(API + '/processos').then(function(r) { return r.json(); }).then(function(processos) {
+  fetch(API + '/processos?usuario_id=' + usuario.id).then(function(r) { return r.json(); }).then(function(processos) {
     var lista = processos || [];
     if (!lista.length) { container.innerHTML = '<div class="loading">Nenhum processo cadastrado.</div>'; return; }
     container.innerHTML = '<table><thead><tr><th>Número</th><th>Cliente</th><th>Telefone</th><th>Status</th><th>Cadastrado em</th></tr></thead><tbody>' +
@@ -360,7 +361,7 @@ function carregarProcessos() {
 
 function carregarMensagens() {
   var container = document.getElementById('mensagens-container');
-  fetch(API + '/movimentacoes').then(function(r) { return r.json(); }).then(function(movs) {
+  fetch(API + '/movimentacoes?usuario_id=' + usuario.id).then(function(r) { return r.json(); }).then(function(movs) {
     var lista = movs || [];
     if (!lista.length) { container.innerHTML = '<div class="loading">Nenhuma mensagem enviada ainda.</div>'; return; }
     container.innerHTML = lista.map(function(m) {
