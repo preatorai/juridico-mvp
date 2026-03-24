@@ -18,7 +18,7 @@ function trocarTab(tab) {
   document.getElementById('form-cadastro').classList.toggle('active', tab === 'cadastro');
 }
 
-// LOGIN
+// ================= LOGIN =================
 document.getElementById('btn-entrar').addEventListener('click', function() {
   var email = document.getElementById('login-email').value.trim();
   var senha = document.getElementById('login-senha').value;
@@ -32,6 +32,14 @@ document.getElementById('btn-entrar').addEventListener('click', function() {
   .then(function(data) {
     if (data.sucesso) {
       usuario = data.usuario;
+
+      console.log('USUARIO LOGADO:', usuario);
+
+      // 🔥 VALIDAÇÃO CRÍTICA
+      if (!usuario || !usuario.id) {
+        alert('Erro ao carregar usuário. Faça login novamente.');
+        return;
+      }
 
       document.getElementById('login-wrap').style.display = 'none';
       document.getElementById('app').style.display = 'block';
@@ -53,7 +61,7 @@ document.getElementById('btn-entrar').addEventListener('click', function() {
   });
 });
 
-// CADASTRO
+// ================= CADASTRO =================
 document.getElementById('btn-cadastrar-conta').addEventListener('click', function() {
   var nome = document.getElementById('cad-nome').value.trim();
   var escritorio = document.getElementById('cad-escritorio').value.trim();
@@ -93,20 +101,31 @@ document.getElementById('btn-cadastrar-conta').addEventListener('click', functio
   });
 });
 
-// SAIR
+// ================= SAIR =================
 document.getElementById('btn-sair').addEventListener('click', function() {
   usuario = null;
   document.getElementById('login-wrap').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 });
 
-// CADASTRAR PROCESSO
+// ================= CADASTRAR PROCESSO =================
 document.getElementById('btn-cadastrar').addEventListener('click', function() {
   var numero = document.getElementById('numero').value.trim();
   var nome = document.getElementById('nome').value.trim();
   var telefone = document.getElementById('telefone').value.trim();
 
-  if (!usuario) return alert('Faça login');
+  console.log('USUARIO NO CADASTRO:', usuario);
+
+  // 🔥 BLOQUEIO CRÍTICO
+  if (!usuario || !usuario.id) {
+    alert('Erro: usuário não identificado. Faça login novamente.');
+    return;
+  }
+
+  if (!numero || !nome || !telefone) {
+    alert('Preencha todos os campos.');
+    return;
+  }
 
   fetch(API + '/processos', {
     method: 'POST',
@@ -119,15 +138,22 @@ document.getElementById('btn-cadastrar').addEventListener('click', function() {
     })
   })
   .then(tratarResposta)
-  .then(function() {
-    alert('Processo cadastrado!');
+  .then(function(data) {
+    if (data.sucesso) {
+      alert('Processo cadastrado!');
+    } else {
+      throw new Error(data.erro || 'Erro ao cadastrar');
+    }
   })
   .catch(function(err) {
     alert(err.message);
   });
 });
 
+// ================= DASHBOARD =================
 function carregarDashboard() {
+  if (!usuario || !usuario.id) return;
+
   fetch(API + '/processos?usuario_id=' + usuario.id)
   .then(r => r.json())
   .then(function(lista) {
