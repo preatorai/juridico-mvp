@@ -29,7 +29,7 @@ document.getElementById('btn-entrar').addEventListener('click', function() {
 
       usuario = data.usuario;
 
-      // 🔥 SALVA NO NAVEGADOR
+      // 🔥 SALVA USUÁRIO
       localStorage.setItem('usuario', JSON.stringify(usuario));
 
       console.log('USUARIO LOGADO:', usuario);
@@ -37,30 +37,91 @@ document.getElementById('btn-entrar').addEventListener('click', function() {
       document.getElementById('login-wrap').style.display = 'none';
       document.getElementById('app').style.display = 'block';
 
+      document.getElementById('topbar-nome').textContent = usuario.nome;
+      document.getElementById('topbar-email').textContent = usuario.email;
+      document.getElementById('topbar-escritorio').textContent = usuario.escritorio;
+      document.getElementById('topbar-avatar').textContent = usuario.nome.charAt(0).toUpperCase();
+
       carregarDashboard();
+    } else {
+      throw new Error(data.erro || 'Login inválido');
     }
   })
   .catch(function(err) {
-    alert(err.message);
+    var el = document.getElementById('login-error');
+    el.style.display = 'block';
+    el.textContent = err.message;
   });
+});
+
+// ================= CADASTRO =================
+document.getElementById('btn-cadastrar-conta').addEventListener('click', function() {
+  var nome = document.getElementById('cad-nome').value.trim();
+  var escritorio = document.getElementById('cad-escritorio').value.trim();
+  var email = document.getElementById('cad-email').value.trim();
+  var senha = document.getElementById('cad-senha').value;
+
+  var err = document.getElementById('cad-error');
+  var suc = document.getElementById('cad-success');
+
+  err.style.display = 'none';
+  suc.style.display = 'none';
+
+  if (!nome || !escritorio || !email || !senha) {
+    err.style.display = 'block';
+    err.textContent = 'Preencha todos os campos.';
+    return;
+  }
+
+  fetch(API + '/auth/cadastro', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome, escritorio, email, senha })
+  })
+  .then(tratarResposta)
+  .then(function(data) {
+    if (data.sucesso) {
+      suc.style.display = 'block';
+      setTimeout(() => trocarTab('login'), 1500);
+    } else {
+      throw new Error(data.erro || 'Erro ao cadastrar');
+    }
+  })
+  .catch(function(err) {
+    errEl = document.getElementById('cad-error');
+    errEl.style.display = 'block';
+    errEl.textContent = err.message;
+  });
+});
+
+// ================= SAIR =================
+document.getElementById('btn-sair').addEventListener('click', function() {
+  usuario = null;
+  localStorage.removeItem('usuario');
+  document.getElementById('login-wrap').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
 });
 
 // ================= CADASTRAR PROCESSO =================
 document.getElementById('btn-cadastrar').addEventListener('click', function() {
 
-  // 🔥 SEMPRE PEGA DO LOCALSTORAGE
   const usuarioAtual = JSON.parse(localStorage.getItem('usuario'));
 
   console.log('USUARIO NO CADASTRO:', usuarioAtual);
 
   if (!usuarioAtual || !usuarioAtual.id) {
-    alert('Faça login novamente');
+    alert('Erro: faça login novamente.');
     return;
   }
 
   var numero = document.getElementById('numero').value.trim();
   var nome = document.getElementById('nome').value.trim();
   var telefone = document.getElementById('telefone').value.trim();
+
+  if (!numero || !nome || !telefone) {
+    alert('Preencha todos os campos.');
+    return;
+  }
 
   fetch(API + '/processos', {
     method: 'POST',
@@ -73,8 +134,12 @@ document.getElementById('btn-cadastrar').addEventListener('click', function() {
     })
   })
   .then(tratarResposta)
-  .then(function() {
-    alert('Processo cadastrado!');
+  .then(function(data) {
+    if (data.sucesso) {
+      alert('Processo cadastrado!');
+    } else {
+      throw new Error(data.erro || 'Erro ao cadastrar');
+    }
   })
   .catch(function(err) {
     alert(err.message);
