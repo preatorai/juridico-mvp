@@ -1,6 +1,8 @@
 <script>
 var API = 'https://juridico-mvp.onrender.com';
-var usuario = null;
+
+// 🔥 RECUPERA USUÁRIO SALVO
+var usuario = JSON.parse(localStorage.getItem('usuario'));
 
 function tratarResposta(res) {
   if (!res.ok) {
@@ -9,13 +11,6 @@ function tratarResposta(res) {
     });
   }
   return res.json();
-}
-
-function trocarTab(tab) {
-  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-  document.getElementById('tab-cadastro').classList.toggle('active', tab === 'cadastro');
-  document.getElementById('form-login').classList.toggle('active', tab === 'login');
-  document.getElementById('form-cadastro').classList.toggle('active', tab === 'cadastro');
 }
 
 // ================= LOGIN =================
@@ -31,101 +26,41 @@ document.getElementById('btn-entrar').addEventListener('click', function() {
   .then(tratarResposta)
   .then(function(data) {
     if (data.sucesso) {
+
       usuario = data.usuario;
 
-      console.log('USUARIO LOGADO:', usuario);
+      // 🔥 SALVA NO NAVEGADOR
+      localStorage.setItem('usuario', JSON.stringify(usuario));
 
-      // 🔥 VALIDAÇÃO CRÍTICA
-      if (!usuario || !usuario.id) {
-        alert('Erro ao carregar usuário. Faça login novamente.');
-        return;
-      }
+      console.log('USUARIO LOGADO:', usuario);
 
       document.getElementById('login-wrap').style.display = 'none';
       document.getElementById('app').style.display = 'block';
 
-      document.getElementById('topbar-nome').textContent = usuario.nome;
-      document.getElementById('topbar-email').textContent = usuario.email;
-      document.getElementById('topbar-escritorio').textContent = usuario.escritorio;
-      document.getElementById('topbar-avatar').textContent = usuario.nome.charAt(0).toUpperCase();
-
       carregarDashboard();
-    } else {
-      throw new Error(data.erro || 'Login inválido');
     }
   })
   .catch(function(err) {
-    var el = document.getElementById('login-error');
-    el.style.display = 'block';
-    el.textContent = err.message;
+    alert(err.message);
   });
-});
-
-// ================= CADASTRO =================
-document.getElementById('btn-cadastrar-conta').addEventListener('click', function() {
-  var nome = document.getElementById('cad-nome').value.trim();
-  var escritorio = document.getElementById('cad-escritorio').value.trim();
-  var email = document.getElementById('cad-email').value.trim();
-  var senha = document.getElementById('cad-senha').value;
-
-  var err = document.getElementById('cad-error');
-  var suc = document.getElementById('cad-success');
-
-  err.style.display = 'none';
-  suc.style.display = 'none';
-
-  if (!nome || !escritorio || !email || !senha) {
-    err.style.display = 'block';
-    err.textContent = 'Preencha todos os campos.';
-    return;
-  }
-
-  fetch(API + '/auth/cadastro', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nome, escritorio, email, senha })
-  })
-  .then(tratarResposta)
-  .then(function(data) {
-    if (data.sucesso) {
-      suc.style.display = 'block';
-      setTimeout(() => trocarTab('login'), 1500);
-    } else {
-      throw new Error(data.erro || 'Erro ao cadastrar');
-    }
-  })
-  .catch(function(err) {
-    errEl = document.getElementById('cad-error');
-    errEl.style.display = 'block';
-    errEl.textContent = err.message;
-  });
-});
-
-// ================= SAIR =================
-document.getElementById('btn-sair').addEventListener('click', function() {
-  usuario = null;
-  document.getElementById('login-wrap').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
 });
 
 // ================= CADASTRAR PROCESSO =================
 document.getElementById('btn-cadastrar').addEventListener('click', function() {
+
+  // 🔥 SEMPRE PEGA DO LOCALSTORAGE
+  const usuarioAtual = JSON.parse(localStorage.getItem('usuario'));
+
+  console.log('USUARIO NO CADASTRO:', usuarioAtual);
+
+  if (!usuarioAtual || !usuarioAtual.id) {
+    alert('Faça login novamente');
+    return;
+  }
+
   var numero = document.getElementById('numero').value.trim();
   var nome = document.getElementById('nome').value.trim();
   var telefone = document.getElementById('telefone').value.trim();
-
-  console.log('USUARIO NO CADASTRO:', usuario);
-
-  // 🔥 BLOQUEIO CRÍTICO
-  if (!usuario || !usuario.id) {
-    alert('Erro: usuário não identificado. Faça login novamente.');
-    return;
-  }
-
-  if (!numero || !nome || !telefone) {
-    alert('Preencha todos os campos.');
-    return;
-  }
 
   fetch(API + '/processos', {
     method: 'POST',
@@ -134,16 +69,12 @@ document.getElementById('btn-cadastrar').addEventListener('click', function() {
       numero_processo: numero,
       nome_cliente: nome,
       telefone_cliente: telefone,
-      usuario_id: usuario.id
+      usuario_id: usuarioAtual.id
     })
   })
   .then(tratarResposta)
-  .then(function(data) {
-    if (data.sucesso) {
-      alert('Processo cadastrado!');
-    } else {
-      throw new Error(data.erro || 'Erro ao cadastrar');
-    }
+  .then(function() {
+    alert('Processo cadastrado!');
   })
   .catch(function(err) {
     alert(err.message);
@@ -152,9 +83,11 @@ document.getElementById('btn-cadastrar').addEventListener('click', function() {
 
 // ================= DASHBOARD =================
 function carregarDashboard() {
-  if (!usuario || !usuario.id) return;
+  const usuarioAtual = JSON.parse(localStorage.getItem('usuario'));
 
-  fetch(API + '/processos?usuario_id=' + usuario.id)
+  if (!usuarioAtual || !usuarioAtual.id) return;
+
+  fetch(API + '/processos?usuario_id=' + usuarioAtual.id)
   .then(r => r.json())
   .then(function(lista) {
     document.getElementById('total-processos').textContent = lista.length;
