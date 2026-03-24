@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="version" content="v2-20260324">
 <title>Praetor AI</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -210,6 +211,7 @@ tr:hover td{background:#f8faff;}
 </div>
 
 <script>
+// v2-20260324
 var API = 'https://juridico-mvp.onrender.com';
 var usuario = null;
 
@@ -303,6 +305,11 @@ document.getElementById('btn-cadastrar').addEventListener('click', function() {
   if (!numero || !nome || !telefone) {
     document.getElementById('msg-erro').style.display = 'block';
     document.getElementById('msg-ok').style.display = 'none';
+    return;
+  }
+  if (!usuario || !usuario.id) {
+    document.getElementById('msg-erro').style.display = 'block';
+    document.getElementById('msg-erro').textContent = 'Sessão expirada. Faça login novamente.';
     return;
   }
   fetch(API + '/processos', {
