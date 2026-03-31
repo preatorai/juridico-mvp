@@ -188,7 +188,9 @@ app.post('/webhook', async (req, res) => {
     if (!body || body.fromMe || body.isGroup) return res.sendStatus(200);
 
     const telefone = normalizarTelefone(body.phone || body.from);
-    const mensagem = (body.text && body.text.message) || body.message || body.body || null;
+    const mensagem = (body.text && body.text.message) ||
+                     (body.texto && body.texto.mensagem) ||
+                     body.message || body.body || null;
 
     console.log('Tel:', telefone, '| Msg:', mensagem);
     if (!telefone || !mensagem) return res.sendStatus(200);
