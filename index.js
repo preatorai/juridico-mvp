@@ -95,7 +95,16 @@ async function jaFoiEnviada(processoId, descricao) {
 }
 
 async function enviarWhatsApp(telefone, mensagem) {
-  await axios.post(EVOLUTION_URL, { phone: '55' + telefone, message: mensagem }, { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } });
+  console.log('=== ENVIANDO WHATSAPP ===');
+  console.log('Para:', '55' + telefone);
+  console.log('URL:', EVOLUTION_URL);
+  console.log('Token:', EVOLUTION_CLIENT_TOKEN);
+  const res = await axios.post(
+    EVOLUTION_URL,
+    { phone: '55' + telefone, message: mensagem },
+    { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } }
+  );
+  console.log('Resposta Z-API:', JSON.stringify(res.data));
 }
 
 async function salvarMovimentacao(processoId, descricao, resumo) {
