@@ -1,0 +1,7 @@
+tunnel: 74fbf706-9bae-40fb-9250-5d86721a9982
+credentials-file: C:\Users\arthu\.cloudflared\74fbf706-9bae-40fb-9250-5d86721a9982.json
+
+ingress:
+  - hostname: praetor.preatorai.com
+    service: http://localhost:3000
+  - service: http_status:404
