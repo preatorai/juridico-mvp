@@ -74,13 +74,28 @@ async function gerarResumo(movimentacao) {
 }
 
 async function gerarRespostaChatbot(mensagem, nome, processos) {
-  const lista = processos.map(p => 'Processo: ' + p.numero_processo).join('\n');
+  // Busca movimentações em tempo real para cada processo
+  let infoProcessos = '';
+  for (const processo of processos) {
+    const movs = await buscarMovimentacoes(processo.numero_processo);
+    if (movs.length > 0) {
+      infoProcessos += '\nProcesso ' + processo.numero_processo + ':\n';
+      infoProcessos += 'Ultimas movimentacoes:\n';
+      movs.slice(0, 5).forEach(m => { infoProcessos += '- ' + m + '\n'; });
+    } else {
+      infoProcessos += '\nProcesso ' + processo.numero_processo + ': Sem movimentacoes recentes encontradas.\n';
+    }
+  }
+
   const res = await axios.post(
     'https://api.openai.com/v1/chat/completions',
     {
       model: 'gpt-4o-mini',
       messages: [
-        { role: 'system', content: 'Voce e um assistente juridico virtual. Responda de forma simples e educada. Cliente: ' + nome + '. Processos:\n' + lista + '\n\nSe nao souber algo, diga para entrar em contato com o escritorio.' },
+        {
+          role: 'system',
+          content: 'Voce e um assistente juridico virtual de um escritorio de advocacia. Responda de forma simples e educada em portugues. Cliente: ' + nome + '.\n\nInformacoes dos processos:\n' + infoProcessos + '\n\nUse essas informacoes para responder. Se nao souber algo especifico, diga para entrar em contato com o escritorio.'
+        },
         { role: 'user', content: mensagem }
       ]
     },
@@ -95,16 +110,13 @@ async function jaFoiEnviada(processoId, descricao) {
 }
 
 async function enviarWhatsApp(telefone, mensagem) {
-  console.log('=== ENVIANDO WHATSAPP ===');
-  console.log('Para:', '55' + telefone);
-  console.log('URL:', EVOLUTION_URL);
-  console.log('Token:', EVOLUTION_CLIENT_TOKEN);
+  console.log('Enviando para:', '55' + telefone);
   const res = await axios.post(
     EVOLUTION_URL,
     { phone: '55' + telefone, message: mensagem },
     { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } }
   );
-  console.log('Resposta Z-API:', JSON.stringify(res.data));
+  console.log('Z-API:', JSON.stringify(res.data));
 }
 
 async function salvarMovimentacao(processoId, descricao, resumo) {
@@ -193,7 +205,6 @@ app.post('/testar-whatsapp', async (req, res) => {
 app.post('/webhook', async (req, res) => {
   try {
     const body = req.body;
-    console.log('Webhook:', JSON.stringify(body));
     if (!body || body.fromMe || body.isGroup) return res.sendStatus(200);
 
     const telefone = normalizarTelefone(body.phone || body.from);
