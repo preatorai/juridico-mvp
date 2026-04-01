@@ -50,14 +50,44 @@ function normalizarTelefone(raw) {
 async function buscarMovimentacoes(numeroProcesso) {
   try {
     const tribunal = detectarTribunal(numeroProcesso);
+    // Remove pontos, traços e espaços para buscar no DataJud
+    const numeroLimpo = numeroProcesso.replace(/[.\-\s]/g, '');
+    console.log('Buscando processo:', numeroLimpo, 'no tribunal:', tribunal);
+
     const res = await axios.post(
       'https://api-publica.datajud.cnj.jus.br/api_publica_' + tribunal + '/_search',
-      { query: { match: { numeroProcesso } } },
+      {
+        query: {
+          bool: {
+            should: [
+              { match: { numeroProcesso: numeroProcesso } },
+              { wildcard: { numeroProcesso: numeroLimpo + '*' } },
+              { wildcard: { numeroProcesso: '*' + numeroLimpo.substring(0, 13) + '*' } }
+            ]
+          }
+        },
+        size: 1
+      },
       { headers: { Authorization: DATAJUD_KEY } }
     );
+
     const hits = (res.data && res.data.hits && res.data.hits.hits) || [];
+    console.log('Hits encontrados:', hits.length);
     if (!hits.length) return [];
-    return ((hits[0]._source && hits[0]._source.movimentos) || []).map(m => m.nome).filter(Boolean);
+
+    const movimentos = (hits[0]._source && hits[0]._source.movimentos) || [];
+    console.log('Movimentos encontrados:', movimentos.length);
+
+    // Ordena por data e pega os 5 mais recentes
+    const movimentosOrdenados = movimentos
+      .filter(m => m.nome && m.dataHora)
+      .sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora))
+      .slice(0, 5);
+
+    return movimentosOrdenados.map(m => ({
+      nome: m.nome,
+      data: new Date(m.dataHora).toLocaleDateString('pt-BR')
+    }));
   } catch (err) {
     console.error('Erro DataJud:', err.message);
     return [];
@@ -73,17 +103,18 @@ async function gerarResumo(movimentacao) {
   return res.data.choices[0].message.content;
 }
 
-async function gerarRespostaChatbot(mensagem, nome, processos) {
-  // Busca movimentações em tempo real para cada processo
+async function gerarRespostaChatbot(mensagem, nome, processos, escritorio) {
   let infoProcessos = '';
   for (const processo of processos) {
     const movs = await buscarMovimentacoes(processo.numero_processo);
+    infoProcessos += '\nProcesso ' + processo.numero_processo + ':\n';
     if (movs.length > 0) {
-      infoProcessos += '\nProcesso ' + processo.numero_processo + ':\n';
       infoProcessos += 'Ultimas movimentacoes:\n';
-      movs.slice(0, 5).forEach(m => { infoProcessos += '- ' + m + '\n'; });
+      movs.forEach(m => {
+        infoProcessos += '- ' + m.nome + ' (' + m.data + ')\n';
+      });
     } else {
-      infoProcessos += '\nProcesso ' + processo.numero_processo + ': Sem movimentacoes recentes encontradas.\n';
+      infoProcessos += 'Sem movimentacoes encontradas no momento.\n';
     }
   }
 
@@ -94,7 +125,7 @@ async function gerarRespostaChatbot(mensagem, nome, processos) {
       messages: [
         {
           role: 'system',
-          content: 'Voce e um assistente juridico virtual de um escritorio de advocacia. Responda de forma simples e educada em portugues. Cliente: ' + nome + '.\n\nInformacoes dos processos:\n' + infoProcessos + '\n\nUse essas informacoes para responder. Se nao souber algo especifico, diga para entrar em contato com o escritorio.'
+          content: 'Voce e um assistente juridico virtual do escritorio ' + (escritorio || 'de advocacia') + '. Responda de forma simples, clara e educada em portugues. Cliente: ' + nome + '.\n\nInformacoes dos processos:\n' + infoProcessos + '\n\nIMPORTANTE: Use as informacoes acima para responder de forma detalhada sobre as movimentacoes. Explique cada movimentacao em linguagem simples para o cliente entender. Se nao houver movimentacoes, diga para entrar em contato com o escritorio.'
         },
         { role: 'user', content: mensagem }
       ]
@@ -123,6 +154,15 @@ async function salvarMovimentacao(processoId, descricao, resumo) {
   await supabase.from('movimentacoes').insert({ processo_id: processoId, descricao, resumo_ia: resumo, relevante: true, enviado_whatsapp: true });
 }
 
+async function enviarBoasVindas(processo, escritorio) {
+  const mensagem = 'Ola, ' + processo.nome_cliente + '! 👋\n\n' +
+    'Seu processo foi cadastrado no sistema do escritório *' + escritorio + '*.\n\n' +
+    '✅ A partir de agora você receberá atualizações automáticas sempre que houver movimentação no seu processo.\n\n' +
+    '💬 Qualquer dúvida é só me perguntar aqui mesmo!\n\n' +
+    '_Sistema Praetor AI_';
+  await enviarWhatsApp(processo.telefone_cliente, mensagem);
+}
+
 async function verificarProcessos() {
   console.log('Verificando processos...');
   const { data: processos } = await supabase.from('processos').select('*');
@@ -131,11 +171,11 @@ async function verificarProcessos() {
     try {
       const movs = await buscarMovimentacoes(processo.numero_processo);
       for (const mov of movs) {
-        if (await jaFoiEnviada(processo.id, mov)) continue;
-        const resumo = await gerarResumo(mov);
-        const msg = 'Ola, ' + processo.nome_cliente + '!\n\nSeu processo teve uma atualizacao:\n' + resumo + '\n\nDuvidas? Fale com o escritorio.';
+        if (await jaFoiEnviada(processo.id, mov.nome)) continue;
+        const resumo = await gerarResumo(mov.nome);
+        const msg = 'Ola, ' + processo.nome_cliente + '!\n\nSeu processo teve uma atualizacao em ' + mov.data + ':\n\n' + resumo + '\n\nDuvidas? Fale com o escritorio.';
         await enviarWhatsApp(processo.telefone_cliente, msg);
-        await salvarMovimentacao(processo.id, mov, resumo);
+        await salvarMovimentacao(processo.id, mov.nome, resumo);
         console.log('Enviado para ' + processo.nome_cliente);
       }
     } catch (err) { console.error('Erro:', err.message); }
@@ -167,6 +207,16 @@ app.post('/processos', async (req, res) => {
   if (!usuario_id) return res.status(400).json({ erro: 'usuario_id obrigatorio.' });
   const { data, error } = await supabase.from('processos').insert({ numero_processo, nome_cliente, telefone_cliente, usuario_id });
   if (error) return res.status(400).json({ erro: error.message });
+
+  try {
+    const { data: usuario } = await supabase.from('usuarios').select('escritorio').eq('id', usuario_id).single();
+    const escritorio = usuario ? usuario.escritorio : 'nosso escritorio';
+    await enviarBoasVindas({ nome_cliente, telefone_cliente }, escritorio);
+    console.log('Boas vindas enviadas para ' + nome_cliente);
+  } catch (err) {
+    console.error('Erro boas vindas:', err.message);
+  }
+
   res.json({ sucesso: true, data });
 });
 
@@ -223,7 +273,10 @@ app.post('/webhook', async (req, res) => {
       return res.sendStatus(200);
     }
 
-    const resposta = await gerarRespostaChatbot(mensagem, processos[0].nome_cliente, processos);
+    const { data: usuario } = await supabase.from('usuarios').select('escritorio').eq('id', processos[0].usuario_id).single();
+    const escritorio = usuario ? usuario.escritorio : 'nosso escritorio';
+
+    const resposta = await gerarRespostaChatbot(mensagem, processos[0].nome_cliente, processos, escritorio);
     await enviarWhatsApp(telefone, resposta);
     console.log('Resposta enviada para ' + processos[0].nome_cliente);
     res.sendStatus(200);
