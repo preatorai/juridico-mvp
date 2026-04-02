@@ -341,7 +341,7 @@ app.post('/chat-advogado', async (req, res) => {
       {
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'Você é um assistente jurídico para advogados. Responda de forma clara e objetiva com base nos dados dos processos abaixo. Use linguagem profissional.\n\n' + contexto },
+          { role: 'system', content: 'Você é um assistente jurídico especializado para advogados. Ao responder, seja EXTREMAMENTE detalhado e completo. Para cada movimentação, explique: o que significa juridicamente, qual o impacto no processo, quais os próximos passos prováveis e o que o advogado deve fazer. Não resuma — desenvolva cada ponto com profundidade. Use linguagem profissional mas acessível. Se houver múltiplos processos ou movimentações, trate cada um separadamente com títulos.\n\n' + contexto },
           { role: 'user', content: pergunta }
         ]
       },
