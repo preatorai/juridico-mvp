@@ -182,6 +182,31 @@ async function enviarBoasVindas(processo, escritorio) {
   await enviarWhatsApp(processo.telefone_cliente, mensagem);
 }
 
+const PALAVRAS_PRAZO = ['prazo','audiência','audiencia','decisão','decisao','sentença','sentenca','intimação','intimacao','despacho','julgamento','recurso','citação','citacao','mandado','penhora','bloqueio'];
+
+function movimentacaoImportante(nome) {
+  const n = nome.toLowerCase();
+  return PALAVRAS_PRAZO.some(p => n.includes(p));
+}
+
+async function alertarAdvogado(processo, mov, resumo) {
+  try {
+    const { data: usuario } = await supabase.from('usuarios').select('telefone, escritorio, nome').eq('id', processo.usuario_id).single();
+    if (!usuario || !usuario.telefone) return;
+    const msg = '⚖️ *Alerta Praetor AI*\n\n' +
+      '📋 *Processo:* ' + processo.numero_processo + '\n' +
+      '👤 *Cliente:* ' + processo.nome_cliente + '\n' +
+      '📅 *Data:* ' + mov.data + '\n\n' +
+      '🔔 *Movimentação:* ' + mov.nome + '\n\n' +
+      '📝 *Resumo:* ' + resumo + '\n\n' +
+      '_Acesse o Praetor AI para mais detalhes._';
+    await enviarWhatsApp(usuario.telefone, msg);
+    console.log('Alerta enviado ao advogado para processo ' + processo.numero_processo);
+  } catch (err) {
+    console.error('Erro ao alertar advogado:', err.message);
+  }
+}
+
 async function verificarProcessos() {
   console.log('Verificando processos...');
   const { data: processos } = await supabase.from('processos').select('*');
@@ -196,6 +221,10 @@ async function verificarProcessos() {
         await enviarWhatsApp(processo.telefone_cliente, msg);
         await salvarMovimentacao(processo.id, mov.nome, resumo);
         console.log('Enviado para ' + processo.nome_cliente);
+        // Alerta ao advogado se for movimentação importante
+        if (movimentacaoImportante(mov.nome)) {
+          await alertarAdvogado(processo, mov, resumo);
+        }
       }
     } catch (err) { console.error('Erro:', err.message); }
   }
@@ -218,7 +247,7 @@ app.post('/auth/login', async (req, res) => {
   const { email, senha } = req.body;
   const { data, error } = await supabase.from('usuarios').select('*').eq('email', email).eq('senha', senha).single();
   if (error || !data) return res.status(401).json({ erro: 'Email ou senha incorretos.' });
-  res.json({ sucesso: true, usuario: { id: data.id, nome: data.nome, email: data.email, escritorio: data.escritorio } });
+  res.json({ sucesso: true, usuario: { id: data.id, nome: data.nome, email: data.email, escritorio: data.escritorio, telefone: data.telefone || '' } });
 });
 
 app.post('/processos', async (req, res) => {
@@ -254,6 +283,14 @@ app.get('/movimentacoes', async (req, res) => {
   const ids = procs.map(p => p.id);
   const { data } = await supabase.from('movimentacoes').select('*, processos(nome_cliente, numero_processo)').in('processo_id', ids).order('detectado_em', { ascending: false }).limit(20);
   res.json(data);
+});
+
+app.post('/perfil/telefone', async (req, res) => {
+  const { usuario_id, telefone } = req.body;
+  if (!usuario_id || !telefone) return res.status(400).json({ erro: 'Campos obrigatórios.' });
+  const { error } = await supabase.from('usuarios').update({ telefone }).eq('id', usuario_id);
+  if (error) return res.status(400).json({ erro: error.message });
+  res.json({ sucesso: true });
 });
 
 app.post('/verificar', (req, res) => {
