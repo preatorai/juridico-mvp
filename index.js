@@ -316,6 +316,21 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
+// Detecta se o advogado quer enviar mensagem ao cliente
+function detectarIntencaoEnvio(pergunta) {
+  const p = pergunta.toLowerCase();
+  return /manda|envia|notifica|avisa|comunica|fala para|fala pra|mande|envie/.test(p);
+}
+
+// Encontra o(s) processo(s) mencionados na pergunta pelo nome do cliente
+function encontrarClientesMencionados(pergunta, processos) {
+  const p = pergunta.toLowerCase();
+  const encontrados = processos.filter(proc =>
+    proc.nome_cliente.toLowerCase().split(' ').some(parte => parte.length > 3 && p.includes(parte))
+  );
+  return encontrados.length ? encontrados : processos; // se não identificou, envia para todos
+}
+
 // Chat do advogado com a IA sobre seus processos
 app.post('/chat-advogado', async (req, res) => {
   const { usuario_id, pergunta } = req.body;
@@ -324,19 +339,26 @@ app.post('/chat-advogado', async (req, res) => {
     const { data: processos } = await supabase.from('processos').select('*').eq('usuario_id', usuario_id);
     if (!processos || !processos.length) return res.json({ resposta: 'Nenhum processo cadastrado ainda.' });
 
+    const { data: usuario } = await supabase.from('usuarios').select('escritorio').eq('id', usuario_id).single();
+    const escritorio = usuario ? usuario.escritorio : 'nosso escritório';
+
+    // Monta contexto com movimentações de todos os processos
     let contexto = 'Processos do escritório:\n';
+    const dadosProcessos = [];
     for (const p of processos) {
-      contexto += '\nProcesso ' + p.numero_processo + ' — Cliente: ' + p.nome_cliente + '\n';
       const movs = await buscarMovimentacoes(p.numero_processo);
+      contexto += '\nProcesso ' + p.numero_processo + ' — Cliente: ' + p.nome_cliente + '\n';
       if (movs.length) {
         contexto += 'Últimas movimentações:\n';
         movs.forEach(m => { contexto += '- ' + m.nome + ' (' + m.data + ')\n'; });
       } else {
         contexto += 'Sem movimentações recentes.\n';
       }
+      dadosProcessos.push({ ...p, movs });
     }
 
-    const resposta = await axios.post(
+    // Resposta detalhada para o advogado
+    const respostaIA = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
         model: 'gpt-4o-mini',
@@ -347,7 +369,43 @@ app.post('/chat-advogado', async (req, res) => {
       },
       { headers: { Authorization: 'Bearer ' + OPENAI_KEY } }
     );
-    res.json({ resposta: resposta.data.choices[0].message.content });
+    let respostaFinal = respostaIA.data.choices[0].message.content;
+
+    // Se o advogado pediu para enviar WhatsApp ao cliente
+    if (detectarIntencaoEnvio(pergunta)) {
+      const alvo = encontrarClientesMencionados(pergunta, dadosProcessos);
+      const enviados = [];
+
+      for (const proc of alvo) {
+        // Gera mensagem em linguagem simples para o cliente
+        let contextoCliente = 'Processo ' + proc.numero_processo + ':\n';
+        if (proc.movs && proc.movs.length) {
+          proc.movs.forEach(m => { contextoCliente += '- ' + m.nome + ' (' + m.data + ')\n'; });
+        } else {
+          contextoCliente += 'Sem movimentações recentes.\n';
+        }
+
+        const msgCliente = await axios.post(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: 'Você é um assistente do escritório ' + escritorio + '. Escreva uma mensagem de WhatsApp para o cliente ' + proc.nome_cliente + ' explicando as novidades do processo dele em linguagem simples e amigável. Máximo 5 linhas. Não use termos jurídicos complexos.' },
+              { role: 'user', content: 'Novidades: ' + contextoCliente }
+            ]
+          },
+          { headers: { Authorization: 'Bearer ' + OPENAI_KEY } }
+        );
+        const textoCliente = msgCliente.data.choices[0].message.content;
+        await enviarWhatsApp(proc.telefone_cliente, textoCliente);
+        enviados.push(proc.nome_cliente);
+        console.log('Mensagem enviada ao cliente ' + proc.nome_cliente + ' pelo advogado');
+      }
+
+      respostaFinal += '\n\n✅ *Mensagem enviada via WhatsApp para: ' + enviados.join(', ') + '*';
+    }
+
+    res.json({ resposta: respostaFinal });
   } catch (err) {
     res.status(500).json({ erro: err.message });
   }
