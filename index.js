@@ -333,10 +333,12 @@ function encontrarClientesMencionados(pergunta, processos) {
 
 // Chat do advogado com a IA sobre seus processos
 app.post('/chat-advogado', async (req, res) => {
-  const { usuario_id, pergunta } = req.body;
+  const { usuario_id, pergunta, processo_id } = req.body;
   if (!usuario_id || !pergunta) return res.status(400).json({ erro: 'Campos obrigatórios.' });
   try {
-    const { data: processos } = await supabase.from('processos').select('*').eq('usuario_id', usuario_id);
+    let query = supabase.from('processos').select('*').eq('usuario_id', usuario_id);
+    if (processo_id) query = query.eq('id', processo_id);
+    const { data: processos } = await query;
     if (!processos || !processos.length) return res.json({ resposta: 'Nenhum processo cadastrado ainda.' });
 
     const { data: usuario } = await supabase.from('usuarios').select('escritorio').eq('id', usuario_id).single();
