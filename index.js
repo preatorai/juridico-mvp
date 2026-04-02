@@ -150,6 +150,10 @@ async function gerarRespostaChatbot(mensagem, nome, processos, escritorio) {
   return res.data.choices[0].message.content;
 }
 
+async function salvarMensagem(usuario_id, telefone, nome_cliente, remetente, conteudo) {
+  await supabase.from('mensagens').insert({ usuario_id, telefone, nome_cliente, remetente, conteudo });
+}
+
 async function jaFoiEnviada(processoId, descricao) {
   const { data } = await supabase.from('movimentacoes').select('id').eq('processo_id', processoId).eq('descricao', descricao).single();
   return !!data;
@@ -299,13 +303,51 @@ app.post('/webhook', async (req, res) => {
     const { data: usuario } = await supabase.from('usuarios').select('escritorio').eq('id', processos[0].usuario_id).single();
     const escritorio = usuario ? usuario.escritorio : 'nosso escritorio';
 
+    await salvarMensagem(processos[0].usuario_id, telefone, processos[0].nome_cliente, 'cliente', mensagem);
+
     const resposta = await gerarRespostaChatbot(mensagem, processos[0].nome_cliente, processos, escritorio);
     await enviarWhatsApp(telefone, resposta);
+    await salvarMensagem(processos[0].usuario_id, telefone, processos[0].nome_cliente, 'bot', resposta);
     console.log('Resposta enviada para ' + processos[0].nome_cliente);
     res.sendStatus(200);
   } catch (err) {
     console.error('Erro webhook:', err.message);
     res.sendStatus(200);
+  }
+});
+
+// Lista de conversas — último mensagem por telefone
+app.get('/mensagens/conversas', async (req, res) => {
+  const { usuario_id } = req.query;
+  if (!usuario_id) return res.json([]);
+  const { data } = await supabase.from('mensagens').select('*').eq('usuario_id', usuario_id).order('criado_em', { ascending: false });
+  if (!data || !data.length) return res.json([]);
+  const seen = new Set();
+  const conversas = [];
+  for (const msg of data) {
+    if (!seen.has(msg.telefone)) { seen.add(msg.telefone); conversas.push(msg); }
+  }
+  res.json(conversas);
+});
+
+// Histórico completo de uma conversa
+app.get('/mensagens/conversa', async (req, res) => {
+  const { usuario_id, telefone } = req.query;
+  if (!usuario_id || !telefone) return res.json([]);
+  const { data } = await supabase.from('mensagens').select('*').eq('usuario_id', usuario_id).eq('telefone', telefone).order('criado_em', { ascending: true });
+  res.json(data || []);
+});
+
+// Advogado envia mensagem pelo dashboard
+app.post('/mensagens/enviar', async (req, res) => {
+  const { usuario_id, telefone, conteudo, nome_cliente } = req.body;
+  if (!usuario_id || !telefone || !conteudo) return res.status(400).json({ erro: 'Campos obrigatórios.' });
+  try {
+    await enviarWhatsApp(telefone, conteudo);
+    await salvarMensagem(usuario_id, telefone, nome_cliente || 'Cliente', 'advogado', conteudo);
+    res.json({ sucesso: true });
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
   }
 });
 
