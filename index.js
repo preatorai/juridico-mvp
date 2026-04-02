@@ -371,13 +371,12 @@ app.post('/chat-advogado', async (req, res) => {
     );
     let respostaFinal = respostaIA.data.choices[0].message.content;
 
-    // Se o advogado pediu para enviar WhatsApp ao cliente
+    // Se o advogado pediu para enviar WhatsApp ao cliente, gera prévia para revisão
+    let mensagensPendentes = [];
     if (detectarIntencaoEnvio(pergunta)) {
       const alvo = encontrarClientesMencionados(pergunta, dadosProcessos);
-      const enviados = [];
 
       for (const proc of alvo) {
-        // Gera mensagem em linguagem simples para o cliente
         let contextoCliente = 'Processo ' + proc.numero_processo + ':\n';
         if (proc.movs && proc.movs.length) {
           proc.movs.forEach(m => { contextoCliente += '- ' + m.nome + ' (' + m.data + ')\n'; });
@@ -396,16 +395,17 @@ app.post('/chat-advogado', async (req, res) => {
           },
           { headers: { Authorization: 'Bearer ' + OPENAI_KEY } }
         );
-        const textoCliente = msgCliente.data.choices[0].message.content;
-        await enviarWhatsApp(proc.telefone_cliente, textoCliente);
-        enviados.push(proc.nome_cliente);
-        console.log('Mensagem enviada ao cliente ' + proc.nome_cliente + ' pelo advogado');
+        mensagensPendentes.push({
+          nome_cliente: proc.nome_cliente,
+          telefone_cliente: proc.telefone_cliente,
+          mensagem: msgCliente.data.choices[0].message.content
+        });
       }
 
-      respostaFinal += '\n\n✅ *Mensagem enviada via WhatsApp para: ' + enviados.join(', ') + '*';
+      respostaFinal += '\n\n📋 *Revise e edite a mensagem abaixo antes de enviar:*';
     }
 
-    res.json({ resposta: respostaFinal });
+    res.json({ resposta: respostaFinal, mensagens_pendentes: mensagensPendentes });
   } catch (err) {
     res.status(500).json({ erro: err.message });
   }
