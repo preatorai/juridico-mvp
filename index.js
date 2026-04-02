@@ -41,6 +41,21 @@ function detectarTribunal(numeroProcesso) {
   return 'tjal';
 }
 
+// Deduplicação de mensagens recebidas via webhook
+// Z-API pode reenviar a mesma mensagem em caso de timeout/retry
+const _mensagensProcessadas = new Set();
+function jaProcessada(msgId) {
+  if (!msgId) return false;
+  if (_mensagensProcessadas.has(msgId)) return true;
+  _mensagensProcessadas.add(msgId);
+  // Evita vazamento de memória: descarta entradas antigas quando passa de 2000
+  if (_mensagensProcessadas.size > 2000) {
+    const primeira = _mensagensProcessadas.values().next().value;
+    _mensagensProcessadas.delete(primeira);
+  }
+  return false;
+}
+
 function normalizarTelefone(raw) {
   let tel = (raw || '').replace('@c.us','').replace('@s.whatsapp.net','').replace(/\D/g,'').replace(/^55/,'');
   if (tel.length === 10) tel = tel.substring(0,2) + '9' + tel.substring(2);
@@ -256,6 +271,14 @@ app.post('/webhook', async (req, res) => {
   try {
     const body = req.body;
     if (!body || body.fromMe || body.isGroup) return res.sendStatus(200);
+
+    // Extrai ID único da mensagem (Z-API envia messageId ou id)
+    const msgId = body.messageId || body.id || (body.data && body.data.key && body.data.key.id);
+    console.log('Webhook recebido | msgId:', msgId, '| campos payload:', Object.keys(body).join(', '));
+    if (jaProcessada(msgId)) {
+      console.log('Mensagem duplicada ignorada:', msgId);
+      return res.sendStatus(200);
+    }
 
     const telefone = normalizarTelefone(body.phone || body.from);
     const mensagem = (body.text && body.text.message) ||
