@@ -316,6 +316,43 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
+// Chat do advogado com a IA sobre seus processos
+app.post('/chat-advogado', async (req, res) => {
+  const { usuario_id, pergunta } = req.body;
+  if (!usuario_id || !pergunta) return res.status(400).json({ erro: 'Campos obrigatórios.' });
+  try {
+    const { data: processos } = await supabase.from('processos').select('*').eq('usuario_id', usuario_id);
+    if (!processos || !processos.length) return res.json({ resposta: 'Nenhum processo cadastrado ainda.' });
+
+    let contexto = 'Processos do escritório:\n';
+    for (const p of processos) {
+      contexto += '\nProcesso ' + p.numero_processo + ' — Cliente: ' + p.nome_cliente + '\n';
+      const movs = await buscarMovimentacoes(p.numero_processo);
+      if (movs.length) {
+        contexto += 'Últimas movimentações:\n';
+        movs.forEach(m => { contexto += '- ' + m.nome + ' (' + m.data + ')\n'; });
+      } else {
+        contexto += 'Sem movimentações recentes.\n';
+      }
+    }
+
+    const resposta = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'Você é um assistente jurídico para advogados. Responda de forma clara e objetiva com base nos dados dos processos abaixo. Use linguagem profissional.\n\n' + contexto },
+          { role: 'user', content: pergunta }
+        ]
+      },
+      { headers: { Authorization: 'Bearer ' + OPENAI_KEY } }
+    );
+    res.json({ resposta: resposta.data.choices[0].message.content });
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
+
 // Lista de conversas — último mensagem por telefone
 app.get('/mensagens/conversas', async (req, res) => {
   const { usuario_id } = req.query;
