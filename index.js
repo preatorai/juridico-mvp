@@ -312,6 +312,14 @@ app.post('/perfil/telefone', async (req, res) => {
   res.json({ sucesso: true });
 });
 
+app.post('/perfil/escritorio', async (req, res) => {
+  const { usuario_id, escritorio } = req.body;
+  if (!usuario_id || !escritorio) return res.status(400).json({ erro: 'Campos obrigatórios.' });
+  const { error } = await supabase.from('usuarios').update({ escritorio }).eq('id', usuario_id);
+  if (error) return res.status(400).json({ erro: error.message });
+  res.json({ sucesso: true });
+});
+
 app.post('/verificar', (req, res) => {
   verificarProcessos();
   res.json({ sucesso: true, mensagem: 'Verificacao iniciada!' });
