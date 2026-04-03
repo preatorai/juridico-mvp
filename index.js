@@ -407,8 +407,9 @@ app.post('/chat-advogado', async (req, res) => {
     const { data: processos } = await query;
     if (!processos || !processos.length) return res.json({ resposta: 'Nenhum processo cadastrado ainda.' });
 
-    const { data: usuario } = await supabase.from('usuarios').select('escritorio').eq('id', usuario_id).single();
+    const { data: usuario } = await supabase.from('usuarios').select('escritorio, nome').eq('id', usuario_id).single();
     const escritorio = usuario ? usuario.escritorio : 'nosso escritório';
+    const nomeAdvogado = usuario ? usuario.nome : 'Advogado';
 
     // Monta contexto com movimentações de todos os processos
     let contexto = 'Processos do escritório:\n';
@@ -436,7 +437,7 @@ app.post('/chat-advogado', async (req, res) => {
         model: 'gpt-4o-mini',
         stream: true,
         messages: [
-          { role: 'system', content: 'Você é um assistente jurídico especializado para advogados. Ao responder, seja EXTREMAMENTE detalhado e completo. Para cada movimentação, explique: o que significa juridicamente, qual o impacto no processo, quais os próximos passos prováveis e o que o advogado deve fazer. Não resuma — desenvolva cada ponto com profundidade. Use linguagem profissional mas acessível. Se houver múltiplos processos ou movimentações, trate cada um separadamente com títulos.\n\n' + contexto },
+          { role: 'system', content: 'Você é um assistente jurídico do escritório ' + escritorio + ', auxiliando o advogado ' + nomeAdvogado + '.\n\nAo responder, siga sempre esta estrutura:\n1. **Resumo** — o que está acontecendo no processo (máximo 2 linhas)\n2. **Ação necessária** — o que o advogado deve fazer agora (se houver)\n3. **Detalhes** — explique as movimentações com linguagem profissional\n4. **Próximos passos** — o que esperar daqui para frente\n\nSeja objetivo e direto. Use negrito para destacar prazos e ações urgentes. Responda sempre em português brasileiro.\n\n' + contexto },
           { role: 'user', content: pergunta }
         ]
       },
