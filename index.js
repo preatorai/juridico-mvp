@@ -180,19 +180,6 @@ async function jaFoiEnviada(processoId, descricao) {
 
 async function enviarWhatsApp(telefone, mensagem) {
   console.log('Enviando para:', '55' + telefone);
-  // Mostra "digitando..." antes de enviar
-  try {
-    const chatStateUrl = EVOLUTION_URL.replace('/send-text', '/send-chat-state');
-    await axios.post(
-      chatStateUrl,
-      { phone: '55' + telefone, chatState: 'composing' },
-      { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } }
-    );
-    await new Promise(r => setTimeout(r, 2500));
-  } catch (e) {
-    console.log('Typing indicator erro:', e.message);
-  }
-
   const res = await axios.post(
     EVOLUTION_URL,
     { phone: '55' + telefone, message: mensagem },
@@ -382,7 +369,15 @@ app.post('/webhook', async (req, res) => {
 
     await salvarMensagem(processos[0].usuario_id, telefone, processos[0].nome_cliente, 'cliente', mensagem);
 
+    // Mostra "digitando..." durante todo o processamento
+    const chatStateUrl = EVOLUTION_URL.replace('/send-text', '/send-chat-state');
+    const enviarDigitando = () => axios.post(chatStateUrl, { phone: '55' + telefone, chatState: 'COMPOSING' }, { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } }).catch(() => {});
+    await enviarDigitando();
+    const digitandoInterval = setInterval(enviarDigitando, 4000);
+
+
     const resposta = await gerarRespostaChatbot(mensagem, processos[0].nome_cliente, processos, escritorio);
+    clearInterval(digitandoInterval);
     await enviarWhatsApp(telefone, resposta);
     await salvarMensagem(processos[0].usuario_id, telefone, processos[0].nome_cliente, 'bot', resposta);
     console.log('Resposta enviada para ' + processos[0].nome_cliente);
