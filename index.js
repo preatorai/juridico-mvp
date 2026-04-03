@@ -425,57 +425,69 @@ app.post('/chat-advogado', async (req, res) => {
       dadosProcessos.push({ ...p, movs });
     }
 
-    // Resposta detalhada para o advogado
-    const respostaIA = await axios.post(
+    // Streaming SSE para o frontend
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    const streamResp = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
         model: 'gpt-4o-mini',
+        stream: true,
         messages: [
           { role: 'system', content: 'Você é um assistente jurídico especializado para advogados. Ao responder, seja EXTREMAMENTE detalhado e completo. Para cada movimentação, explique: o que significa juridicamente, qual o impacto no processo, quais os próximos passos prováveis e o que o advogado deve fazer. Não resuma — desenvolva cada ponto com profundidade. Use linguagem profissional mas acessível. Se houver múltiplos processos ou movimentações, trate cada um separadamente com títulos.\n\n' + contexto },
           { role: 'user', content: pergunta }
         ]
       },
-      { headers: { Authorization: 'Bearer ' + OPENAI_KEY } }
+      { headers: { Authorization: 'Bearer ' + OPENAI_KEY }, responseType: 'stream' }
     );
-    let respostaFinal = respostaIA.data.choices[0].message.content;
 
-    // Se o advogado pediu para enviar WhatsApp ao cliente, gera prévia para revisão
+    let respostaFinal = '';
+    await new Promise((resolve) => {
+      streamResp.data.on('data', (chunk) => {
+        const lines = chunk.toString().split('\n').filter(l => l.startsWith('data: '));
+        for (const line of lines) {
+          const data = line.slice(6);
+          if (data === '[DONE]') return;
+          try {
+            const token = JSON.parse(data).choices[0]?.delta?.content || '';
+            if (token) {
+              respostaFinal += token;
+              res.write('data: ' + JSON.stringify({ token }) + '\n\n');
+            }
+          } catch (e) {}
+        }
+      });
+      streamResp.data.on('end', resolve);
+    });
+
+    // Se pediu envio ao cliente, gera prévia
     let mensagensPendentes = [];
     if (detectarIntencaoEnvio(pergunta)) {
       const alvo = encontrarClientesMencionados(pergunta, dadosProcessos);
-
       for (const proc of alvo) {
         let contextoCliente = 'Processo ' + proc.numero_processo + ':\n';
         if (proc.movs && proc.movs.length) {
           proc.movs.forEach(m => { contextoCliente += '- ' + m.nome + ' (' + m.data + ')\n'; });
-        } else {
-          contextoCliente += 'Sem movimentações recentes.\n';
-        }
-
+        } else { contextoCliente += 'Sem movimentações recentes.\n'; }
         const msgCliente = await axios.post(
           'https://api.openai.com/v1/chat/completions',
-          {
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: 'Você é um assistente do escritório ' + escritorio + '. Escreva uma mensagem de WhatsApp para o cliente ' + proc.nome_cliente + ' explicando as novidades do processo dele em linguagem simples e amigável. Máximo 5 linhas. Não use termos jurídicos complexos.' },
-              { role: 'user', content: 'Novidades: ' + contextoCliente }
-            ]
-          },
+          { model: 'gpt-4o-mini', messages: [
+            { role: 'system', content: 'Você é um assistente do escritório ' + escritorio + '. Escreva uma mensagem de WhatsApp para o cliente ' + proc.nome_cliente + ' em linguagem simples e amigável. Máximo 5 linhas.' },
+            { role: 'user', content: 'Novidades: ' + contextoCliente }
+          ]},
           { headers: { Authorization: 'Bearer ' + OPENAI_KEY } }
         );
-        mensagensPendentes.push({
-          nome_cliente: proc.nome_cliente,
-          telefone_cliente: proc.telefone_cliente,
-          mensagem: msgCliente.data.choices[0].message.content
-        });
+        mensagensPendentes.push({ nome_cliente: proc.nome_cliente, telefone_cliente: proc.telefone_cliente, mensagem: msgCliente.data.choices[0].message.content });
       }
-
-      respostaFinal += '\n\n📋 *Revise e edite a mensagem abaixo antes de enviar:*';
     }
 
-    res.json({ resposta: respostaFinal, mensagens_pendentes: mensagensPendentes });
+    res.write('data: ' + JSON.stringify({ done: true, mensagens_pendentes: mensagensPendentes }) + '\n\n');
+    res.end();
   } catch (err) {
-    res.status(500).json({ erro: err.message });
+    res.write('data: ' + JSON.stringify({ erro: err.message }) + '\n\n');
+    res.end();
   }
 });
 
