@@ -182,19 +182,16 @@ async function enviarWhatsApp(telefone, mensagem) {
   console.log('Enviando para:', '55' + telefone);
   // Mostra "digitando..." antes de enviar
   try {
-    const typingUrl = EVOLUTION_URL.replace('/send-text', '/send-typing');
+    const chatStateUrl = EVOLUTION_URL.replace('/send-text', '/send-chat-state');
     await axios.post(
-      typingUrl,
-      { phone: '55' + telefone, typing: true },
+      chatStateUrl,
+      { phone: '55' + telefone, chatState: 'composing' },
       { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } }
     );
-    await new Promise(r => setTimeout(r, 2000));
-    await axios.post(
-      typingUrl,
-      { phone: '55' + telefone, typing: false },
-      { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } }
-    );
-  } catch (e) { /* silencioso */ }
+    await new Promise(r => setTimeout(r, 2500));
+  } catch (e) {
+    console.log('Typing indicator erro:', e.message);
+  }
 
   const res = await axios.post(
     EVOLUTION_URL,
