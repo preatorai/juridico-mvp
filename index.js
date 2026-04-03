@@ -180,6 +180,22 @@ async function jaFoiEnviada(processoId, descricao) {
 
 async function enviarWhatsApp(telefone, mensagem) {
   console.log('Enviando para:', '55' + telefone);
+  // Mostra "digitando..." antes de enviar
+  try {
+    const typingUrl = EVOLUTION_URL.replace('/send-text', '/send-typing');
+    await axios.post(
+      typingUrl,
+      { phone: '55' + telefone, typing: true },
+      { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } }
+    );
+    await new Promise(r => setTimeout(r, 2000));
+    await axios.post(
+      typingUrl,
+      { phone: '55' + telefone, typing: false },
+      { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } }
+    );
+  } catch (e) { /* silencioso */ }
+
   const res = await axios.post(
     EVOLUTION_URL,
     { phone: '55' + telefone, message: mensagem },
