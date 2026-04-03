@@ -371,7 +371,9 @@ app.post('/webhook', async (req, res) => {
 
     // Mostra "digitando..." durante todo o processamento
     const chatStateUrl = EVOLUTION_URL.replace('/send-text', '/send-chat-state');
-    const enviarDigitando = () => axios.post(chatStateUrl, { phone: '55' + telefone, chatState: 'COMPOSING' }, { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } }).catch(() => {});
+    const enviarDigitando = () => axios.post(chatStateUrl, { phone: '55' + telefone, chatState: 'composing' }, { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } })
+      .then(r => console.log('Digitando OK:', JSON.stringify(r.data)))
+      .catch(e => console.log('Digitando ERRO:', e.response ? JSON.stringify(e.response.data) : e.message));
     await enviarDigitando();
     const digitandoInterval = setInterval(enviarDigitando, 4000);
 
