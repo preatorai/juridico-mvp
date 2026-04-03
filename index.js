@@ -411,19 +411,21 @@ app.post('/chat-advogado', async (req, res) => {
     const escritorio = usuario ? usuario.escritorio : 'nosso escritório';
     const nomeAdvogado = usuario ? usuario.nome : 'Advogado';
 
-    // Monta contexto com movimentações de todos os processos
-    let contexto = 'Processos do escritório:\n';
-    const dadosProcessos = [];
-    for (const p of processos) {
+    // Busca movimentações de todos os processos em paralelo
+    const resultados = await Promise.all(processos.map(async p => {
       const movs = await buscarMovimentacoes(p.numero_processo);
+      return { ...p, movs };
+    }));
+    const dadosProcessos = resultados;
+    let contexto = 'Processos do escritório:\n';
+    for (const p of dadosProcessos) {
       contexto += '\nProcesso ' + p.numero_processo + ' — Cliente: ' + p.nome_cliente + '\n';
-      if (movs.length) {
+      if (p.movs.length) {
         contexto += 'Últimas movimentações:\n';
-        movs.forEach(m => { contexto += '- ' + m.nome + ' (' + m.data + ')\n'; });
+        p.movs.forEach(m => { contexto += '- ' + m.nome + ' (' + m.data + ')\n'; });
       } else {
         contexto += 'Sem movimentações recentes.\n';
       }
-      dadosProcessos.push({ ...p, movs });
     }
 
     // Streaming SSE para o frontend
@@ -528,5 +530,10 @@ app.post('/mensagens/enviar', async (req, res) => {
 });
 
 cron.schedule('0 */6 * * *', verificarProcessos);
+
+// Ping a cada 10 minutos para evitar cold start no Render
+cron.schedule('*/10 * * * *', () => {
+  axios.get('https://juridico-mvp.onrender.com/').catch(() => {});
+});
 
 app.listen(3000, () => console.log('Servidor rodando em http://localhost:3000'));
