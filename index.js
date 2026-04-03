@@ -369,17 +369,9 @@ app.post('/webhook', async (req, res) => {
 
     await salvarMensagem(processos[0].usuario_id, telefone, processos[0].nome_cliente, 'cliente', mensagem);
 
-    // Mostra "digitando..." durante todo o processamento
-    const chatStateUrl = EVOLUTION_URL.replace('/send-text', '/send-typing');
-    const enviarDigitando = () => axios.post(chatStateUrl, { phone: '55' + telefone }, { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } })
-      .then(r => console.log('Digitando OK:', JSON.stringify(r.data)))
-      .catch(e => console.log('Digitando ERRO:', e.response ? JSON.stringify(e.response.data) : e.message));
-    await enviarDigitando();
-    const digitandoInterval = setInterval(enviarDigitando, 4000);
 
 
     const resposta = await gerarRespostaChatbot(mensagem, processos[0].nome_cliente, processos, escritorio);
-    clearInterval(digitandoInterval);
     await enviarWhatsApp(telefone, resposta);
     await salvarMensagem(processos[0].usuario_id, telefone, processos[0].nome_cliente, 'bot', resposta);
     console.log('Resposta enviada para ' + processos[0].nome_cliente);
