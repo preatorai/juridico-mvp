@@ -527,9 +527,19 @@ app.post('/mensagens/enviar', async (req, res) => {
   const { usuario_id, telefone, conteudo, nome_cliente } = req.body;
   if (!usuario_id || !telefone || !conteudo) return res.status(400).json({ erro: 'Campos obrigatórios.' });
   try {
-    await enviarWhatsApp(telefone, conteudo);
-    await salvarMensagem(usuario_id, telefone, nome_cliente || 'Cliente', 'advogado', conteudo);
-    res.json({ sucesso: true });
+    const nums = telefone.replace(/\D/g, '');
+    const fone = nums.startsWith('55') ? nums : '55' + nums;
+    console.log('[enviar] telefone recebido:', telefone, '→ normalizado:', fone);
+    console.log('[enviar] EVOLUTION_URL:', EVOLUTION_URL);
+    const zRes = await axios.post(
+      EVOLUTION_URL,
+      { phone: fone, message: conteudo },
+      { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } }
+    );
+    console.log('[enviar] Z-API status:', zRes.status, 'body:', JSON.stringify(zRes.data));
+    if (zRes.data && zRes.data.error) throw new Error('Z-API: ' + zRes.data.error);
+    await salvarMensagem(usuario_id, fone, nome_cliente || 'Cliente', 'advogado', conteudo);
+    res.json({ sucesso: true, zapi: zRes.data });
   } catch (err) {
     res.status(500).json({ erro: err.message });
   }
