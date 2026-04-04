@@ -179,13 +179,19 @@ async function jaFoiEnviada(processoId, descricao) {
 }
 
 async function enviarWhatsApp(telefone, mensagem) {
-  console.log('Enviando para:', '55' + telefone);
+  // Normaliza telefone: remove tudo que não é número e garante prefixo 55
+  const nums = telefone.replace(/\D/g, '');
+  const fone = nums.startsWith('55') ? nums : '55' + nums;
+  console.log('Enviando para:', fone);
   const res = await axios.post(
     EVOLUTION_URL,
-    { phone: '55' + telefone, message: mensagem },
+    { phone: fone, message: mensagem },
     { headers: { 'Client-Token': EVOLUTION_CLIENT_TOKEN } }
   );
-  console.log('Z-API:', JSON.stringify(res.data));
+  console.log('Z-API resposta:', JSON.stringify(res.data));
+  if (res.data && res.data.error) {
+    throw new Error('Z-API: ' + res.data.error);
+  }
 }
 
 async function salvarMovimentacao(processoId, descricao, resumo) {
