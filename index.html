@@ -60,6 +60,7 @@
                 textarea.id = 'txt-' + cardId;
                 textarea.value = mp.mensagem;
                 var btn2 = document.createElement('button');
+                btn2.id = 'btn-' + cardId;
                 btn2.className = 'ai-preview-btn';
                 btn2.textContent = 'Enviar agora';
                 btn2.onclick = (function(cid, tel, nome) {
