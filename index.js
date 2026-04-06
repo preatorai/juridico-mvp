@@ -4,6 +4,7 @@ const cors = require('cors');
 const axios = require('axios');
 const cron = require('node-cron');
 const { createClient } = require('@supabase/supabase-js');
+const { buscarPorTribunal } = require('./scraper');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
@@ -89,56 +90,58 @@ function formatarCNJ(numero) {
   return d.slice(0,7) + '-' + d.slice(7,9) + '.' + d.slice(9,13) + '.' + d.slice(13,14) + '.' + d.slice(14,16) + '.' + d.slice(16,20);
 }
 
-async function buscarMovimentacoes(numeroProcesso, tentativa = 1) {
+async function buscarMovimentacoes(numeroProcesso) {
+  const tribunal = detectarTribunal(numeroProcesso);
+  console.log('Buscando processo:', numeroProcesso, 'no tribunal:', tribunal);
+
+  // 1. Scraper direto (fonte primária)
   try {
-    const tribunal = detectarTribunal(numeroProcesso);
-    const numeroLimpo = numeroProcesso.replace(/\D/g, '');
-    const numeroCNJ = formatarCNJ(numeroLimpo) || numeroProcesso;
-    console.log('Buscando processo:', numeroCNJ, 'no tribunal:', tribunal);
-
-    const res = await axios.post(
-      'https://api-publica.datajud.cnj.jus.br/api_publica_' + tribunal + '/_search',
-      {
-        query: {
-          bool: {
-            should: [
-              { term: { 'numeroProcesso.keyword': numeroCNJ } },
-              { match: { numeroProcesso: numeroCNJ } },
-              { match: { numeroProcesso: numeroProcesso } }
-            ],
-            minimum_should_match: 1
-          }
-        },
-        size: 1
-      },
-      { headers: { Authorization: DATAJUD_KEY }, timeout: 20000 }
-    );
-
-    const hits = (res.data && res.data.hits && res.data.hits.hits) || [];
-    console.log('Hits encontrados:', hits.length);
-    if (!hits.length) return [];
-
-    const movimentos = (hits[0]._source && hits[0]._source.movimentos) || [];
-    console.log('Movimentos encontrados:', movimentos.length);
-
-    // Ordena por data e pega os 5 mais recentes
-    const movimentosOrdenados = movimentos
-      .filter(m => m.nome && m.dataHora)
-      .sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora))
-      .slice(0, 5);
-
-    return movimentosOrdenados.map(m => ({
-      nome: m.nome,
-      data: new Date(m.dataHora).toLocaleDateString('pt-BR')
-    }));
-  } catch (err) {
-    console.error('Erro DataJud (tentativa ' + tentativa + '):', err.message);
-    if (tentativa < 3) {
-      await new Promise(r => setTimeout(r, 2000 * tentativa));
-      return buscarMovimentacoes(numeroProcesso, tentativa + 1);
+    const movs = await buscarPorTribunal(numeroProcesso, tribunal);
+    if (movs && movs.length > 0) {
+      console.log('[scraper] movimentos encontrados:', movs.length);
+      return movs;
     }
-    return [];
+  } catch (err) {
+    console.error('[scraper] erro:', err.message);
   }
+
+  // 2. DataJud como fallback
+  console.log('[datajud] scraper sem resultado, tentando DataJud...');
+  const numeroCNJ = formatarCNJ(numeroProcesso.replace(/\D/g, '')) || numeroProcesso;
+  for (let tentativa = 1; tentativa <= 3; tentativa++) {
+    try {
+      const res = await axios.post(
+        'https://api-publica.datajud.cnj.jus.br/api_publica_' + tribunal + '/_search',
+        {
+          query: {
+            bool: {
+              should: [
+                { term: { 'numeroProcesso.keyword': numeroCNJ } },
+                { match: { numeroProcesso: numeroCNJ } },
+                { match: { numeroProcesso: numeroProcesso } }
+              ],
+              minimum_should_match: 1
+            }
+          },
+          size: 1
+        },
+        { headers: { Authorization: DATAJUD_KEY }, timeout: 20000 }
+      );
+      const hits = (res.data && res.data.hits && res.data.hits.hits) || [];
+      if (!hits.length) return [];
+      const movimentos = (hits[0]._source && hits[0]._source.movimentos) || [];
+      console.log('[datajud] movimentos encontrados:', movimentos.length);
+      return movimentos
+        .filter(m => m.nome && m.dataHora)
+        .sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora))
+        .slice(0, 5)
+        .map(m => ({ nome: m.nome, data: new Date(m.dataHora).toLocaleDateString('pt-BR') }));
+    } catch (err) {
+      console.error('[datajud] tentativa ' + tentativa + ':', err.message);
+      if (tentativa < 3) await new Promise(r => setTimeout(r, 2000 * tentativa));
+    }
+  }
+  return [];
 }
 
 async function gerarResumo(movimentacao) {
