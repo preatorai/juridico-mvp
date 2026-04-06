@@ -69,7 +69,7 @@ const CONFIG = {
 
   // TJs — PJe (maioria dos estados)
   tjac: { sistema: 'pje', url: 'https://pje.tjac.jus.br' },
-  tjal: { sistema: 'esaj', url: 'https://www2.tjal.jus.br/esaj' },
+  tjal: { sistema: 'esaj-tjal', url: 'https://www2.tjal.jus.br' },
   tjam: { sistema: 'pje', url: 'https://pje.tjam.jus.br' },
   tjap: { sistema: 'pje', url: 'https://pje.tjap.jus.br' },
   tjce: { sistema: 'esaj', url: 'https://esaj.tjce.jus.br' },
@@ -180,6 +180,46 @@ async function buscarESAJ(numero, baseUrl) {
       'dados.numeroDoProcesso': cnj,
       'dados.pesquisar': 'Pesquisar'
     }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
+  ];
+
+  for (const tentativa of tentativas) {
+    try {
+      const res = await tentativa();
+      const movs = extrairMovimentosHTML(res.data);
+      if (movs.length > 0) return movs;
+    } catch (e) {
+      continue;
+    }
+  }
+  return [];
+}
+
+// ESAJ TJAL — www2.tjal.jus.br (1º e 2º grau)
+async function buscarESAJTJAL(numero, baseUrl) {
+  const cnj = formatarCNJ(numero);
+  const tentativas = [
+    // 1º grau
+    () => http.post(`${baseUrl}/cpopg/search.do`, new URLSearchParams({
+      conversationId: '',
+      'dados.numeroDoProcesso': cnj,
+      'dados.pesquisar': 'Pesquisar'
+    }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
+    // 2º grau
+    () => http.post(`${baseUrl}/cposg5/search.do`, new URLSearchParams({
+      conversationId: '',
+      'dados.numeroDoProcesso': cnj,
+      'dados.pesquisar': 'Pesquisar'
+    }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
+    // GET direto 1º grau
+    () => http.get(`${baseUrl}/cpopg/show.do`, {
+      params: { 'dados.numeroDoProcesso': cnj },
+      headers: { 'Accept': 'text/html' }
+    }),
+    // GET direto 2º grau
+    () => http.get(`${baseUrl}/cposg5/show.do`, {
+      params: { 'dados.numeroDoProcesso': cnj },
+      headers: { 'Accept': 'text/html' }
+    }),
   ];
 
   for (const tentativa of tentativas) {
@@ -305,11 +345,12 @@ async function buscarPorTribunal(numeroProcesso, tribunal) {
 
   try {
     switch (cfg.sistema) {
-      case 'pje':  return await buscarPJe(numeroProcesso, cfg.url);
-      case 'esaj': return await buscarESAJ(numeroProcesso, cfg.url);
-      case 'tre':  return await buscarTRE(numeroProcesso, cfg.uf);
-      case 'tjmg': return await buscarTJMG(numeroProcesso);
-      default:     return [];
+      case 'pje':       return await buscarPJe(numeroProcesso, cfg.url);
+      case 'esaj':      return await buscarESAJ(numeroProcesso, cfg.url);
+      case 'esaj-tjal': return await buscarESAJTJAL(numeroProcesso, cfg.url);
+      case 'tre':       return await buscarTRE(numeroProcesso, cfg.uf);
+      case 'tjmg':      return await buscarTJMG(numeroProcesso);
+      default:          return [];
     }
   } catch (err) {
     console.error(`[scraper] erro ${tribunal}:`, err.message);
