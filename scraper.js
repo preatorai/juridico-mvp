@@ -69,7 +69,7 @@ const CONFIG = {
 
   // TJs — PJe (maioria dos estados)
   tjac: { sistema: 'pje', url: 'https://pje.tjac.jus.br' },
-  tjal: { sistema: 'pje', url: 'https://pje.tjal.jus.br' },
+  tjal: { sistema: 'esaj', url: 'https://www2.tjal.jus.br/esaj' },
   tjam: { sistema: 'pje', url: 'https://pje.tjam.jus.br' },
   tjap: { sistema: 'pje', url: 'https://pje.tjap.jus.br' },
   tjce: { sistema: 'esaj', url: 'https://esaj.tjce.jus.br' },
