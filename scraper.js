@@ -139,7 +139,6 @@ function extrairMovimentosPJe(data) {
       return movimentos
         .filter(m => m.nome || m.descricao || m.movimento)
         .sort((a, b) => new Date(b.dataHora || b.data || 0) - new Date(a.dataHora || a.data || 0))
-        .slice(0, 5)
         .map(m => ({
           nome: m.nome || m.descricao || m.movimento || 'Movimentação',
           data: formatarData(m.dataHora || m.data || m.dataMovimento)

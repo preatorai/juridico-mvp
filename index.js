@@ -149,7 +149,6 @@ async function buscarMovimentacoes(numeroProcesso) {
       return movimentos
         .filter(m => m.nome && m.dataHora)
         .sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora))
-        .slice(0, 5)
         .map(m => ({ nome: m.nome, data: new Date(m.dataHora).toLocaleDateString('pt-BR') }));
     } catch (err) {
       console.error('[datajud] tentativa ' + tentativa + ':', err.message);
