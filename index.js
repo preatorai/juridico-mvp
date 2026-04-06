@@ -459,13 +459,33 @@ app.post('/chat-advogado', async (req, res) => {
       return { ...p, movs };
     }));
     const dadosProcessos = resultados;
+
+    // Se pergunta sobre movimentações, retorna direto sem passar pela IA
+    if (perguntaSobreProcesso(pergunta) && !detectarIntencaoEnvio(pergunta)) {
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      for (const p of dadosProcessos) {
+        let texto = '';
+        if (p.movs.length) {
+          p.movs.forEach(m => { texto += '- ' + m.nome + ' (' + m.data + ')\n'; });
+        } else {
+          texto = 'Sem movimentações registradas.';
+        }
+        res.write('data: ' + JSON.stringify({ token: texto }) + '\n\n');
+      }
+      res.write('data: ' + JSON.stringify({ done: true, mensagens_pendentes: [] }) + '\n\n');
+      res.end();
+      return;
+    }
+
     let contexto = '';
-    if (perguntaSobreProcesso(pergunta) || detectarIntencaoEnvio(pergunta)) {
+    if (detectarIntencaoEnvio(pergunta)) {
       contexto = 'Processos do escritório:\n';
       for (const p of dadosProcessos) {
         contexto += '\nProcesso ' + p.numero_processo + ' — Cliente: ' + p.nome_cliente + '\n';
         if (p.movs.length) {
-          contexto += 'Últimas movimentações:\n';
+          contexto += 'Movimentações:\n';
           p.movs.forEach(m => { contexto += '- ' + m.nome + ' (' + m.data + ')\n'; });
         } else {
           contexto += 'Sem movimentações recentes.\n';
