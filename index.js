@@ -61,6 +61,21 @@ function detectarTribunal(numeroProcesso) {
   return 'tjal';
 }
 
+// Cache de movimentações — evita re-buscar a cada pergunta
+const _cacheMovs = new Map();
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
+async function buscarMovimentacoesCache(numeroProcesso) {
+  const agora = Date.now();
+  const cached = _cacheMovs.get(numeroProcesso);
+  if (cached && agora - cached.ts < CACHE_TTL) {
+    console.log('[cache] usando cache para', numeroProcesso);
+    return cached.movs;
+  }
+  const movs = await buscarMovimentacoes(numeroProcesso);
+  _cacheMovs.set(numeroProcesso, { movs, ts: agora });
+  return movs;
+}
+
 // Deduplicação de mensagens recebidas via webhook
 // Z-API pode reenviar a mesma mensagem em caso de timeout/retry
 const _mensagensProcessadas = new Set();
@@ -435,7 +450,7 @@ app.post('/chat-advogado', async (req, res) => {
 
     // Busca movimentações de todos os processos em paralelo
     const resultados = await Promise.all(processos.map(async p => {
-      const movs = await buscarMovimentacoes(p.numero_processo);
+      const movs = await buscarMovimentacoesCache(p.numero_processo);
       return { ...p, movs };
     }));
     const dadosProcessos = resultados;
