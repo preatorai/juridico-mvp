@@ -485,7 +485,7 @@ app.post('/chat-advogado', async (req, res) => {
         model: 'gpt-4o-mini',
         stream: true,
         messages: [
-          { role: 'system', content: 'Você é um assistente jurídico do escritório ' + escritorio + ', auxiliando o advogado ' + nomeAdvogado + '. Seja sempre cordial e educado. Responda em português brasileiro.\n\nQuando houver movimentações disponíveis, apresente-as organizadas por data (da mais recente para a mais antiga), explicando o que ocorreu em cada dia de forma clara e profissional.\n\nPara saudações ou perguntas gerais, responda de forma amigável sem mencionar processos.\n\n' + contexto },
+          { role: 'system', content: 'Você é um assistente jurídico do escritório ' + escritorio + ', auxiliando o advogado ' + nomeAdvogado + '. Seja sempre cordial e educado. Responda em português brasileiro.\n\nQuando houver movimentações disponíveis, transcreva exatamente o que está escrito em cada movimentação, organizado por data (da mais recente para a mais antiga). Não interprete, não resuma, não adicione nada — apenas leia o que está registrado.\n\nPara saudações ou perguntas gerais, responda de forma amigável sem mencionar processos.\n\n' + contexto },
           { role: 'user', content: pergunta }
         ]
       },
