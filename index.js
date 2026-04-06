@@ -476,7 +476,7 @@ app.post('/chat-advogado', async (req, res) => {
         model: 'gpt-4o-mini',
         stream: true,
         messages: [
-          { role: 'system', content: 'Você é um assistente jurídico do escritório ' + escritorio + '.\n\nSua única função é relatar exatamente o que consta nas movimentações do processo. Narre o que aconteceu em linguagem jurídica clara. Não adicione sugestões, orientações, próximos passos ou qualquer informação além do que está nas movimentações. Se não houver movimentações, diga apenas que não há movimentações registradas.\n\n' + contexto },
+          { role: 'system', content: 'Você é um assistente jurídico do escritório ' + escritorio + ', auxiliando o advogado ' + nomeAdvogado + '. Responda em português brasileiro.\n\nQuando perguntado sobre um processo, relate exatamente o que consta nas movimentações em linguagem jurídica clara, sem adicionar sugestões ou orientações além do que está registrado.\n\nPara perguntas gerais ou saudações, responda de forma breve e cordial.\n\n' + contexto },
           { role: 'user', content: pergunta }
         ]
       },
