@@ -81,12 +81,20 @@ function normalizarTelefone(raw) {
   return tel;
 }
 
-async function buscarMovimentacoes(numeroProcesso) {
+function formatarCNJ(numero) {
+  // Remove tudo que não é dígito
+  const d = numero.replace(/\D/g, '');
+  if (d.length !== 20) return null;
+  // NNNNNNN-DD.AAAA.J.TT.OOOO
+  return d.slice(0,7) + '-' + d.slice(7,9) + '.' + d.slice(9,13) + '.' + d.slice(13,14) + '.' + d.slice(14,16) + '.' + d.slice(16,20);
+}
+
+async function buscarMovimentacoes(numeroProcesso, tentativa = 1) {
   try {
     const tribunal = detectarTribunal(numeroProcesso);
-    // Remove pontos, traços e espaços para buscar no DataJud
-    const numeroLimpo = numeroProcesso.replace(/[.\-\s]/g, '');
-    console.log('Buscando processo:', numeroLimpo, 'no tribunal:', tribunal);
+    const numeroLimpo = numeroProcesso.replace(/\D/g, '');
+    const numeroCNJ = formatarCNJ(numeroLimpo) || numeroProcesso;
+    console.log('Buscando processo:', numeroCNJ, 'no tribunal:', tribunal);
 
     const res = await axios.post(
       'https://api-publica.datajud.cnj.jus.br/api_publica_' + tribunal + '/_search',
@@ -94,15 +102,16 @@ async function buscarMovimentacoes(numeroProcesso) {
         query: {
           bool: {
             should: [
-              { match: { numeroProcesso: numeroProcesso } },
-              { wildcard: { numeroProcesso: numeroLimpo + '*' } },
-              { wildcard: { numeroProcesso: '*' + numeroLimpo.substring(0, 13) + '*' } }
-            ]
+              { term: { 'numeroProcesso.keyword': numeroCNJ } },
+              { match: { numeroProcesso: numeroCNJ } },
+              { match: { numeroProcesso: numeroProcesso } }
+            ],
+            minimum_should_match: 1
           }
         },
         size: 1
       },
-      { headers: { Authorization: DATAJUD_KEY } }
+      { headers: { Authorization: DATAJUD_KEY }, timeout: 20000 }
     );
 
     const hits = (res.data && res.data.hits && res.data.hits.hits) || [];
@@ -123,7 +132,11 @@ async function buscarMovimentacoes(numeroProcesso) {
       data: new Date(m.dataHora).toLocaleDateString('pt-BR')
     }));
   } catch (err) {
-    console.error('Erro DataJud:', err.message);
+    console.error('Erro DataJud (tentativa ' + tentativa + '):', err.message);
+    if (tentativa < 3) {
+      await new Promise(r => setTimeout(r, 2000 * tentativa));
+      return buscarMovimentacoes(numeroProcesso, tentativa + 1);
+    }
     return [];
   }
 }
