@@ -425,6 +425,12 @@ function detectarIntencaoEnvio(pergunta) {
   return /manda|envia|notifica|avisa|comunica|fala para|fala pra|mande|envie/.test(p);
 }
 
+// Detecta se a pergunta é sobre o processo (precisa do contexto)
+function perguntaSobreProcesso(pergunta) {
+  const p = pergunta.toLowerCase();
+  return /processo|moviment|prazo|audiên|decisão|sentença|recurso|andament|atualiz|aconteceu|novidade|status|cliente|o que|como está|como tá/.test(p);
+}
+
 // Encontra o(s) processo(s) mencionados na pergunta pelo nome do cliente
 function encontrarClientesMencionados(pergunta, processos) {
   const p = pergunta.toLowerCase();
@@ -454,14 +460,17 @@ app.post('/chat-advogado', async (req, res) => {
       return { ...p, movs };
     }));
     const dadosProcessos = resultados;
-    let contexto = 'Processos do escritório:\n';
-    for (const p of dadosProcessos) {
-      contexto += '\nProcesso ' + p.numero_processo + ' — Cliente: ' + p.nome_cliente + '\n';
-      if (p.movs.length) {
-        contexto += 'Últimas movimentações:\n';
-        p.movs.forEach(m => { contexto += '- ' + m.nome + ' (' + m.data + ')\n'; });
-      } else {
-        contexto += 'Sem movimentações recentes.\n';
+    let contexto = '';
+    if (perguntaSobreProcesso(pergunta) || detectarIntencaoEnvio(pergunta)) {
+      contexto = 'Processos do escritório:\n';
+      for (const p of dadosProcessos) {
+        contexto += '\nProcesso ' + p.numero_processo + ' — Cliente: ' + p.nome_cliente + '\n';
+        if (p.movs.length) {
+          contexto += 'Últimas movimentações:\n';
+          p.movs.forEach(m => { contexto += '- ' + m.nome + ' (' + m.data + ')\n'; });
+        } else {
+          contexto += 'Sem movimentações recentes.\n';
+        }
       }
     }
 
