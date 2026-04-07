@@ -152,7 +152,7 @@ async function buscarMovimentacoes(numeroProcesso) {
         .map(m => ({ nome: m.nome, data: new Date(m.dataHora).toLocaleDateString('pt-BR') }));
     } catch (err) {
       console.error('[datajud] tentativa ' + tentativa + ':', err.message);
-      if (tentativa < 3) await new Promise(r => setTimeout(r, 2000 * tentativa));
+      if (tentativa < 3) await new Promise(r => setTimeout(r, 5000 * tentativa));
     }
   }
   return [];
