@@ -2,7 +2,7 @@ services:
   - type: web
     name: juridico-mvp
     env: node
-    buildCommand: npm install && npx puppeteer browsers install chrome
+    buildCommand: npm install
     startCommand: node index.js
     envVars:
       - key: PUPPETEER_CACHE_DIR

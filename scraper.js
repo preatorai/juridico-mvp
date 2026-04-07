@@ -1,44 +1,5 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
-let _browser = null;
-
-async function getBrowser() {
-  if (_browser && _browser.isConnected()) return _browser;
-  const puppeteer = require('puppeteer');
-  _browser = await puppeteer.launch({
-    headless: 'new',
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process'
-    ]
-  });
-  return _browser;
-}
-
-async function buscarComPuppeteer(url, seletor, campoNumero, numero) {
-  let page;
-  try {
-    const browser = await getBrowser();
-    page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36');
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-    await page.type(campoNumero, numero);
-    await page.keyboard.press('Enter');
-    await page.waitForSelector(seletor, { timeout: 15000 }).catch(() => {});
-    const html = await page.content();
-    return extrairMovimentosHTML(html);
-  } catch (e) {
-    console.error('[puppeteer] erro:', e.message);
-    return [];
-  } finally {
-    if (page) await page.close().catch(() => {});
-  }
-}
 
 const http = axios.create({
   timeout: 20000,
@@ -168,14 +129,7 @@ async function buscarPJe(numero, baseUrl) {
     }
   }
 
-  // Fallback: Puppeteer
-  console.log('[puppeteer] tentando PJe:', baseUrl);
-  return buscarComPuppeteer(
-    `${baseUrl}/consultaprocessual/`,
-    '.rich-table-row, [class*="moviment"]',
-    'input[id*="numProcesso"], input[name*="numProcesso"]',
-    formatarCNJ(numero)
-  );
+  return [];
 }
 
 function extrairMovimentosPJe(data) {
@@ -228,14 +182,7 @@ async function buscarESAJ(numero, baseUrl) {
     } catch (e) { continue; }
   }
 
-  // Fallback: Puppeteer
-  console.log('[puppeteer] tentando ESAJ:', baseUrl);
-  return buscarComPuppeteer(
-    `${baseUrl}/cpopg/open.do`,
-    '#tabelaTodasMovimentacoes, .containerMovimentacao',
-    'input[name="dados.numeroDoProcesso"], #numeroDigitoAnoUnificado',
-    cnj
-  );
+  return [];
 }
 
 // ESAJ TJAL — www2.tjal.jus.br (1º e 2º grau)
@@ -264,23 +211,7 @@ async function buscarESAJTJAL(numero, baseUrl) {
     } catch (e) { continue; }
   }
 
-  // Fallback: Puppeteer (navegador real)
-  console.log('[puppeteer] tentando TJAL 1º grau...');
-  const movs1 = await buscarComPuppeteer(
-    `${baseUrl}/cpopg/open.do`,
-    '#tabelaTodasMovimentacoes, .containerMovimentacao',
-    'input[name="dados.numeroDoProcesso"], #numeroDigitoAnoUnificado',
-    cnj
-  );
-  if (movs1.length > 0) return movs1;
-
-  console.log('[puppeteer] tentando TJAL 2º grau...');
-  return buscarComPuppeteer(
-    `${baseUrl}/cposg5/open.do`,
-    '#tabelaTodasMovimentacoes, .containerMovimentacao',
-    'input[name="dados.numeroDoProcesso"]',
-    cnj
-  );
+  return [];
 }
 
 // TJMG — sistema próprio
