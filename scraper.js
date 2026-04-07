@@ -1,5 +1,44 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+let _browser = null;
+
+async function getBrowser() {
+  if (_browser && _browser.isConnected()) return _browser;
+  const puppeteer = require('puppeteer');
+  _browser = await puppeteer.launch({
+    headless: 'new',
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process'
+    ]
+  });
+  return _browser;
+}
+
+async function buscarComPuppeteer(url, seletor, campoNumero, numero) {
+  let page;
+  try {
+    const browser = await getBrowser();
+    page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36');
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+    await page.type(campoNumero, numero);
+    await page.keyboard.press('Enter');
+    await page.waitForSelector(seletor, { timeout: 15000 }).catch(() => {});
+    const html = await page.content();
+    return extrairMovimentosHTML(html);
+  } catch (e) {
+    console.error('[puppeteer] erro:', e.message);
+    return [];
+  } finally {
+    if (page) await page.close().catch(() => {});
+  }
+}
 
 const http = axios.create({
   timeout: 20000,
@@ -128,7 +167,15 @@ async function buscarPJe(numero, baseUrl) {
       continue;
     }
   }
-  return [];
+
+  // Fallback: Puppeteer
+  console.log('[puppeteer] tentando PJe:', baseUrl);
+  return buscarComPuppeteer(
+    `${baseUrl}/consultaprocessual/`,
+    '.rich-table-row, [class*="moviment"]',
+    'input[id*="numProcesso"], input[name*="numProcesso"]',
+    formatarCNJ(numero)
+  );
 }
 
 function extrairMovimentosPJe(data) {
@@ -160,25 +207,17 @@ function extrairMovimentosPJe(data) {
 // ESAJ — TJSP, TJBA, TJCE, TJSC, TJMS
 async function buscarESAJ(numero, baseUrl) {
   const cnj = formatarCNJ(numero);
-  const numLimpo = numero.replace(/\D/g, '');
 
   const tentativas = [
-    // 1ª instância
-    () => http.get(`${baseUrl}/cpopg/show.do`, {
-      params: { processo: { codigo: cnj }, 'dados.pesquisar': 'Pesquisar' },
-      headers: { 'Accept': 'text/html,application/xhtml+xml' }
-    }),
-    // 2ª instância
-    () => http.get(`${baseUrl}/cposg/show.do`, {
-      params: { processo: { codigo: cnj } },
-      headers: { 'Accept': 'text/html' }
-    }),
-    // Busca direta por número
     () => http.post(`${baseUrl}/cpopg/search.do`, new URLSearchParams({
       conversationId: '',
       'dados.numeroDoProcesso': cnj,
       'dados.pesquisar': 'Pesquisar'
     }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
+    () => http.get(`${baseUrl}/cpopg/show.do`, {
+      params: { 'dados.numeroDoProcesso': cnj },
+      headers: { 'Accept': 'text/html' }
+    }),
   ];
 
   for (const tentativa of tentativas) {
@@ -186,39 +225,35 @@ async function buscarESAJ(numero, baseUrl) {
       const res = await tentativa();
       const movs = extrairMovimentosHTML(res.data);
       if (movs.length > 0) return movs;
-    } catch (e) {
-      continue;
-    }
+    } catch (e) { continue; }
   }
-  return [];
+
+  // Fallback: Puppeteer
+  console.log('[puppeteer] tentando ESAJ:', baseUrl);
+  return buscarComPuppeteer(
+    `${baseUrl}/cpopg/open.do`,
+    '#tabelaTodasMovimentacoes, .containerMovimentacao',
+    'input[name="dados.numeroDoProcesso"], #numeroDigitoAnoUnificado',
+    cnj
+  );
 }
 
 // ESAJ TJAL — www2.tjal.jus.br (1º e 2º grau)
 async function buscarESAJTJAL(numero, baseUrl) {
   const cnj = formatarCNJ(numero);
+
+  // Tenta axios primeiro (mais leve)
   const tentativas = [
-    // 1º grau
     () => http.post(`${baseUrl}/cpopg/search.do`, new URLSearchParams({
       conversationId: '',
       'dados.numeroDoProcesso': cnj,
       'dados.pesquisar': 'Pesquisar'
     }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
-    // 2º grau
     () => http.post(`${baseUrl}/cposg5/search.do`, new URLSearchParams({
       conversationId: '',
       'dados.numeroDoProcesso': cnj,
       'dados.pesquisar': 'Pesquisar'
     }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }),
-    // GET direto 1º grau
-    () => http.get(`${baseUrl}/cpopg/show.do`, {
-      params: { 'dados.numeroDoProcesso': cnj },
-      headers: { 'Accept': 'text/html' }
-    }),
-    // GET direto 2º grau
-    () => http.get(`${baseUrl}/cposg5/show.do`, {
-      params: { 'dados.numeroDoProcesso': cnj },
-      headers: { 'Accept': 'text/html' }
-    }),
   ];
 
   for (const tentativa of tentativas) {
@@ -226,11 +261,26 @@ async function buscarESAJTJAL(numero, baseUrl) {
       const res = await tentativa();
       const movs = extrairMovimentosHTML(res.data);
       if (movs.length > 0) return movs;
-    } catch (e) {
-      continue;
-    }
+    } catch (e) { continue; }
   }
-  return [];
+
+  // Fallback: Puppeteer (navegador real)
+  console.log('[puppeteer] tentando TJAL 1º grau...');
+  const movs1 = await buscarComPuppeteer(
+    `${baseUrl}/cpopg/open.do`,
+    '#tabelaTodasMovimentacoes, .containerMovimentacao',
+    'input[name="dados.numeroDoProcesso"], #numeroDigitoAnoUnificado',
+    cnj
+  );
+  if (movs1.length > 0) return movs1;
+
+  console.log('[puppeteer] tentando TJAL 2º grau...');
+  return buscarComPuppeteer(
+    `${baseUrl}/cposg5/open.do`,
+    '#tabelaTodasMovimentacoes, .containerMovimentacao',
+    'input[name="dados.numeroDoProcesso"]',
+    cnj
+  );
 }
 
 // TJMG — sistema próprio
