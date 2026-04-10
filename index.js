@@ -442,7 +442,7 @@ app.post('/chat-advogado', async (req, res) => {
         {
           model: 'gpt-4o-mini',
           stream: true,
-          max_tokens: 600,
+          max_tokens: 1000,
           messages: [
             { role: 'system', content: 'Você é o assistente jurídico do escritório ' + escritorio + '. Explique o que aconteceu em cada data do processo de forma clara e simples, em português. Para cada data, diga o que ocorreu e o que isso significa. Seja objetivo e conciso. Não invente nada.\n\nDados:\n' + contextoMovs },
             { role: 'user', content: pergunta }
