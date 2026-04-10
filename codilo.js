@@ -165,8 +165,9 @@ async function consultarAutomatico(numeroProcesso) {
   console.log('[codilo] consulta automática →', cnj);
 
   try {
-    const r = await axios.post('https://api.consulta.codilo.com.br/v1/request/auto', {
-      param: { key: 'cnj', value: cnj },
+    const r = await axios.post('https://api.consulta.codilo.com.br/v1/autorequest', {
+      key: 'cnj',
+      value: cnj,
       callbacks: []
     }, {
       headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
@@ -227,25 +228,29 @@ async function aguardarResultado(requestId, token, tentativas = 0) {
 }
 
 function extrairMovimentacoes(data) {
-  const result = data.result || data.response || data;
+  // data é um array de processos, cada um com campo "steps"
+  const items = Array.isArray(data) ? data : [data];
 
-  // Tenta diferentes estruturas de resposta
-  const andamentos = result?.andamentos || result?.movimentacoes ||
-    result?.data?.andamentos || result?.data?.movimentacoes || [];
+  const steps = [];
+  for (const item of items) {
+    if (item.steps && Array.isArray(item.steps)) {
+      steps.push(...item.steps);
+    }
+  }
 
-  if (!Array.isArray(andamentos) || !andamentos.length) {
-    console.log('[codilo] sem andamentos na resposta');
+  if (!steps.length) {
+    console.log('[codilo] sem steps na resposta');
     return [];
   }
 
-  console.log('[codilo] andamentos encontrados:', andamentos.length);
+  console.log('[codilo] steps encontrados:', steps.length);
 
-  return andamentos
-    .filter(a => a.descricao || a.nome || a.titulo)
-    .sort((a, b) => new Date(b.data || b.dataHora || 0) - new Date(a.data || a.dataHora || 0))
-    .map(a => ({
-      nome: a.descricao || a.nome || a.titulo || 'Movimentação',
-      data: formatarData(a.data || a.dataHora)
+  return steps
+    .filter(s => s.title || s.description)
+    .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0))
+    .map(s => ({
+      nome: s.title || s.description || 'Movimentação',
+      data: formatarData(s.timestamp)
     }));
 }
 
