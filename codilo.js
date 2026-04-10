@@ -196,6 +196,7 @@ async function aguardarResultado(requestId, token, tentativas = 0) {
       timeout: 10000
     });
 
+    console.log('[codilo] poll resposta bruta:', JSON.stringify(r.data).substring(0, 800));
     const data = r.data.data;
     if (!data) return [];
 
