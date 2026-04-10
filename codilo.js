@@ -189,7 +189,7 @@ async function aguardarResultado(requestId, token, tentativas = 0) {
     return [];
   }
 
-  await new Promise(r => setTimeout(r, 3000));
+  await new Promise(r => setTimeout(r, 2000));
 
   try {
     const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {

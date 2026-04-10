@@ -423,7 +423,7 @@ app.post('/chat-advogado', async (req, res) => {
         contextoMovs += 'Processo ' + p.numero_processo + ' — Cliente: ' + p.nome_cliente + '\n';
         if (p.movs.length) {
           // Agrupa por data e pega as últimas 15
-          const ultimas = p.movs.slice(0, 15);
+          const ultimas = p.movs.slice(0, 8);
           const porData = {};
           ultimas.forEach(m => {
             if (!porData[m.data]) porData[m.data] = [];
@@ -442,8 +442,9 @@ app.post('/chat-advogado', async (req, res) => {
         {
           model: 'gpt-4o-mini',
           stream: true,
+          max_tokens: 600,
           messages: [
-            { role: 'system', content: 'Você é o assistente jurídico do escritório ' + escritorio + '. Explique o que aconteceu em cada data do processo de forma clara e simples, em português. Para cada data, diga o que ocorreu e o que isso significa para o processo. Seja objetivo. Não invente nada além do que está nos dados.\n\nDados do processo:\n' + contextoMovs },
+            { role: 'system', content: 'Você é o assistente jurídico do escritório ' + escritorio + '. Explique o que aconteceu em cada data do processo de forma clara e simples, em português. Para cada data, diga o que ocorreu e o que isso significa. Seja objetivo e conciso. Não invente nada.\n\nDados:\n' + contextoMovs },
             { role: 'user', content: pergunta }
           ]
         },
