@@ -444,9 +444,8 @@ app.post('/chat-advogado', async (req, res) => {
         {
           model: 'gpt-4o-mini',
           stream: true,
-          max_tokens: 1000,
           messages: [
-            { role: 'system', content: 'Você é o assistente jurídico do escritório ' + escritorio + '. Escreva sempre em português brasileiro correto, com frases completas e sem abreviações. Para cada data, explique o que ocorreu e o que isso significa para o processo, em linguagem simples e clara. Nunca invente informações. Nunca deixe frases incompletas.\n\nDados do processo:\n' + contextoMovs },
+            { role: 'system', content: 'Você é o assistente jurídico do escritório ' + escritorio + '. Escreva sempre em português brasileiro correto, com frases completas e sem abreviações. Para cada data, explique detalhadamente o que ocorreu e o que isso significa para o processo, em linguagem simples e clara. Nunca invente informações. Nunca deixe frases incompletas.\n\nDados do processo:\n' + contextoMovs },
             { role: 'user', content: pergunta }
           ]
         },
@@ -454,9 +453,13 @@ app.post('/chat-advogado', async (req, res) => {
       );
 
       await new Promise((resolve) => {
+        let buf = '';
         streamResp.data.on('data', (chunk) => {
-          const lines = chunk.toString().split('\n').filter(l => l.startsWith('data: '));
+          buf += chunk.toString();
+          const lines = buf.split('\n');
+          buf = lines.pop();
           for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
             const data = line.slice(6);
             if (data === '[DONE]') return;
             try {
@@ -507,9 +510,13 @@ app.post('/chat-advogado', async (req, res) => {
 
     let respostaFinal = '';
     await new Promise((resolve) => {
+      let buf = '';
       streamResp.data.on('data', (chunk) => {
-        const lines = chunk.toString().split('\n').filter(l => l.startsWith('data: '));
+        buf += chunk.toString();
+        const lines = buf.split('\n');
+        buf = lines.pop();
         for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
           const data = line.slice(6);
           if (data === '[DONE]') return;
           try {
