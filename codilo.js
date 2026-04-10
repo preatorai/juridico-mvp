@@ -216,7 +216,9 @@ async function aguardarResultado(requestId, token, tentativas = 0) {
       return [];
     }
 
-    console.log('[codilo] resposta completa:', JSON.stringify(data).substring(0, 800));
+    const item = Array.isArray(data) ? data[0] : data;
+    console.log('[codilo] chaves da resposta:', Object.keys(item || {}));
+    console.log('[codilo] resposta completa:', JSON.stringify(data).substring(0, 1500));
     return extrairMovimentacoes(data);
   } catch (e) {
     console.log('[codilo] erro ao buscar resultado:', e.message);
