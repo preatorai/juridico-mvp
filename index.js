@@ -71,7 +71,9 @@ async function buscarMovimentacoesCache(numeroProcesso) {
     return cached.movs;
   }
   const movs = await buscarMovimentacoes(numeroProcesso);
-  _cacheMovs.set(numeroProcesso, { movs, ts: agora });
+  if (movs && movs.length > 0) {
+    _cacheMovs.set(numeroProcesso, { movs, ts: agora });
+  }
   return movs;
 }
 

@@ -184,7 +184,7 @@ async function consultarAutomatico(numeroProcesso) {
 }
 
 async function aguardarResultado(requestId, token, tentativas = 0) {
-  if (tentativas > 10) {
+  if (tentativas > 20) {
     console.log('[codilo] timeout aguardando resultado');
     return [];
   }
