@@ -145,7 +145,7 @@ async function consultarProcesso(numeroProcesso, tribunal) {
         return aguardarResultado(requestId, token);
       }
     } catch (e) {
-      console.log('[codilo] erro query', query, ':', e.response?.status, e.message);
+      console.log('[codilo] erro query', query, ':', e.response?.status, e.message, JSON.stringify(e.response?.data));
       continue;
     }
   }
