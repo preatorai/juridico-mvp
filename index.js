@@ -5,6 +5,7 @@ const axios = require('axios');
 const cron = require('node-cron');
 const { createClient } = require('@supabase/supabase-js');
 const { buscarPorTribunal } = require('./scraper');
+const { consultarProcesso } = require('./codilo');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
@@ -109,7 +110,20 @@ async function buscarMovimentacoes(numeroProcesso) {
   const tribunal = detectarTribunal(numeroProcesso);
   console.log('Buscando processo:', numeroProcesso, 'no tribunal:', tribunal);
 
-  // 1. Scraper direto (fonte primária)
+  // 1. Codilo (fonte primária — cobre TJs, TRTs, TREs)
+  if (process.env.CODILO_ID && process.env.CODILO_SECRET) {
+    try {
+      const movs = await consultarProcesso(numeroProcesso, tribunal);
+      if (movs && movs.length > 0) {
+        console.log('[codilo] movimentos encontrados:', movs.length);
+        return movs;
+      }
+    } catch (err) {
+      console.error('[codilo] erro:', err.message);
+    }
+  }
+
+  // 2. Scraper direto (fallback secundário)
   try {
     const movs = await buscarPorTribunal(numeroProcesso, tribunal);
     if (movs && movs.length > 0) {
@@ -120,7 +134,7 @@ async function buscarMovimentacoes(numeroProcesso) {
     console.error('[scraper] erro:', err.message);
   }
 
-  // 2. DataJud como fallback
+  // 3. DataJud como último fallback
   console.log('[datajud] scraper sem resultado, tentando DataJud...');
   const numeroCNJ = formatarCNJ(numeroProcesso.replace(/\D/g, '')) || numeroProcesso;
   for (let tentativa = 1; tentativa <= 3; tentativa++) {
