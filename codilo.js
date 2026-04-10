@@ -96,14 +96,21 @@ const MAPA_TRIBUNAL = {
 
 async function getToken() {
   if (_token && Date.now() < _tokenExpira) return _token;
-  const r = await axios.post('https://auth.codilo.com.br/oauth/token', {
-    grant_type: 'client_credentials',
-    id: CODILO_ID,
-    secret: CODILO_SECRET
-  }, { timeout: 10000 });
-  _token = r.data.access_token;
-  _tokenExpira = Date.now() + (r.data.expires_in - 60) * 1000;
-  return _token;
+  console.log('[codilo] obtendo token | ID:', CODILO_ID ? CODILO_ID.substring(0,6) + '...' : 'NAO DEFINIDO');
+  try {
+    const r = await axios.post('https://auth.codilo.com.br/oauth/token', {
+      grant_type: 'client_credentials',
+      id: CODILO_ID,
+      secret: CODILO_SECRET
+    }, { timeout: 10000 });
+    _token = r.data.access_token;
+    _tokenExpira = Date.now() + (r.data.expires_in - 60) * 1000;
+    console.log('[codilo] token obtido com sucesso');
+    return _token;
+  } catch (e) {
+    console.log('[codilo] erro ao obter token:', e.response?.status, JSON.stringify(e.response?.data), e.message);
+    throw e;
+  }
 }
 
 function formatarCNJ(numero) {
