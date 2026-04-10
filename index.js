@@ -412,20 +412,59 @@ app.post('/chat-advogado', async (req, res) => {
     }));
     const dadosProcessos = resultados;
 
-    // Se pergunta sobre movimentações, retorna direto sem passar pela IA
+    // Se pergunta sobre movimentações, passa pela IA para explicar cada dia
     if (perguntaSobreProcesso(pergunta) && !detectarIntencaoEnvio(pergunta)) {
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
+
+      let contextoMovs = '';
       for (const p of dadosProcessos) {
-        let texto = '';
+        contextoMovs += 'Processo ' + p.numero_processo + ' — Cliente: ' + p.nome_cliente + '\n';
         if (p.movs.length) {
-          p.movs.forEach(m => { texto += '- ' + m.nome + ' (' + m.data + ')\n'; });
+          // Agrupa por data e pega as últimas 15
+          const ultimas = p.movs.slice(0, 15);
+          const porData = {};
+          ultimas.forEach(m => {
+            if (!porData[m.data]) porData[m.data] = [];
+            porData[m.data].push(m.nome);
+          });
+          Object.entries(porData).forEach(([data, nomes]) => {
+            contextoMovs += data + ': ' + nomes.join(', ') + '\n';
+          });
         } else {
-          texto = 'Sem movimentações registradas.';
+          contextoMovs += 'Sem movimentações registradas.\n';
         }
-        res.write('data: ' + JSON.stringify({ token: texto }) + '\n\n');
       }
+
+      const streamResp = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4o-mini',
+          stream: true,
+          messages: [
+            { role: 'system', content: 'Você é o assistente jurídico do escritório ' + escritorio + '. Explique o que aconteceu em cada data do processo de forma clara e simples, em português. Para cada data, diga o que ocorreu e o que isso significa para o processo. Seja objetivo. Não invente nada além do que está nos dados.\n\nDados do processo:\n' + contextoMovs },
+            { role: 'user', content: pergunta }
+          ]
+        },
+        { headers: { Authorization: 'Bearer ' + OPENAI_KEY }, responseType: 'stream' }
+      );
+
+      await new Promise((resolve) => {
+        streamResp.data.on('data', (chunk) => {
+          const lines = chunk.toString().split('\n').filter(l => l.startsWith('data: '));
+          for (const line of lines) {
+            const data = line.slice(6);
+            if (data === '[DONE]') return;
+            try {
+              const token = JSON.parse(data).choices[0]?.delta?.content || '';
+              if (token) res.write('data: ' + JSON.stringify({ token }) + '\n\n');
+            } catch (e) {}
+          }
+        });
+        streamResp.data.on('end', resolve);
+      });
+
       res.write('data: ' + JSON.stringify({ done: true, mensagens_pendentes: [] }) + '\n\n');
       res.end();
       return;
