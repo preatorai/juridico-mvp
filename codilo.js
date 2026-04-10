@@ -196,24 +196,27 @@ async function aguardarResultado(requestId, token, tentativas = 0) {
       timeout: 10000
     });
 
-    console.log('[codilo] poll resposta bruta:', JSON.stringify(r.data).substring(0, 800));
-    const data = r.data.data;
-    if (!data) return [];
-
-    const status = (data.status || '').toLowerCase();
+    // Status fica em r.data.requested.status, não em r.data.data
+    const requested = r.data.requested;
+    const status = (requested?.status || '').toLowerCase();
 
     if (status === 'pending' || status === 'pendente' || status === 'processing' || status === 'processando') {
       console.log('[codilo] aguardando... tentativa', tentativas + 1);
       return aguardarResultado(requestId, token, tentativas + 1);
     }
 
-    if (status === 'error' || status === 'erro' || status === 'not_found' || status === 'nao_encontrado') {
-      console.log('[codilo] processo não encontrado, status:', data.status);
+    if (status === 'error' || status === 'erro') {
+      console.log('[codilo] erro na consulta, status:', requested?.status);
       return [];
     }
 
-    console.log('[codilo] resposta completa:', JSON.stringify(data).substring(0, 500));
-    // Extrai movimentações da resposta
+    const data = r.data.data;
+    if (!data || (Array.isArray(data) && !data.length)) {
+      console.log('[codilo] processo não encontrado');
+      return [];
+    }
+
+    console.log('[codilo] resposta completa:', JSON.stringify(data).substring(0, 800));
     return extrairMovimentacoes(data);
   } catch (e) {
     console.log('[codilo] erro ao buscar resultado:', e.message);
