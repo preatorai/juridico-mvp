@@ -199,16 +199,19 @@ async function aguardarResultado(requestId, token, tentativas = 0) {
     const data = r.data.data;
     if (!data) return [];
 
-    if (data.status === 'pending') {
+    const status = (data.status || '').toLowerCase();
+
+    if (status === 'pending' || status === 'pendente' || status === 'processing' || status === 'processando') {
       console.log('[codilo] aguardando... tentativa', tentativas + 1);
       return aguardarResultado(requestId, token, tentativas + 1);
     }
 
-    if (data.status === 'error' || data.status === 'not_found') {
-      console.log('[codilo] processo não encontrado');
+    if (status === 'error' || status === 'erro' || status === 'not_found' || status === 'nao_encontrado') {
+      console.log('[codilo] processo não encontrado, status:', data.status);
       return [];
     }
 
+    console.log('[codilo] resposta completa:', JSON.stringify(data).substring(0, 500));
     // Extrai movimentações da resposta
     return extrairMovimentacoes(data);
   } catch (e) {
