@@ -217,7 +217,7 @@ async function aguardarResultado(requestId, token, tentativas = 0) {
       return [];
     }
 
-    return extrairDadosCompletos(data);
+    return extrairMovimentacoes(data);
   } catch (e) {
     console.log('[codilo] erro ao buscar resultado:', e.message);
     return [];
