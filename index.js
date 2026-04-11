@@ -246,7 +246,31 @@ app.get('/processos/:numero/movimentacoes', async (req, res) => {
   const numero = decodeURIComponent(req.params.numero);
   try {
     const movs = await buscarMovimentacoesCache(numero);
-    res.json(movs);
+    if (!movs || !movs.length) return res.json([]);
+
+    // Gera explicações para movimentações únicas em paralelo com a resposta
+    const unicos = [...new Set(movs.map(m => m.nome))].slice(0, 25);
+    let explicacoes = {};
+    try {
+      const resp = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4o-mini',
+          max_tokens: 600,
+          messages: [
+            { role: 'system', content: 'Você é um assistente jurídico brasileiro. Para cada movimentação listada, escreva UMA frase curta (máximo 12 palavras) explicando o que significa em linguagem simples. Responda APENAS em JSON válido: {"nome da movimentação": "explicação"}. Nada fora do JSON.' },
+            { role: 'user', content: unicos.join('\n') }
+          ]
+        },
+        { headers: { Authorization: 'Bearer ' + OPENAI_KEY }, timeout: 15000 }
+      );
+      const match = resp.data.choices[0].message.content.match(/\{[\s\S]*\}/);
+      if (match) explicacoes = JSON.parse(match[0]);
+    } catch (e) {
+      console.error('[explicar]', e.message);
+    }
+
+    res.json(movs.map(m => ({ ...m, resumo: explicacoes[m.nome] || '' })));
   } catch (err) {
     res.status(500).json({ erro: err.message });
   }
