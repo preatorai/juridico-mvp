@@ -151,8 +151,11 @@ function confirmarEnvio(cardId, telefone, nomeCliente) { var textarea = document
         html += '<div class="loading">Nenhuma movimentação encontrada.</div>';
       } else {
         html += '<div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Movimentações</div>';
-        html += d.movimentacoes.map(function(m){
-          return '<div class="timeline-item"><div class="timeline-dot">⚖</div><div class="timeline-content"><div class="timeline-date">' + m.data + '</div><div class="timeline-nome">' + m.nome + '</div>' + (m.resumo?'<div style="font-size:11px;color:var(--muted);margin-top:3px">' + m.resumo + '</div>':'') + '</div></div>';
+        html += d.movimentacoes.map(function(m, i){
+          var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+          var partes = m.data.split('/');
+          var dataExt = partes.length===3 ? partes[0] + ' de ' + meses[parseInt(partes[1])-1] + ' de ' + partes[2] : m.data;
+          return '<div class="timeline-item"><div class="timeline-dot">' + (i+1) + '</div><div class="timeline-content"><div class="timeline-date">' + dataExt + '</div><div class="timeline-nome">' + m.nome + '</div>' + (m.resumo?'<div style="font-size:12px;color:#4a5568;margin-top:6px;line-height:1.6">' + m.resumo + '</div>':'') + '</div></div>';
         }).join('');
       }
 

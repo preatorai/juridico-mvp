@@ -257,9 +257,9 @@ app.get('/processos/:numero/detalhes', async (req, res) => {
         'https://api.openai.com/v1/chat/completions',
         {
           model: 'gpt-4o-mini',
-          max_tokens: 800,
+          max_tokens: 1200,
           messages: [
-            { role: 'system', content: 'Você é um assistente jurídico brasileiro. Para cada movimentação listada, escreva UMA frase curta (máximo 15 palavras) explicando o que significa em linguagem simples para leigos. Responda APENAS em JSON válido: {"nome da movimentação": "explicação"}. Nada fora do JSON.' },
+            { role: 'system', content: 'Você é um assistente jurídico brasileiro. Para cada movimentação listada, escreva um parágrafo de 2 a 3 frases explicando o que significa e qual o impacto para o processo, em linguagem simples para leigos. Responda APENAS em JSON válido: {"nome da movimentação": "explicação"}. Nada fora do JSON.' },
             { role: 'user', content: unicos.join('\n') }
           ]
         },
