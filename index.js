@@ -252,6 +252,32 @@ app.get('/processos/:numero/movimentacoes', async (req, res) => {
   }
 });
 
+app.post('/processos/explicar', async (req, res) => {
+  const { movimentos } = req.body;
+  if (!movimentos || !movimentos.length) return res.json({});
+  const unicos = [...new Set(movimentos)].slice(0, 25);
+  try {
+    const resp = await axios.post(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        model: 'gpt-4o-mini',
+        max_tokens: 600,
+        messages: [
+          { role: 'system', content: 'Você é um assistente jurídico brasileiro. Para cada movimentação processual listada, escreva UMA frase curta (máximo 12 palavras) explicando o que significa em linguagem simples para leigos. Responda APENAS em JSON válido no formato: {"nome exato da movimentação": "explicação simples"}. Não inclua nada fora do JSON.' },
+          { role: 'user', content: unicos.join('\n') }
+        ]
+      },
+      { headers: { Authorization: 'Bearer ' + OPENAI_KEY } }
+    );
+    const content = resp.data.choices[0].message.content;
+    const match = content.match(/\{[\s\S]*\}/);
+    res.json(match ? JSON.parse(match[0]) : {});
+  } catch (e) {
+    console.error('[explicar]', e.message);
+    res.json({});
+  }
+});
+
 app.post('/auth/cadastro', async (req, res) => {
   const { nome, email, senha, escritorio } = req.body;
   if (!nome || !email || !senha || !escritorio) return res.status(400).json({ erro: 'Preencha todos os campos.' });
