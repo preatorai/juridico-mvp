@@ -242,6 +242,16 @@ async function verificarProcessos() {
 
 app.get('/', (req, res) => res.send('Sistema juridico rodando!'));
 
+app.get('/processos/:numero/movimentacoes', async (req, res) => {
+  const numero = decodeURIComponent(req.params.numero);
+  try {
+    const movs = await buscarMovimentacoesCache(numero);
+    res.json(movs);
+  } catch (err) {
+    res.status(500).json({ erro: err.message });
+  }
+});
+
 app.post('/auth/cadastro', async (req, res) => {
   const { nome, email, senha, escritorio } = req.body;
   if (!nome || !email || !senha || !escritorio) return res.status(400).json({ erro: 'Preencha todos os campos.' });
