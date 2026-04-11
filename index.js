@@ -673,7 +673,105 @@ app.post('/mensagens/enviar', async (req, res) => {
   }
 });
 
+// ─── AGENDA DE PRAZOS ────────────────────────────────────────────────────────
+
+const PALAVRAS_PRAZO_AGENDA = ['prazo','audiência','audiencia','decisão','decisao','sentença','sentenca','intimação','intimacao','despacho','julgamento','recurso','citação','citacao','mandado','penhora','bloqueio','concluso','publicado','diário','diario'];
+
+function detectarUrgencia(descricao, dataMovimentacao) {
+  const hoje = new Date();
+  const dataM = new Date(dataMovimentacao.split('/').reverse().join('-'));
+  const diffDias = Math.floor((hoje - dataM) / (1000 * 60 * 60 * 24));
+  const desc = descricao.toLowerCase();
+  if (desc.includes('audiên') || desc.includes('audienc') || desc.includes('sentença') || desc.includes('sentenca') || desc.includes('decisão') || desc.includes('decisao')) return 'urgente';
+  if (diffDias <= 7) return 'esta_semana';
+  return 'normal';
+}
+
+async function sincronizarPrazos(usuarioId) {
+  const { data: processos } = await supabase.from('processos').select('*').eq('usuario_id', usuarioId);
+  if (!processos || !processos.length) return;
+
+  for (const proc of processos) {
+    try {
+      const movs = await buscarMovimentacoesCache(proc.numero_processo);
+      const importantes = movs.filter(m => {
+        const n = m.nome.toLowerCase();
+        return PALAVRAS_PRAZO_AGENDA.some(p => n.includes(p));
+      });
+
+      for (const mov of importantes) {
+        const { data: existe } = await supabase.from('prazos')
+          .select('id').eq('processo_id', proc.id).eq('descricao', mov.nome).eq('data_movimentacao', mov.data).single();
+        if (existe) continue;
+
+        const urgencia = detectarUrgencia(mov.nome, mov.data);
+        await supabase.from('prazos').insert({
+          processo_id: proc.id,
+          usuario_id: usuarioId,
+          numero_processo: proc.numero_processo,
+          nome_cliente: proc.nome_cliente,
+          descricao: mov.nome,
+          data_movimentacao: mov.data,
+          urgencia
+        });
+      }
+    } catch (e) { console.error('[prazos]', e.message); }
+  }
+}
+
+app.get('/prazos', async (req, res) => {
+  const { usuario_id } = req.query;
+  if (!usuario_id) return res.json([]);
+  await sincronizarPrazos(usuario_id);
+  const { data } = await supabase.from('prazos').select('*')
+    .eq('usuario_id', usuario_id).eq('visto', false)
+    .order('criado_em', { ascending: false });
+  res.json(data || []);
+});
+
+app.post('/prazos/:id/visto', async (req, res) => {
+  const { id } = req.params;
+  await supabase.from('prazos').update({ visto: true }).eq('id', id);
+  res.json({ sucesso: true });
+});
+
+async function enviarAlertaPrazos() {
+  console.log('[agenda] enviando alertas de prazo...');
+  const { data: usuarios } = await supabase.from('usuarios').select('*');
+  if (!usuarios) return;
+
+  for (const usuario of usuarios) {
+    if (!usuario.telefone) continue;
+    try {
+      const { data: prazos } = await supabase.from('prazos').select('*')
+        .eq('usuario_id', usuario.id).eq('visto', false)
+        .in('urgencia', ['urgente', 'esta_semana'])
+        .order('urgencia', { ascending: true });
+
+      if (!prazos || !prazos.length) continue;
+
+      const urgentes = prazos.filter(p => p.urgencia === 'urgente');
+      const semana = prazos.filter(p => p.urgencia === 'esta_semana');
+
+      let msg = '⚖️ *Praetor AI — Agenda do dia*\n\n';
+      if (urgentes.length) {
+        msg += '🔴 *ATENÇÃO IMEDIATA*\n';
+        urgentes.forEach(p => { msg += '• ' + p.descricao + ' — ' + p.nome_cliente + '\n  Proc. ' + p.numero_processo + '\n  Data: ' + p.data_movimentacao + '\n\n'; });
+      }
+      if (semana.length) {
+        msg += '🟡 *ESTA SEMANA*\n';
+        semana.forEach(p => { msg += '• ' + p.descricao + ' — ' + p.nome_cliente + '\n  Proc. ' + p.numero_processo + '\n  Data: ' + p.data_movimentacao + '\n\n'; });
+      }
+      msg += '_Acesse o Praetor AI para detalhes._';
+
+      await enviarWhatsApp(usuario.telefone, msg);
+      console.log('[agenda] alerta enviado para', usuario.nome);
+    } catch (e) { console.error('[agenda]', e.message); }
+  }
+}
+
 cron.schedule('0 */6 * * *', verificarProcessos);
+cron.schedule('0 8 * * *', enviarAlertaPrazos); // Todo dia às 8h
 
 // Ping a cada 10 minutos para evitar cold start no Render
 cron.schedule('*/10 * * * *', () => {
