@@ -217,41 +217,56 @@ async function aguardarResultado(requestId, token, tentativas = 0) {
       return [];
     }
 
-    const item = Array.isArray(data) ? data[0] : data;
-    console.log('[codilo] chaves da resposta:', Object.keys(item || {}));
-    console.log('[codilo] resposta completa:', JSON.stringify(data).substring(0, 1500));
-    return extrairMovimentacoes(data);
+    return extrairDadosCompletos(data);
   } catch (e) {
     console.log('[codilo] erro ao buscar resultado:', e.message);
     return [];
   }
 }
 
-function extrairMovimentacoes(data) {
-  // data é um array de processos, cada um com campo "steps"
+function extrairDadosCompletos(data) {
   const items = Array.isArray(data) ? data : [data];
+  const item = items[0] || {};
 
+  // Capa do processo
+  const capa = {};
+  if (item.cover && Array.isArray(item.cover)) {
+    item.cover.forEach(c => { if (c.description && (c.value || c.valor)) capa[c.description] = c.value || c.valor; });
+  }
+  if (item.properties) {
+    const p = item.properties;
+    if (p.class) capa['Classe'] = capa['Classe'] || p.class;
+    if (p.subject) capa['Assunto'] = capa['Assunto'] || p.subject;
+    if (p.judge) capa['Juiz'] = capa['Juiz'] || p.judge;
+    if (p.startAt) capa['Distribuição'] = capa['Distribuição'] || formatarData(p.startAt);
+  }
+
+  // Partes e advogados
+  const partes = (item.people || []).map(p => ({
+    polo: p.pole === 'active' ? 'Ativo' : p.pole === 'passive' ? 'Passivo' : p.pole,
+    tipo: p.description || '',
+    nome: p.name || '',
+    advogados: (p.advogados || p.lawyers || []).map(a => a.name).filter(Boolean)
+  }));
+
+  // Movimentações
   const steps = [];
-  for (const item of items) {
-    if (item.steps && Array.isArray(item.steps)) {
-      steps.push(...item.steps);
-    }
+  for (const it of items) {
+    if (it.steps && Array.isArray(it.steps)) steps.push(...it.steps);
   }
-
-  if (!steps.length) {
-    console.log('[codilo] sem steps na resposta');
-    return [];
-  }
-
   console.log('[codilo] steps encontrados:', steps.length);
 
-  return steps
+  const movimentacoes = steps
     .filter(s => s.title || s.description)
     .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0))
-    .map(s => ({
-      nome: s.title || s.description || 'Movimentação',
-      data: formatarData(s.timestamp)
-    }));
+    .map(s => ({ nome: s.title || s.description || 'Movimentação', data: formatarData(s.timestamp) }));
+
+  return { capa, partes, movimentacoes };
+}
+
+function extrairMovimentacoes(data) {
+  const resultado = extrairDadosCompletos(data);
+  return resultado.movimentacoes || [];
 }
 
 function formatarData(dataStr) {
@@ -260,4 +275,61 @@ function formatarData(dataStr) {
   catch (e) { return dataStr; }
 }
 
-module.exports = { consultarProcesso };
+async function consultarProcessoCompleto(numeroProcesso, tribunal) {
+  const token = await getToken();
+  const cnj = formatarCNJ(numeroProcesso);
+  const cfg = MAPA_TRIBUNAL[tribunal];
+
+  if (!cfg) return consultarAutomaticoCompleto(numeroProcesso);
+
+  for (const query of ['principal', 'unificada', 'recursal']) {
+    try {
+      const r = await axios.post('https://api.consulta.codilo.com.br/v1/request', {
+        source: 'courts', platform: cfg.platform, search: cfg.search, query,
+        param: { key: 'cnj', value: cnj }, callbacks: []
+      }, { headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, timeout: 15000 });
+
+      if (r.data.success && r.data.data?.id) {
+        return aguardarResultadoCompleto(r.data.data.id, token);
+      }
+    } catch (e) {
+      console.log('[codilo] erro query', query, ':', e.response?.status, e.message);
+    }
+  }
+  return null;
+}
+
+async function consultarAutomaticoCompleto(numeroProcesso) {
+  const token = await getToken();
+  const cnj = formatarCNJ(numeroProcesso);
+  try {
+    const r = await axios.post('https://api.consulta.codilo.com.br/v1/autorequest', {
+      key: 'cnj', value: cnj, callbacks: []
+    }, { headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, timeout: 15000 });
+    if (r.data.success && r.data.data?.id) return aguardarResultadoCompleto(r.data.data.id, token);
+  } catch (e) {
+    console.log('[codilo] erro automático:', e.message);
+  }
+  return null;
+}
+
+async function aguardarResultadoCompleto(requestId, token, tentativas = 0) {
+  if (tentativas > 20) return null;
+  await new Promise(r => setTimeout(r, 2000));
+  try {
+    const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {
+      headers: { Authorization: 'Bearer ' + token }, timeout: 10000
+    });
+    const requested = r.data.requested;
+    const status = (requested?.status || '').toLowerCase();
+    if (status === 'pending' || status === 'pendente') return aguardarResultadoCompleto(requestId, token, tentativas + 1);
+    if (status === 'error' || status === 'erro') return null;
+    const data = r.data.data;
+    if (!data || (Array.isArray(data) && !data.length)) return null;
+    return extrairDadosCompletos(data);
+  } catch (e) {
+    return null;
+  }
+}
+
+module.exports = { consultarProcesso, consultarProcessoCompleto };

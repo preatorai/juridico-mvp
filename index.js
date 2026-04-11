@@ -4,7 +4,7 @@ const cors = require('cors');
 const axios = require('axios');
 const cron = require('node-cron');
 const { createClient } = require('@supabase/supabase-js');
-const { consultarProcesso } = require('./codilo');
+const { consultarProcesso, consultarProcessoCompleto } = require('./codilo');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
@@ -242,23 +242,24 @@ async function verificarProcessos() {
 
 app.get('/', (req, res) => res.send('Sistema juridico rodando!'));
 
-app.get('/processos/:numero/movimentacoes', async (req, res) => {
+app.get('/processos/:numero/detalhes', async (req, res) => {
   const numero = decodeURIComponent(req.params.numero);
+  const tribunal = detectarTribunal(numero);
   try {
-    const movs = await buscarMovimentacoesCache(numero);
-    if (!movs || !movs.length) return res.json([]);
+    const dados = await consultarProcessoCompleto(numero, tribunal);
+    if (!dados) return res.json({ capa: {}, partes: [], movimentacoes: [] });
 
-    // Gera explicações para movimentações únicas em paralelo com a resposta
-    const unicos = [...new Set(movs.map(m => m.nome))].slice(0, 25);
+    // Gera explicações para as movimentações
+    const unicos = [...new Set(dados.movimentacoes.map(m => m.nome))].slice(0, 25);
     let explicacoes = {};
     try {
       const resp = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
           model: 'gpt-4o-mini',
-          max_tokens: 600,
+          max_tokens: 800,
           messages: [
-            { role: 'system', content: 'Você é um assistente jurídico brasileiro. Para cada movimentação listada, escreva UMA frase curta (máximo 12 palavras) explicando o que significa em linguagem simples. Responda APENAS em JSON válido: {"nome da movimentação": "explicação"}. Nada fora do JSON.' },
+            { role: 'system', content: 'Você é um assistente jurídico brasileiro. Para cada movimentação listada, escreva UMA frase curta (máximo 15 palavras) explicando o que significa em linguagem simples para leigos. Responda APENAS em JSON válido: {"nome da movimentação": "explicação"}. Nada fora do JSON.' },
             { role: 'user', content: unicos.join('\n') }
           ]
         },
@@ -270,7 +271,11 @@ app.get('/processos/:numero/movimentacoes', async (req, res) => {
       console.error('[explicar]', e.message);
     }
 
-    res.json(movs.map(m => ({ ...m, resumo: explicacoes[m.nome] || '' })));
+    res.json({
+      capa: dados.capa,
+      partes: dados.partes,
+      movimentacoes: dados.movimentacoes.map(m => ({ ...m, resumo: explicacoes[m.nome] || '' }))
+    });
   } catch (err) {
     res.status(500).json({ erro: err.message });
   }

@@ -108,4 +108,55 @@
     btn.disabled = false;
   });
 }
-function confirmarEnvio(cardId, telefone, nomeCliente) { var textarea = document.getElementById('txt-' + cardId); var btnEnviar = document.getElementById('btn-' + cardId); if (!textarea || !textarea.value.trim()) return; var conteudo = textarea.value.trim(); btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; fetch(API + '/mensagens/enviar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuario_id: usuario.id, telefone: telefone, conteudo: conteudo, nome_cliente: nomeCliente }) }).then(function(r) { return r.json(); }).then(function(data) { if (data.sucesso) { var card = document.getElementById(cardId); if (card) { card.innerHTML = '<div class="ai-preview-title" style="color:#16a34a">✅ Mensagem enviada para ' + nomeCliente.replace(/</g,'&lt;') + '</div><div style="font-size:12px;color:#4a5568;margin-top:6px;white-space:pre-wrap">' + conteudo.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'; card.style.background = '#f0fdf4'; card.style.borderColor = '#86efac'; } } else { btnEnviar.disabled = false; btnEnviar.textContent = 'Enviar agora'; alert('Erro ao enviar: ' + (data.erro || 'Tente novamente.')); } }).catch(function() { btnEnviar.disabled = false; btnEnviar.textContent = 'Enviar agora'; alert('Erro ao conectar. Tente novamente.'); }); }function abrirDetalheProcesso(numero, cliente) { document.getElementById('modal-numero').textContent = numero; document.getElementById('modal-cliente').textContent = 'Cliente: ' + cliente; document.getElementById('modal-body').innerHTML = '<div class="loading">Carregando movimentações...</div>'; document.getElementById('modal-processo').classList.add('open'); fetch(API + '/processos/' + encodeURIComponent(numero) + '/movimentacoes').then(function(r){return r.json();}).then(function(movs){ var body = document.getElementById('modal-body'); if(!movs||!movs.length){body.innerHTML='<div class="loading">Nenhuma movimentação encontrada.</div>';return;} body.innerHTML = movs.map(function(m){ return '<div class="timeline-item"><div class="timeline-dot">⚖</div><div class="timeline-content"><div class="timeline-date">' + m.data + '</div><div class="timeline-nome">' + m.nome + '</div>' + (m.resumo ? '<div style="font-size:11px;color:var(--muted);margin-top:3px;">' + m.resumo + '</div>' : '') + '</div></div>'; }).join(''); }).catch(function(){ document.getElementById('modal-body').innerHTML='<div class="loading">Erro ao carregar.</div>'; }); } function fecharModal(){ document.getElementById('modal-processo').classList.remove('open'); }</script> <div class="modal-overlay" id="modal-processo"><div class="modal-box"><div class="modal-header"><div class="modal-header-info"><h2 id="modal-numero"></h2><p id="modal-cliente"></p></div><button class="modal-close" onclick="fecharModal()">×</button></div><div class="modal-body" id="modal-body"><div class="loading">Carregando movimentações...</div></div></div></div></body> </html>
+function confirmarEnvio(cardId, telefone, nomeCliente) { var textarea = document.getElementById('txt-' + cardId); var btnEnviar = document.getElementById('btn-' + cardId); if (!textarea || !textarea.value.trim()) return; var conteudo = textarea.value.trim(); btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; fetch(API + '/mensagens/enviar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuario_id: usuario.id, telefone: telefone, conteudo: conteudo, nome_cliente: nomeCliente }) }).then(function(r) { return r.json(); }).then(function(data) { if (data.sucesso) { var card = document.getElementById(cardId); if (card) { card.innerHTML = '<div class="ai-preview-title" style="color:#16a34a">✅ Mensagem enviada para ' + nomeCliente.replace(/</g,'&lt;') + '</div><div style="font-size:12px;color:#4a5568;margin-top:6px;white-space:pre-wrap">' + conteudo.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'; card.style.background = '#f0fdf4'; card.style.borderColor = '#86efac'; } } else { btnEnviar.disabled = false; btnEnviar.textContent = 'Enviar agora'; alert('Erro ao enviar: ' + (data.erro || 'Tente novamente.')); } }).catch(function() { btnEnviar.disabled = false; btnEnviar.textContent = 'Enviar agora'; alert('Erro ao conectar. Tente novamente.'); }); }function abrirDetalheProcesso(numero, cliente) {
+  document.getElementById('modal-numero').textContent = numero;
+  document.getElementById('modal-cliente').textContent = 'Cliente: ' + cliente;
+  document.getElementById('modal-body').innerHTML = '<div class="loading">Carregando...</div>';
+  document.getElementById('modal-processo').classList.add('open');
+  fetch(API + '/processos/' + encodeURIComponent(numero) + '/detalhes')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var body = document.getElementById('modal-body');
+      var html = '';
+
+      // Capa do processo
+      var capaKeys = Object.keys(d.capa || {});
+      if(capaKeys.length) {
+        html += '<div style="background:#f4f6fb;border-radius:10px;padding:14px 16px;margin-bottom:18px">';
+        html += '<div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Dados do Processo</div>';
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px">';
+        capaKeys.forEach(function(k){
+          html += '<div><div style="font-size:10px;color:var(--muted);font-weight:600">' + k + '</div><div style="font-size:12px;color:var(--text);font-weight:500">' + d.capa[k] + '</div></div>';
+        });
+        html += '</div></div>';
+      }
+
+      // Partes
+      if(d.partes && d.partes.length) {
+        html += '<div style="background:#f4f6fb;border-radius:10px;padding:14px 16px;margin-bottom:18px">';
+        html += '<div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Partes</div>';
+        d.partes.forEach(function(p){
+          html += '<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--muted)">' + p.polo + (p.tipo?' — '+p.tipo:'') + '</div>';
+          html += '<div style="font-size:13px;font-weight:600">' + p.nome + '</div>';
+          if(p.advogados && p.advogados.length) {
+            html += '<div style="font-size:11px;color:var(--muted);margin-top:2px">Adv: ' + p.advogados.join(', ') + '</div>';
+          }
+          html += '</div>';
+        });
+        html += '</div>';
+      }
+
+      // Movimentações
+      if(!d.movimentacoes || !d.movimentacoes.length) {
+        html += '<div class="loading">Nenhuma movimentação encontrada.</div>';
+      } else {
+        html += '<div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Movimentações</div>';
+        html += d.movimentacoes.map(function(m){
+          return '<div class="timeline-item"><div class="timeline-dot">⚖</div><div class="timeline-content"><div class="timeline-date">' + m.data + '</div><div class="timeline-nome">' + m.nome + '</div>' + (m.resumo?'<div style="font-size:11px;color:var(--muted);margin-top:3px">' + m.resumo + '</div>':'') + '</div></div>';
+        }).join('');
+      }
+
+      body.innerHTML = html;
+    })
+    .catch(function(){ document.getElementById('modal-body').innerHTML='<div class="loading">Erro ao carregar.</div>'; });
+} function fecharModal(){ document.getElementById('modal-processo').classList.remove('open'); }</script> <div class="modal-overlay" id="modal-processo"><div class="modal-box"><div class="modal-header"><div class="modal-header-info"><h2 id="modal-numero"></h2><p id="modal-cliente"></p></div><button class="modal-close" onclick="fecharModal()">×</button></div><div class="modal-body" id="modal-body"><div class="loading">Carregando movimentações...</div></div></div></div></body> </html>
