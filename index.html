@@ -191,7 +191,7 @@ function carregarAgenda() {
       }
       renderCalendario();
     })
-    .catch(function() { container.innerHTML = '<div class="loading">Erro ao carregar.</div>'; });
+    .catch(function() { renderCalendario(); });
 }
 
 function renderCalendario() {
@@ -276,6 +276,11 @@ function renderCalendario() {
 
   // Painel de detalhe do dia selecionado
   html += '<div id="painel-dia" style="margin-top:20px"></div>';
+
+  if (!_agendaPrazos.length) {
+    html += '<div style="text-align:center;padding:20px;background:#f8fafc;border-radius:12px;color:var(--muted);font-size:13px;margin-top:16px">' +
+      '📋 Nenhum prazo encontrado. Clique em <strong>Sincronizar processos</strong> para buscar.</div>';
+  }
 
   container.innerHTML = html;
   } catch(e) {
