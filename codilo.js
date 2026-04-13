@@ -131,7 +131,7 @@ async function consultarProcesso(numeroProcesso, tribunal) {
 
   console.log(`[codilo] consultando ${tribunal} (${cfg.platform}) → ${cnj}`);
 
-  // Tenta 1º grau, se não tentar 2º grau
+  // Tenta 1º grau, 2º grau e recursal
   for (const query of ['principal', 'unificada', 'recursal']) {
     try {
       const r = await axios.post('https://api.consulta.codilo.com.br/v1/request', {
@@ -148,15 +148,19 @@ async function consultarProcesso(numeroProcesso, tribunal) {
 
       if (r.data.success && r.data.data?.id) {
         const requestId = r.data.data.id;
-        console.log('[codilo] requestId:', requestId, 'status:', r.data.data.status);
-        return aguardarResultado(requestId, token);
+        console.log('[codilo] requestId:', requestId, 'query:', query);
+        const resultado = await aguardarResultado(requestId, token);
+        if (resultado.length > 0) return resultado;
+        console.log('[codilo] query', query, 'retornou vazio, tentando próxima...');
       }
     } catch (e) {
       console.log('[codilo] erro query', query, ':', e.response?.status, e.message, JSON.stringify(e.response?.data));
-      continue;
     }
   }
-  return [];
+
+  // Fallback: consulta automática
+  console.log('[codilo] todas queries sem resultado, tentando auto-request...');
+  return consultarAutomatico(numeroProcesso);
 }
 
 async function consultarAutomatico(numeroProcesso) {
@@ -290,13 +294,18 @@ async function consultarProcessoCompleto(numeroProcesso, tribunal) {
       }, { headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, timeout: 15000 });
 
       if (r.data.success && r.data.data?.id) {
-        return aguardarResultadoCompleto(r.data.data.id, token);
+        const resultado = await aguardarResultadoCompleto(r.data.data.id, token);
+        if (resultado) return resultado;
+        console.log('[codilo] query', query, 'retornou vazio, tentando próxima...');
       }
     } catch (e) {
       console.log('[codilo] erro query', query, ':', e.response?.status, e.message);
     }
   }
-  return null;
+
+  // Fallback: consulta automática
+  console.log('[codilo] todas queries sem resultado, tentando auto-request completo...');
+  return consultarAutomaticoCompleto(numeroProcesso);
 }
 
 async function consultarAutomaticoCompleto(numeroProcesso) {
@@ -322,7 +331,7 @@ async function aguardarResultadoCompleto(requestId, token, tentativas = 0) {
     });
     const requested = r.data.requested;
     const status = (requested?.status || '').toLowerCase();
-    if (status === 'pending' || status === 'pendente') return aguardarResultadoCompleto(requestId, token, tentativas + 1);
+    if (status === 'pending' || status === 'pendente' || status === 'processing' || status === 'processando') return aguardarResultadoCompleto(requestId, token, tentativas + 1);
     if (status === 'error' || status === 'erro') return null;
     const data = r.data.data;
     if (!data || (Array.isArray(data) && !data.length)) return null;
