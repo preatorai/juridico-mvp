@@ -60,19 +60,48 @@ function detectarTribunal(numeroProcesso) {
   return 'tjal';
 }
 
-// Cache de movimentações — evita re-buscar a cada pergunta
+// Cache de movimentações — memória (rápido) + Supabase (persiste entre restarts)
 const _cacheMovs = new Map();
-const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
+const CACHE_TTL_MEM = 10 * 60 * 1000;  // 10 min em memória
+const CACHE_TTL_DB  = 60 * 60 * 1000;  // 1h no banco
+
 async function buscarMovimentacoesCache(numeroProcesso) {
   const agora = Date.now();
-  const cached = _cacheMovs.get(numeroProcesso);
-  if (cached && agora - cached.ts < CACHE_TTL) {
-    console.log('[cache] usando cache para', numeroProcesso);
-    return cached.movs;
+
+  // 1. Cache em memória
+  const mem = _cacheMovs.get(numeroProcesso);
+  if (mem && agora - mem.ts < CACHE_TTL_MEM) {
+    console.log('[cache-mem] hit:', numeroProcesso);
+    return mem.movs;
   }
+
+  // 2. Cache no banco (persiste entre restarts do servidor)
+  try {
+    const { data: row } = await supabase.from('cache_movimentos')
+      .select('movimentos, atualizado_em')
+      .eq('numero_processo', numeroProcesso)
+      .single();
+    if (row && row.movimentos) {
+      const idade = agora - new Date(row.atualizado_em).getTime();
+      if (idade < CACHE_TTL_DB) {
+        console.log('[cache-db] hit:', numeroProcesso);
+        const movs = row.movimentos;
+        _cacheMovs.set(numeroProcesso, { movs, ts: agora });
+        return movs;
+      }
+    }
+  } catch (_) {}
+
+  // 3. Busca na Codilo
   const movs = await buscarMovimentacoes(numeroProcesso);
   if (movs && movs.length > 0) {
     _cacheMovs.set(numeroProcesso, { movs, ts: agora });
+    // Salva/atualiza no banco em background
+    supabase.from('cache_movimentos').upsert({
+      numero_processo: numeroProcesso,
+      movimentos: movs,
+      atualizado_em: new Date().toISOString()
+    }, { onConflict: 'numero_processo' }).catch(() => {});
   }
   return movs;
 }

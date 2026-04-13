@@ -188,12 +188,12 @@ async function consultarAutomatico(numeroProcesso) {
 }
 
 async function aguardarResultado(requestId, token, tentativas = 0) {
-  if (tentativas > 20) {
+  if (tentativas > 15) {
     console.log('[codilo] timeout aguardando resultado');
     return [];
   }
 
-  await new Promise(r => setTimeout(r, 2000));
+  await new Promise(r => setTimeout(r, 800));
 
   try {
     const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {
@@ -323,8 +323,8 @@ async function consultarAutomaticoCompleto(numeroProcesso) {
 }
 
 async function aguardarResultadoCompleto(requestId, token, tentativas = 0) {
-  if (tentativas > 20) return null;
-  await new Promise(r => setTimeout(r, 2000));
+  if (tentativas > 15) return null;
+  await new Promise(r => setTimeout(r, 800));
   try {
     const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {
       headers: { Authorization: 'Bearer ' + token }, timeout: 10000
