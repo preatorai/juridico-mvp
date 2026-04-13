@@ -169,8 +169,9 @@ var _agendaAno = new Date().getFullYear();
 var _agendaPrazos = [];
 
 function carregarAgenda() {
-  var container = document.getElementById('lista-prazos');
-  container.innerHTML = '<div class="loading">Carregando prazos...</div>';
+  if (!usuario) return;
+  // Mostra o calendário imediatamente (vazio) sem esperar o fetch
+  renderCalendario();
   fetch(API + '/prazos?usuario_id=' + usuario.id)
     .then(function(r) { return r.json(); })
     .then(function(prazos) {
@@ -194,7 +195,9 @@ function carregarAgenda() {
 }
 
 function renderCalendario() {
+  try {
   var container = document.getElementById('lista-prazos');
+  if (!container) return;
   var mes = _agendaMes;
   var ano = _agendaAno;
   var hoje = new Date();
@@ -275,6 +278,10 @@ function renderCalendario() {
   html += '<div id="painel-dia" style="margin-top:20px"></div>';
 
   container.innerHTML = html;
+  } catch(e) {
+    var c = document.getElementById('lista-prazos');
+    if (c) c.innerHTML = '<div class="loading">Erro ao renderizar calendário: ' + e.message + '</div>';
+  }
 }
 
 function mudarMesAgenda(delta) {
