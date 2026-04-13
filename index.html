@@ -297,15 +297,12 @@ function sincronizarPrazos() {
   btn.disabled = true;
   btn.textContent = '⏳ Sincronizando...';
   container.innerHTML = '<div class="loading">Buscando movimentações dos seus processos... pode levar até 1 minuto.</div>';
-  fetch(API + '/prazos/sincronizar', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({usuario_id: usuario.id}) })
+  fetch(API + '/prazos/sincronizar', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({usuario_id: usuario.id}), signal: AbortSignal.timeout(120000) })
     .then(function(r) { return r.json(); })
     .then(function(res) {
-      btn.textContent = '✅ Sincronizado';
-      setTimeout(function() {
-        btn.disabled = false;
-        btn.textContent = '🔄 Sincronizar processos';
-        carregarAgenda();
-      }, 3000);
+      btn.disabled = false;
+      btn.textContent = '🔄 Sincronizar processos';
+      carregarAgenda();
     })
     .catch(function() {
       btn.disabled = false;

@@ -700,6 +700,8 @@ async function sincronizarPrazos(usuarioId) {
       });
 
       for (const mov of importantes) {
+        if (!mov.data || mov.data === '—' || !mov.data.includes('/')) continue;
+
         const { data: existe } = await supabase.from('prazos')
           .select('id').eq('processo_id', proc.id).eq('descricao', mov.nome).eq('data_movimentacao', mov.data).single();
         if (existe) continue;
@@ -722,11 +724,27 @@ async function sincronizarPrazos(usuarioId) {
 app.get('/prazos', async (req, res) => {
   const { usuario_id } = req.query;
   if (!usuario_id) return res.json([]);
-  await sincronizarPrazos(usuario_id);
+
+  // Retorna prazos já salvos imediatamente
   const { data } = await supabase.from('prazos').select('*')
     .eq('usuario_id', usuario_id).eq('visto', false)
     .order('criado_em', { ascending: false });
   res.json(data || []);
+
+  // Sincroniza em background sem bloquear a resposta
+  sincronizarPrazos(usuario_id).catch(e => console.error('[prazos sync]', e.message));
+});
+
+app.post('/prazos/sincronizar', async (req, res) => {
+  const { usuario_id } = req.body;
+  if (!usuario_id) return res.status(400).json({ erro: 'usuario_id obrigatorio' });
+  try {
+    await sincronizarPrazos(usuario_id);
+    res.json({ sucesso: true, mensagem: 'Sincronização concluída' });
+  } catch (e) {
+    console.error('[prazos sync]', e.message);
+    res.json({ sucesso: true, mensagem: 'Sincronização concluída com erros' });
+  }
 });
 
 app.post('/prazos/:id/visto', async (req, res) => {
