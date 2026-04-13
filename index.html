@@ -175,6 +175,19 @@ function carregarAgenda() {
     .then(function(r) { return r.json(); })
     .then(function(prazos) {
       _agendaPrazos = prazos || [];
+      // Navega automaticamente para o mês com o prazo mais recente
+      if (_agendaPrazos.length) {
+        var datas = _agendaPrazos.map(function(p) {
+          if (!p.data_movimentacao || !p.data_movimentacao.includes('/')) return null;
+          var pts = p.data_movimentacao.split('/');
+          return new Date(parseInt(pts[2]), parseInt(pts[1])-1, parseInt(pts[0]));
+        }).filter(Boolean);
+        if (datas.length) {
+          var mais_recente = datas.reduce(function(a,b){ return b > a ? b : a; });
+          _agendaMes = mais_recente.getMonth();
+          _agendaAno = mais_recente.getFullYear();
+        }
+      }
       renderCalendario();
     })
     .catch(function() { container.innerHTML = '<div class="loading">Erro ao carregar.</div>'; });
