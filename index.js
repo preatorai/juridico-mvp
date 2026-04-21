@@ -817,8 +817,7 @@ async function enviarAlertaPrazos() {
   }
 }
 
-cron.schedule('0 */6 * * *', verificarProcessos);
-cron.schedule('0 8 * * *', enviarAlertaPrazos); // Todo dia às 8h
+cron.schedule('0 8 * * *', enviarAlertaPrazos); // Alerta de prazos urgentes só para o advogado
 
 // Ping a cada 10 minutos para evitar cold start no Render
 cron.schedule('*/10 * * * *', () => {
