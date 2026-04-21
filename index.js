@@ -220,54 +220,6 @@ async function enviarBoasVindas(processo, escritorio) {
   await enviarWhatsApp(processo.telefone_cliente, mensagem);
 }
 
-const PALAVRAS_PRAZO = ['prazo','audiência','audiencia','decisão','decisao','sentença','sentenca','intimação','intimacao','despacho','julgamento','recurso','citação','citacao','mandado','penhora','bloqueio'];
-
-function movimentacaoImportante(nome) {
-  const n = nome.toLowerCase();
-  return PALAVRAS_PRAZO.some(p => n.includes(p));
-}
-
-async function alertarAdvogado(processo, mov, resumo) {
-  try {
-    const { data: usuario } = await supabase.from('usuarios').select('telefone, escritorio, nome').eq('id', processo.usuario_id).single();
-    if (!usuario || !usuario.telefone) return;
-    const msg = '⚖️ *Alerta Praetor AI*\n\n' +
-      '📋 *Processo:* ' + processo.numero_processo + '\n' +
-      '👤 *Cliente:* ' + processo.nome_cliente + '\n' +
-      '📅 *Data:* ' + mov.data + '\n\n' +
-      '🔔 *Movimentação:* ' + mov.nome + '\n\n' +
-      '📝 *Resumo:* ' + resumo + '\n\n' +
-      '_Acesse o Praetor AI para mais detalhes._';
-    await enviarWhatsApp(usuario.telefone, msg);
-    console.log('Alerta enviado ao advogado para processo ' + processo.numero_processo);
-  } catch (err) {
-    console.error('Erro ao alertar advogado:', err.message);
-  }
-}
-
-async function verificarProcessos() {
-  console.log('Verificando processos...');
-  const { data: processos } = await supabase.from('processos').select('*');
-  if (!processos || !processos.length) { console.log('Nenhum processo.'); return; }
-  for (const processo of processos) {
-    try {
-      const movs = await buscarMovimentacoes(processo.numero_processo);
-      for (const mov of movs) {
-        if (await jaFoiEnviada(processo.id, mov.nome)) continue;
-        const resumo = await gerarResumo(mov.nome);
-        const msg = 'Ola, ' + processo.nome_cliente + '!\n\nSeu processo teve uma atualizacao em ' + mov.data + ':\n\n' + resumo + '\n\nDuvidas? Fale com o escritorio.';
-        await enviarWhatsApp(processo.telefone_cliente, msg);
-        await salvarMovimentacao(processo.id, mov.nome, resumo);
-        console.log('Enviado para ' + processo.nome_cliente);
-        // Alerta ao advogado se for movimentação importante
-        if (movimentacaoImportante(mov.nome)) {
-          await alertarAdvogado(processo, mov, resumo);
-        }
-      }
-    } catch (err) { console.error('Erro:', err.message); }
-  }
-  console.log('Verificacao concluida.');
-}
 
 app.get('/', (req, res) => res.send('Sistema juridico rodando!'));
 
@@ -353,7 +305,7 @@ app.post('/auth/login', async (req, res) => {
   const { email, senha } = req.body;
   const { data, error } = await supabase.from('usuarios').select('*').eq('email', email).eq('senha', senha).single();
   if (error || !data) return res.status(401).json({ erro: 'Email ou senha incorretos.' });
-  res.json({ sucesso: true, usuario: { id: data.id, nome: data.nome, email: data.email, escritorio: data.escritorio, telefone: data.telefone || '' } });
+  res.json({ sucesso: true, usuario: { id: data.id, nome: data.nome, email: data.email, escritorio: data.escritorio, telefone: data.telefone || '', oab: data.oab || '', estado: data.estado || '', horario_alerta: data.horario_alerta || '08:00', tipos_alerta: data.tipos_alerta || 'urgente,semana' } });
 });
 
 app.post('/processos', async (req, res) => {
@@ -407,10 +359,32 @@ app.post('/perfil/escritorio', async (req, res) => {
   res.json({ sucesso: true });
 });
 
-app.post('/verificar', (req, res) => {
-  verificarProcessos();
-  res.json({ sucesso: true, mensagem: 'Verificacao iniciada!' });
+app.post('/perfil/config', async (req, res) => {
+  const { usuario_id, telefone, horario_alerta, tipos_alerta, escritorio, oab, estado } = req.body;
+  if (!usuario_id) return res.status(400).json({ erro: 'usuario_id obrigatório.' });
+  const campos = {};
+  if (telefone !== undefined) campos.telefone = telefone;
+  if (horario_alerta !== undefined) campos.horario_alerta = horario_alerta;
+  if (tipos_alerta !== undefined) campos.tipos_alerta = tipos_alerta;
+  if (escritorio !== undefined) campos.escritorio = escritorio;
+  if (oab !== undefined) campos.oab = oab;
+  if (estado !== undefined) campos.estado = estado;
+  if (!Object.keys(campos).length) return res.status(400).json({ erro: 'Nenhum campo para atualizar.' });
+  const { error } = await supabase.from('usuarios').update(campos).eq('id', usuario_id);
+  if (error) return res.status(400).json({ erro: error.message });
+  res.json({ sucesso: true });
 });
+
+app.post('/perfil/senha', async (req, res) => {
+  const { usuario_id, senha_atual, senha_nova } = req.body;
+  if (!usuario_id || !senha_atual || !senha_nova) return res.status(400).json({ erro: 'Campos obrigatórios.' });
+  const { data } = await supabase.from('usuarios').select('senha').eq('id', usuario_id).single();
+  if (!data || data.senha !== senha_atual) return res.status(401).json({ erro: 'Senha atual incorreta.' });
+  const { error } = await supabase.from('usuarios').update({ senha: senha_nova }).eq('id', usuario_id);
+  if (error) return res.status(400).json({ erro: error.message });
+  res.json({ sucesso: true });
+});
+
 
 app.post('/testar-whatsapp', async (req, res) => {
   const { telefone, nome } = req.body;
