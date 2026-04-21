@@ -288,7 +288,7 @@ tr:hover td{background:rgba(240,180,41,0.04);}
     btn.disabled = false;
   });
 }
-function confirmarEnvio(cardId, telefone, nomeCliente) { var textarea = document.getElementById('txt-' + cardId); var btnEnviar = document.getElementById('btn-' + cardId); if (!textarea || !textarea.value.trim()) return; var conteudo = textarea.value.trim(); btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; fetch(API + '/mensagens/enviar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuario_id: usuario.id, telefone: telefone, conteudo: conteudo, nome_cliente: nomeCliente }) }).then(function(r) { return r.json(); }).then(function(data) { if (data.sucesso) { var card = document.getElementById(cardId); if (card) { card.innerHTML = '<div class="ai-preview-title" style="color:#16a34a">✅ Mensagem enviada para ' + nomeCliente.replace(/</g,'&lt;') + '</div><div style="font-size:12px;color:#4a5568;margin-top:6px;white-space:pre-wrap">' + conteudo.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'; card.style.background = '#f0fdf4'; card.style.borderColor = '#86efac'; } } else { btnEnviar.disabled = false; btnEnviar.textContent = 'Enviar agora'; alert('Erro ao enviar: ' + (data.erro || 'Tente novamente.')); } }).catch(function() { btnEnviar.disabled = false; btnEnviar.textContent = 'Enviar agora'; alert('Erro ao conectar. Tente novamente.'); }); }function abrirDetalheProcesso(numero, cliente) {
+function confirmarEnvio(cardId, telefone, nomeCliente) { var textarea = document.getElementById('txt-' + cardId); var btnEnviar = document.getElementById('btn-' + cardId); if (!textarea || !textarea.value.trim()) return; var conteudo = textarea.value.trim(); btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; fetch(API + '/mensagens/enviar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuario_id: usuario.id, telefone: telefone, conteudo: conteudo, nome_cliente: nomeCliente }) }).then(function(r) { return r.json(); }).then(function(data) { if (data.sucesso) { var card = document.getElementById(cardId); if (card) { card.innerHTML = '<div class="ai-preview-title" style="color:#16a34a">✅ Mensagem enviada para ' + nomeCliente.replace(/</g,'&lt;') + '</div><div style="font-size:12px;color:#4a5568;margin-top:6px;white-space:pre-wrap">' + conteudo.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'; card.style.background = 'rgba(22,163,74,0.12)'; card.style.borderColor = '#16a34a'; } } else { btnEnviar.disabled = false; btnEnviar.textContent = 'Enviar agora'; alert('Erro ao enviar: ' + (data.erro || 'Tente novamente.')); } }).catch(function() { btnEnviar.disabled = false; btnEnviar.textContent = 'Enviar agora'; alert('Erro ao conectar. Tente novamente.'); }); }function abrirDetalheProcesso(numero, cliente) {
   document.getElementById('modal-numero').textContent = numero;
   document.getElementById('modal-cliente').textContent = 'Cliente: ' + cliente;
   document.getElementById('modal-body').innerHTML = '<div class="loading">Carregando...</div>';
@@ -302,7 +302,7 @@ function confirmarEnvio(cardId, telefone, nomeCliente) { var textarea = document
       // Capa do processo
       var capaKeys = Object.keys(d.capa || {});
       if(capaKeys.length) {
-        html += '<div style="background:#f4f6fb;border-radius:10px;padding:14px 16px;margin-bottom:18px">';
+        html += '<div style="background:var(--bg3);border-radius:10px;padding:14px 16px;margin-bottom:18px">';
         html += '<div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Dados do Processo</div>';
         html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px">';
         capaKeys.forEach(function(k){
@@ -313,7 +313,7 @@ function confirmarEnvio(cardId, telefone, nomeCliente) { var textarea = document
 
       // Partes
       if(d.partes && d.partes.length) {
-        html += '<div style="background:#f4f6fb;border-radius:10px;padding:14px 16px;margin-bottom:18px">';
+        html += '<div style="background:var(--bg3);border-radius:10px;padding:14px 16px;margin-bottom:18px">';
         html += '<div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Partes</div>';
         d.partes.forEach(function(p){
           html += '<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--muted)">' + p.polo + (p.tipo?' — '+p.tipo:'') + '</div>';
@@ -426,12 +426,12 @@ function renderCalendario() {
     var temUrgente = prazosNoDia.some(function(p) { return p.urgencia === 'urgente'; });
     var temSemana = prazosNoDia.some(function(p) { return p.urgencia === 'esta_semana'; });
     var cor = temUrgente ? '#ef4444' : temSemana ? '#f59e0b' : prazosNoDia.length ? '#3b82f6' : 'transparent';
-    var bgCell = isHoje ? 'var(--blue-light)' : 'white';
-    var borderCell = isHoje ? '2px solid var(--blue)' : '1.5px solid var(--border)';
+    var bgCell = isHoje ? 'rgba(240,180,41,0.12)' : 'var(--bg2)';
+    var borderCell = isHoje ? '2px solid var(--gold)' : '1.5px solid var(--border)';
 
     html += '<div style="min-height:64px;background:' + bgCell + ';border:' + borderCell + ';border-radius:10px;padding:6px;cursor:' + (prazosNoDia.length ? 'pointer' : 'default') + '" ' +
       (prazosNoDia.length ? 'onclick="verPrazosDia(' + dia + ',' + mes + ',' + ano + ')"' : '') + '>' +
-      '<div style="font-size:13px;font-weight:' + (isHoje ? '700' : '500') + ';color:' + (isHoje ? 'var(--blue)' : 'var(--text)') + '">' + dia + '</div>';
+      '<div style="font-size:13px;font-weight:' + (isHoje ? '700' : '500') + ';color:' + (isHoje ? 'var(--gold)' : 'var(--text)') + '">' + dia + '</div>';
 
     if (prazosNoDia.length) {
       html += '<div style="margin-top:4px">';
@@ -457,7 +457,7 @@ function renderCalendario() {
   html += '<div id="painel-dia" style="margin-top:20px"></div>';
 
   if (!_agendaPrazos.length) {
-    html += '<div style="text-align:center;padding:20px;background:#f8fafc;border-radius:12px;color:var(--muted);font-size:13px;margin-top:16px">' +
+    html += '<div style="text-align:center;padding:20px;background:var(--bg2);border-radius:12px;color:var(--muted);font-size:13px;margin-top:16px">' +
       '📋 Nenhum prazo encontrado. Clique em <strong>Sincronizar processos</strong> para buscar.</div>';
   }
 
@@ -486,7 +486,7 @@ function verPrazosDia(dia, mes, ano) {
   var html = '<div style="font-weight:700;font-size:14px;margin-bottom:12px;color:var(--text)">' + dia + ' de ' + nomesMes[mes] + ' de ' + ano + '</div>';
   prazosNoDia.forEach(function(p) {
     var cor = p.urgencia === 'urgente' ? '#ef4444' : p.urgencia === 'esta_semana' ? '#f59e0b' : '#3b82f6';
-    html += '<div id="prazo-' + p.id + '" style="background:white;border:1.5px solid ' + cor + ';border-left:4px solid ' + cor + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">' +
+    html += '<div id="prazo-' + p.id + '" style="background:var(--bg2);border:1.5px solid ' + cor + ';border-left:4px solid ' + cor + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">' +
       '<div style="font-size:13px;font-weight:600;margin-bottom:4px">' + p.descricao + '</div>' +
       '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">' + p.nome_cliente + ' — Proc. ' + p.numero_processo + '</div>' +
       '<button class="btn-visto" data-id="' + p.id + '" onclick="marcarVisto(this)" style="font-size:11px;padding:4px 10px">✓ Marcar como visto</button>' +
