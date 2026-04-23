@@ -1,53 +1,47 @@
 const axios = require('axios');
 
-const CODILO_ID = process.env.CODILO_ID;
+const CODILO_ID     = process.env.CODILO_ID;
 const CODILO_SECRET = process.env.CODILO_SECRET;
 
-let _token = null;
+let _token       = null;
 let _tokenExpira = 0;
 
-// Mapeamento tribunal CNJ → plataforma e search da Codilo
 const MAPA_TRIBUNAL = {
-  // TJs ESAJ
   tjsp: { platform: 'esaj', search: 'tjsp' },
   tjba: { platform: 'esaj', search: 'tjba' },
   tjce: { platform: 'esaj', search: 'tjce' },
   tjsc: { platform: 'esaj', search: 'tjsc' },
   tjms: { platform: 'esaj', search: 'tjms' },
   tjal: { platform: 'esaj', search: 'tjal' },
-
-  // TJs PJe
-  tjam: { platform: 'pje', search: 'tjam' },
-  tjap: { platform: 'pje', search: 'tjap' },
-  tjdft: { platform: 'pje', search: 'tjdft' },
-  tjes: { platform: 'pje', search: 'tjes' },
-  tjgo: { platform: 'pje', search: 'tjgo' },
-  tjma: { platform: 'pje', search: 'tjma' },
-  tjmt: { platform: 'pje', search: 'tjmt' },
-  tjpa: { platform: 'pje', search: 'tjpa' },
-  tjpb: { platform: 'pje', search: 'tjpb' },
-  tjpe: { platform: 'pje', search: 'tjpe' },
-  tjpi: { platform: 'pje', search: 'tjpi' },
-  tjpr: { platform: 'pje', search: 'tjpr' },
-  tjrj: { platform: 'pje', search: 'tjrj' },
-  tjrn: { platform: 'pje', search: 'tjrn' },
-  tjro: { platform: 'pje', search: 'tjro' },
-  tjrr: { platform: 'pje', search: 'tjrr' },
-  tjrs: { platform: 'pje', search: 'tjrs' },
-  tjse: { platform: 'pje', search: 'tjse' },
-  tjto: { platform: 'pje', search: 'tjto' },
-  tjac: { platform: 'pje', search: 'tjac' },
-
-  // TRTs PJe
-  trt1:  { platform: 'pje-jt-merged', search: 'trt1' },
-  trt2:  { platform: 'pje-jt-merged', search: 'trt2' },
-  trt3:  { platform: 'pje-jt-merged', search: 'trt3' },
-  trt4:  { platform: 'pje-jt-merged', search: 'trt4' },
-  trt5:  { platform: 'pje-jt-merged', search: 'trt5' },
-  trt6:  { platform: 'pje-jt-merged', search: 'trt6' },
-  trt7:  { platform: 'pje-jt-merged', search: 'trt7' },
-  trt8:  { platform: 'pje-jt-merged', search: 'trt8' },
-  trt9:  { platform: 'pje-jt-merged', search: 'trt9' },
+  tjam: { platform: 'pje',  search: 'tjam' },
+  tjap: { platform: 'pje',  search: 'tjap' },
+  tjdft:{ platform: 'pje',  search: 'tjdft'},
+  tjes: { platform: 'pje',  search: 'tjes' },
+  tjgo: { platform: 'pje',  search: 'tjgo' },
+  tjma: { platform: 'pje',  search: 'tjma' },
+  tjmt: { platform: 'pje',  search: 'tjmt' },
+  tjpa: { platform: 'pje',  search: 'tjpa' },
+  tjpb: { platform: 'pje',  search: 'tjpb' },
+  tjpe: { platform: 'pje',  search: 'tjpe' },
+  tjpi: { platform: 'pje',  search: 'tjpi' },
+  tjpr: { platform: 'pje',  search: 'tjpr' },
+  tjrj: { platform: 'pje',  search: 'tjrj' },
+  tjrn: { platform: 'pje',  search: 'tjrn' },
+  tjro: { platform: 'pje',  search: 'tjro' },
+  tjrr: { platform: 'pje',  search: 'tjrr' },
+  tjrs: { platform: 'pje',  search: 'tjrs' },
+  tjse: { platform: 'pje',  search: 'tjse' },
+  tjto: { platform: 'pje',  search: 'tjto' },
+  tjac: { platform: 'pje',  search: 'tjac' },
+  trt1:  { platform: 'pje-jt-merged', search: 'trt1'  },
+  trt2:  { platform: 'pje-jt-merged', search: 'trt2'  },
+  trt3:  { platform: 'pje-jt-merged', search: 'trt3'  },
+  trt4:  { platform: 'pje-jt-merged', search: 'trt4'  },
+  trt5:  { platform: 'pje-jt-merged', search: 'trt5'  },
+  trt6:  { platform: 'pje-jt-merged', search: 'trt6'  },
+  trt7:  { platform: 'pje-jt-merged', search: 'trt7'  },
+  trt8:  { platform: 'pje-jt-merged', search: 'trt8'  },
+  trt9:  { platform: 'pje-jt-merged', search: 'trt9'  },
   trt10: { platform: 'pje-jt-merged', search: 'trt10' },
   trt11: { platform: 'pje-jt-merged', search: 'trt11' },
   trt12: { platform: 'pje-jt-merged', search: 'trt12' },
@@ -63,8 +57,6 @@ const MAPA_TRIBUNAL = {
   trt22: { platform: 'pje-jt-merged', search: 'trt22' },
   trt23: { platform: 'pje-jt-merged', search: 'trt23' },
   trt24: { platform: 'pje-jt-merged', search: 'trt24' },
-
-  // TREs
   'tre-al': { platform: 'pje', search: 'tre-al' },
   'tre-sp': { platform: 'pje', search: 'tre-sp' },
   'tre-rj': { platform: 'pje', search: 'tre-rj' },
@@ -94,23 +86,15 @@ const MAPA_TRIBUNAL = {
   'tre-se': { platform: 'pje', search: 'tre-se' },
 };
 
-async function getToken() {
-  if (_token && Date.now() < _tokenExpira) return _token;
-  console.log('[codilo] obtendo token | ID:', CODILO_ID ? CODILO_ID.substring(0,6) + '...' : 'NAO DEFINIDO');
-  try {
-    const r = await axios.post('https://auth.codilo.com.br/oauth/token', {
-      grant_type: 'client_credentials',
-      id: CODILO_ID,
-      secret: CODILO_SECRET
-    }, { timeout: 10000 });
-    _token = r.data.access_token;
-    _tokenExpira = Date.now() + (r.data.expires_in - 60) * 1000;
-    console.log('[codilo] token obtido com sucesso');
-    return _token;
-  } catch (e) {
-    console.log('[codilo] erro ao obter token:', e.response?.status, JSON.stringify(e.response?.data), e.message);
-    throw e;
-  }
+async function getToken(forceRefresh = false) {
+  if (!forceRefresh && _token && Date.now() < _tokenExpira) return _token;
+  const r = await axios.post('https://auth.codilo.com.br/oauth/token', {
+    grant_type: 'client_credentials', id: CODILO_ID, secret: CODILO_SECRET
+  }, { timeout: 10000 });
+  _token       = r.data.access_token;
+  _tokenExpira = Date.now() + (r.data.expires_in - 60) * 1000;
+  console.log('[codilo] token renovado');
+  return _token;
 }
 
 function formatarCNJ(numero) {
@@ -119,152 +103,145 @@ function formatarCNJ(numero) {
   return `${d.slice(0,7)}-${d.slice(7,9)}.${d.slice(9,13)}.${d.slice(13,14)}.${d.slice(14,16)}.${d.slice(16,20)}`;
 }
 
-async function consultarProcesso(numeroProcesso, tribunal) {
-  const inicio = Date.now();
-  const token = await getToken();
-  const cnj = formatarCNJ(numeroProcesso);
-  const cfg = MAPA_TRIBUNAL[tribunal];
-
-  if (!cfg) {
-    console.log('[codilo] tribunal não mapeado:', tribunal, '— usando consulta automática');
-    return consultarAutomatico(numeroProcesso);
-  }
-
-  console.log(`[codilo] consultando ${tribunal} (${cfg.platform}) → ${cnj}`);
-
-  // Tenta 1º grau e recursal (unificada não é aceita pela Codilo para esaj/pje)
-  for (const query of ['principal', 'recursal']) {
-    try {
-      const t0 = Date.now();
-      const r = await axios.post('https://api.consulta.codilo.com.br/v1/request', {
-        source: 'courts',
-        platform: cfg.platform,
-        search: cfg.search,
-        query,
-        param: { key: 'cnj', value: cnj },
-        callbacks: []
-      }, {
-        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-        timeout: 15000
-      });
-      console.log(`[codilo] POST /request (${query}) → ${Date.now() - t0}ms`);
-
-      if (r.data.success && r.data.data?.id) {
-        const requestId = r.data.data.id;
-        const resultado = await aguardarResultado(requestId, token);
-        if (resultado.length > 0) {
-          console.log(`[codilo] ✅ total consultarProcesso: ${Date.now() - inicio}ms`);
-          return resultado;
-        }
-        console.log('[codilo] query', query, 'retornou vazio, tentando próxima...');
-      }
-    } catch (e) {
-      console.log('[codilo] erro query', query, ':', e.response?.status, e.message, JSON.stringify(e.response?.data));
-    }
-  }
-
-  // Fallback 1: tenta PJe se o tribunal estava mapeado como ESAJ (alguns TJs usam os dois sistemas)
-  if (cfg.platform === 'esaj') {
-    console.log(`[codilo] esaj sem resultado, tentando pje para ${tribunal}...`);
-    for (const query of ['principal', 'recursal']) {
-      try {
-        const r = await axios.post('https://api.consulta.codilo.com.br/v1/request', {
-          source: 'courts', platform: 'pje', search: cfg.search, query,
-          param: { key: 'cnj', value: cnj }, callbacks: []
-        }, { headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, timeout: 15000 });
-        if (r.data.success && r.data.data?.id) {
-          const resultado = await aguardarResultado(r.data.data.id, token);
-          if (resultado.length > 0) {
-            console.log(`[codilo] ✅ encontrado via pje fallback`);
-            return resultado;
-          }
-        }
-      } catch (e) {
-        console.log('[codilo] pje fallback erro:', e.response?.status, e.message);
-      }
-    }
-  }
-
-  // Fallback 2: consulta automática
-  console.log(`[codilo] todas queries sem resultado após ${Date.now() - inicio}ms, tentando auto-request...`);
-  return consultarAutomatico(numeroProcesso);
+function formatarData(dataStr) {
+  if (!dataStr) return '—';
+  try { return new Date(dataStr).toLocaleDateString('pt-BR'); } catch (e) { return dataStr; }
 }
 
-async function consultarAutomatico(numeroProcesso) {
-  const token = await getToken();
-  const cnj = formatarCNJ(numeroProcesso);
-  console.log('[codilo] consulta automática →', cnj);
-
-  try {
-    const r = await axios.post('https://api.consulta.codilo.com.br/v1/autorequest', {
-      key: 'cnj',
-      value: cnj,
-      callbacks: []
-    }, {
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      timeout: 15000
-    });
-
-    if (r.data.success && r.data.data?.id) {
-      return aguardarResultado(r.data.data.id, token);
-    }
-  } catch (e) {
-    console.log('[codilo] erro automático:', e.response?.status, e.message);
-  }
-  return [];
-}
-
-async function aguardarResultado(requestId, token) {
+// Polling genérico — usado por todos os fluxos
+async function polling(requestId, completo = false) {
   const inicio = Date.now();
-  const MAX = 10;
+  const MAX    = 12;
+
   for (let i = 0; i < MAX; i++) {
     await new Promise(r => setTimeout(r, 800));
     try {
+      const token = await getToken();
       const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {
-        headers: { Authorization: 'Bearer ' + token },
-        timeout: 10000
+        headers: { Authorization: 'Bearer ' + token }, timeout: 10000
       });
-      const requested = r.data.requested;
-      const status = (requested?.status || '').toLowerCase();
-      console.log(`[codilo] tentativa ${i + 1}/${MAX} status=${status} / ${Date.now() - inicio}ms`);
 
-      if (status === 'pending' || status === 'pendente' || status === 'processing' || status === 'processando') continue;
-      if (status === 'error' || status === 'erro') { console.log('[codilo] erro retornado pelo tribunal'); return []; }
+      const status = (r.data.requested?.status || '').toLowerCase();
+      console.log(`[codilo] polling ${i + 1}/${MAX} status=${status} (${Date.now() - inicio}ms)`);
+
+      if (['pending','pendente','processing','processando'].includes(status)) continue;
+      if (['error','erro'].includes(status)) { console.log('[codilo] tribunal retornou erro'); return null; }
 
       const data = r.data.data;
-      if (!data || (Array.isArray(data) && !data.length)) { console.log('[codilo] processo não encontrado'); return []; }
+      if (!data || (Array.isArray(data) && !data.length)) { console.log('[codilo] sem dados'); return null; }
 
-      console.log(`[codilo] ✅ resultado em ${i + 1} tentativas / ${Date.now() - inicio}ms`);
-      return extrairMovimentacoes(data);
+      console.log(`[codilo] ✅ dados em ${i + 1} tentativas (${Date.now() - inicio}ms)`);
+      return completo ? extrairDadosCompletos(data) : extrairMovimentacoes(data);
+
     } catch (e) {
       const s = e.response?.status;
-      console.log(`[codilo] tentativa ${i + 1}/${MAX} erro ${s || 'rede'} / ${Date.now() - inicio}ms`);
-      if (s === 400 || s === 401 || s === 403 || s === 404) return []; // erro definitivo
-      // 500/502/503/504/timeout → continua tentando
+      if (s === 401) {
+        console.log('[codilo] token expirado, renovando...');
+        await getToken(true);
+        continue;
+      }
+      if (s === 400 || s === 403 || s === 404) { console.log(`[codilo] erro definitivo ${s}`); return null; }
+      console.log(`[codilo] erro temporário ${s || 'rede'}, aguardando...`);
     }
   }
-  console.log(`[codilo] ⏱ timeout após ${MAX} tentativas / ${Date.now() - inicio}ms`);
-  return [];
+  console.log(`[codilo] timeout após ${MAX} tentativas (${MAX * 0.8}s)`);
+  return null;
+}
+
+// Submete uma query e aguarda resultado
+async function submitQuery(cnj, platform, search, query, completo) {
+  try {
+    const token = await getToken();
+    const r = await axios.post('https://api.consulta.codilo.com.br/v1/request', {
+      source: 'courts', platform, search, query,
+      param: { key: 'cnj', value: cnj }, callbacks: []
+    }, { headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, timeout: 15000 });
+
+    if (r.data.success && r.data.data?.id) {
+      return await polling(r.data.data.id, completo);
+    }
+  } catch (e) {
+    if (e.response?.status !== 400) // 400 = query inválida para esse tribunal, ignora silenciosamente
+      console.log(`[codilo] submitQuery erro ${e.response?.status}: ${e.message}`);
+  }
+  return null;
+}
+
+// Autorequest — tenta detectar o tribunal automaticamente
+async function autoRequest(cnj, completo) {
+  try {
+    const token = await getToken();
+    const r = await axios.post('https://api.consulta.codilo.com.br/v1/autorequest', {
+      key: 'cnj', value: cnj, callbacks: []
+    }, { headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, timeout: 15000 });
+
+    if (r.data.success && r.data.data?.id) {
+      return await polling(r.data.data.id, completo);
+    }
+  } catch (e) {
+    console.log('[codilo] autorequest erro:', e.response?.status, e.message);
+  }
+  return null;
+}
+
+// Cadeia completa de tentativas para um processo
+async function buscar(numeroProcesso, tribunal, completo) {
+  const cnj = formatarCNJ(numeroProcesso);
+  const cfg = MAPA_TRIBUNAL[tribunal];
+  const vazio = completo ? null : [];
+
+  console.log(`[codilo] buscando ${cnj} | tribunal=${tribunal} | completo=${completo}`);
+
+  if (cfg) {
+    // 1. Plataforma mapeada — principal e recursal
+    for (const query of ['principal', 'recursal']) {
+      const res = await submitQuery(cnj, cfg.platform, cfg.search, query, completo);
+      if (res && (completo ? res.movimentacoes?.length : res.length)) {
+        console.log(`[codilo] ✅ encontrado via ${cfg.platform}/${query}`);
+        return res;
+      }
+    }
+
+    // 2. Se era ESAJ, tenta PJe (alguns TJs operam nos dois sistemas)
+    if (cfg.platform === 'esaj') {
+      for (const query of ['principal', 'recursal']) {
+        const res = await submitQuery(cnj, 'pje', cfg.search, query, completo);
+        if (res && (completo ? res.movimentacoes?.length : res.length)) {
+          console.log(`[codilo] ✅ encontrado via pje fallback/${query}`);
+          return res;
+        }
+      }
+    }
+  }
+
+  // 3. Autorequest — Codilo detecta o tribunal automaticamente
+  console.log('[codilo] tentando autorequest...');
+  const res = await autoRequest(cnj, completo);
+  if (res && (completo ? res.movimentacoes?.length : res.length)) {
+    console.log('[codilo] ✅ encontrado via autorequest');
+    return res;
+  }
+
+  console.log('[codilo] nenhuma fonte retornou dados para', cnj);
+  return vazio;
 }
 
 function extrairDadosCompletos(data) {
   const items = Array.isArray(data) ? data : [data];
-  const item = items[0] || {};
+  const item  = items[0] || {};
 
-  // Capa do processo
   const capa = {};
   if (item.cover && Array.isArray(item.cover)) {
     item.cover.forEach(c => { if (c.description && (c.value || c.valor)) capa[c.description] = c.value || c.valor; });
   }
   if (item.properties) {
     const p = item.properties;
-    if (p.class) capa['Classe'] = capa['Classe'] || p.class;
-    if (p.subject) capa['Assunto'] = capa['Assunto'] || p.subject;
-    if (p.judge) capa['Juiz'] = capa['Juiz'] || p.judge;
+    if (p.class)   capa['Classe']       = capa['Classe']       || p.class;
+    if (p.subject) capa['Assunto']      = capa['Assunto']      || p.subject;
+    if (p.judge)   capa['Juiz']         = capa['Juiz']         || p.judge;
     if (p.startAt) capa['Distribuição'] = capa['Distribuição'] || formatarData(p.startAt);
   }
 
-  // Partes e advogados
   const partes = (item.people || []).map(p => ({
     polo: p.pole === 'active' ? 'Ativo' : p.pole === 'passive' ? 'Passivo' : p.pole,
     tipo: p.description || '',
@@ -272,7 +249,6 @@ function extrairDadosCompletos(data) {
     advogados: (p.advogados || p.lawyers || []).map(a => a.name).filter(Boolean)
   }));
 
-  // Movimentações
   const steps = [];
   for (const it of items) {
     if (it.steps && Array.isArray(it.steps)) steps.push(...it.steps);
@@ -288,88 +264,15 @@ function extrairDadosCompletos(data) {
 }
 
 function extrairMovimentacoes(data) {
-  const resultado = extrairDadosCompletos(data);
-  return resultado.movimentacoes || [];
+  return extrairDadosCompletos(data).movimentacoes || [];
 }
 
-function formatarData(dataStr) {
-  if (!dataStr) return '—';
-  try { return new Date(dataStr).toLocaleDateString('pt-BR'); }
-  catch (e) { return dataStr; }
+async function consultarProcesso(numeroProcesso, tribunal) {
+  return buscar(numeroProcesso, tribunal, false);
 }
 
 async function consultarProcessoCompleto(numeroProcesso, tribunal) {
-  const token = await getToken();
-  const cnj = formatarCNJ(numeroProcesso);
-  const cfg = MAPA_TRIBUNAL[tribunal];
-
-  if (!cfg) return consultarAutomaticoCompleto(numeroProcesso);
-
-  for (const query of ['principal', 'recursal']) {
-    try {
-      const r = await axios.post('https://api.consulta.codilo.com.br/v1/request', {
-        source: 'courts', platform: cfg.platform, search: cfg.search, query,
-        param: { key: 'cnj', value: cnj }, callbacks: []
-      }, { headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, timeout: 15000 });
-
-      if (r.data.success && r.data.data?.id) {
-        const resultado = await aguardarResultadoCompleto(r.data.data.id, token);
-        if (resultado) return resultado;
-        console.log('[codilo] query', query, 'retornou vazio, tentando próxima...');
-      }
-    } catch (e) {
-      console.log('[codilo] erro query', query, ':', e.response?.status, e.message);
-    }
-  }
-
-  // Fallback: consulta automática
-  console.log('[codilo] todas queries sem resultado, tentando auto-request completo...');
-  return consultarAutomaticoCompleto(numeroProcesso);
-}
-
-async function consultarAutomaticoCompleto(numeroProcesso) {
-  const token = await getToken();
-  const cnj = formatarCNJ(numeroProcesso);
-  try {
-    const r = await axios.post('https://api.consulta.codilo.com.br/v1/autorequest', {
-      key: 'cnj', value: cnj, callbacks: []
-    }, { headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, timeout: 15000 });
-    if (r.data.success && r.data.data?.id) return aguardarResultadoCompleto(r.data.data.id, token);
-  } catch (e) {
-    console.log('[codilo] erro automático:', e.message);
-  }
-  return null;
-}
-
-async function aguardarResultadoCompleto(requestId, token) {
-  const inicio = Date.now();
-  const MAX = 10;
-  for (let i = 0; i < MAX; i++) {
-    await new Promise(r => setTimeout(r, 800));
-    try {
-      const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {
-        headers: { Authorization: 'Bearer ' + token }, timeout: 10000
-      });
-      const requested = r.data.requested;
-      const status = (requested?.status || '').toLowerCase();
-      console.log(`[codilo] completo tentativa ${i + 1}/${MAX} status=${status} / ${Date.now() - inicio}ms`);
-
-      if (status === 'pending' || status === 'pendente' || status === 'processing' || status === 'processando') continue;
-      if (status === 'error' || status === 'erro') return null;
-
-      const data = r.data.data;
-      if (!data || (Array.isArray(data) && !data.length)) return null;
-
-      console.log(`[codilo] ✅ completo em ${i + 1} tentativas / ${Date.now() - inicio}ms`);
-      return extrairDadosCompletos(data);
-    } catch (e) {
-      const s = e.response?.status;
-      console.log(`[codilo] completo tentativa ${i + 1}/${MAX} erro ${s || 'rede'}`);
-      if (s === 400 || s === 401 || s === 403 || s === 404) return null;
-    }
-  }
-  console.log(`[codilo] ⏱ completo timeout após ${MAX} tentativas / ${Date.now() - inicio}ms`);
-  return null;
+  return buscar(numeroProcesso, tribunal, true);
 }
 
 module.exports = { consultarProcesso, consultarProcessoCompleto };
