@@ -251,7 +251,13 @@ async function aguardarResultado(requestId, token, tentativas = 0, _inicio = Dat
     console.log(`[codilo] ✅ resultado em ${tentativas + 1} tentativas / ${Date.now() - _inicio}ms`);
     return extrairMovimentacoes(data);
   } catch (e) {
-    console.log('[codilo] erro ao buscar resultado:', e.message);
+    const status = e.response?.status;
+    // 500 é temporário (tribunal sobrecarregado) — continua tentando
+    if (status === 500 || status === 502 || status === 503 || status === 504 || !status) {
+      console.log(`[codilo] erro ${status || 'rede'} temporário, tentativa ${tentativas + 1} / ${Date.now() - _inicio}ms`);
+      return aguardarResultado(requestId, token, tentativas + 1, _inicio);
+    }
+    console.log('[codilo] erro fatal ao buscar resultado:', status, e.message);
     return [];
   }
 }
@@ -375,6 +381,11 @@ async function aguardarResultadoCompleto(requestId, token, tentativas = 0, _inic
     console.log(`[codilo] ✅ resultado completo em ${tentativas + 1} tentativas / ${Date.now() - _inicio}ms`);
     return extrairDadosCompletos(data);
   } catch (e) {
+    const status = e.response?.status;
+    if (status === 500 || status === 502 || status === 503 || status === 504 || !status) {
+      console.log(`[codilo] erro ${status || 'rede'} temporário (completo), tentativa ${tentativas + 1}`);
+      return aguardarResultadoCompleto(requestId, token, tentativas + 1, _inicio);
+    }
     return null;
   }
 }
