@@ -272,9 +272,10 @@ app.get('/processos/:numero/detalhes', async (req, res) => {
     const dados = await consultarProcessoCompleto(numero, tribunal);
     if (!dados) return res.json({ capa: {}, partes: [], movimentacoes: [] });
 
-    // Filtra movimentações dos últimos 3 anos
-    const anosVisiveis = [new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2].map(String);
-    dados.movimentacoes = dados.movimentacoes.filter(m => m.data && anosVisiveis.some(a => m.data.includes('/' + a)));
+    // Tenta filtrar pelos últimos 3 anos; se não sobrar nada, usa todas as movimentações
+    const anosVisiveis = [0, 1, 2, 3, 4].map(n => String(new Date().getFullYear() - n));
+    const filtradas = dados.movimentacoes.filter(m => m.data && anosVisiveis.some(a => m.data.includes('/' + a)));
+    dados.movimentacoes = filtradas.length > 0 ? filtradas : dados.movimentacoes;
 
     // Gera explicações para as movimentações
     const unicos = [...new Set(dados.movimentacoes.map(m => m.nome))].slice(0, 25);
@@ -547,8 +548,13 @@ app.post('/chat-advogado', async (req, res) => {
     // Busca movimentações de todos os processos em paralelo
     const tMovs = Date.now();
     const resultados = await Promise.all(processos.map(async p => {
-      const movs = await buscarMovimentacoesCache(p.numero_processo);
-      return { ...p, movs };
+      let movs = await buscarMovimentacoesCache(p.numero_processo);
+      // Se cache retornou vazio, tenta busca completa ignorando cache
+      if (!movs || movs.length === 0) {
+        console.log(`[chat-advogado] cache vazio para ${p.numero_processo}, tentando busca direta...`);
+        movs = await buscarMovimentacoes(p.numero_processo);
+      }
+      return { ...p, movs: movs || [] };
     }));
     console.log(`[chat-advogado] ⏱ busca movimentações (${processos.length} processos): ${Date.now() - tMovs}ms`);
     const dadosProcessos = resultados;
