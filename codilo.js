@@ -120,6 +120,7 @@ function formatarCNJ(numero) {
 }
 
 async function consultarProcesso(numeroProcesso, tribunal) {
+  const inicio = Date.now();
   const token = await getToken();
   const cnj = formatarCNJ(numeroProcesso);
   const cfg = MAPA_TRIBUNAL[tribunal];
@@ -131,9 +132,10 @@ async function consultarProcesso(numeroProcesso, tribunal) {
 
   console.log(`[codilo] consultando ${tribunal} (${cfg.platform}) → ${cnj}`);
 
-  // Tenta 1º grau, 2º grau e recursal
-  for (const query of ['principal', 'unificada', 'recursal']) {
+  // Tenta 1º grau e recursal (unificada não é aceita pela Codilo para esaj/pje)
+  for (const query of ['principal', 'recursal']) {
     try {
+      const t0 = Date.now();
       const r = await axios.post('https://api.consulta.codilo.com.br/v1/request', {
         source: 'courts',
         platform: cfg.platform,
@@ -145,12 +147,15 @@ async function consultarProcesso(numeroProcesso, tribunal) {
         headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
         timeout: 15000
       });
+      console.log(`[codilo] POST /request (${query}) → ${Date.now() - t0}ms`);
 
       if (r.data.success && r.data.data?.id) {
         const requestId = r.data.data.id;
-        console.log('[codilo] requestId:', requestId, 'query:', query);
         const resultado = await aguardarResultado(requestId, token);
-        if (resultado.length > 0) return resultado;
+        if (resultado.length > 0) {
+          console.log(`[codilo] ✅ total consultarProcesso: ${Date.now() - inicio}ms`);
+          return resultado;
+        }
         console.log('[codilo] query', query, 'retornou vazio, tentando próxima...');
       }
     } catch (e) {
@@ -159,7 +164,7 @@ async function consultarProcesso(numeroProcesso, tribunal) {
   }
 
   // Fallback: consulta automática
-  console.log('[codilo] todas queries sem resultado, tentando auto-request...');
+  console.log(`[codilo] todas queries sem resultado após ${Date.now() - inicio}ms, tentando auto-request...`);
   return consultarAutomatico(numeroProcesso);
 }
 
@@ -187,9 +192,9 @@ async function consultarAutomatico(numeroProcesso) {
   return [];
 }
 
-async function aguardarResultado(requestId, token, tentativas = 0) {
-  if (tentativas > 15) {
-    console.log('[codilo] timeout aguardando resultado');
+async function aguardarResultado(requestId, token, tentativas = 0, _inicio = Date.now()) {
+  if (tentativas > 8) {
+    console.log(`[codilo] ⏱ timeout após ${tentativas} tentativas / ${Date.now() - _inicio}ms`);
     return [];
   }
 
@@ -206,21 +211,22 @@ async function aguardarResultado(requestId, token, tentativas = 0) {
     const status = (requested?.status || '').toLowerCase();
 
     if (status === 'pending' || status === 'pendente' || status === 'processing' || status === 'processando') {
-      console.log('[codilo] aguardando... tentativa', tentativas + 1);
-      return aguardarResultado(requestId, token, tentativas + 1);
+      console.log(`[codilo] aguardando... tentativa ${tentativas + 1} / ${Date.now() - _inicio}ms`);
+      return aguardarResultado(requestId, token, tentativas + 1, _inicio);
     }
 
     if (status === 'error' || status === 'erro') {
-      console.log('[codilo] erro na consulta, status:', requested?.status);
+      console.log(`[codilo] erro na consulta, status: ${requested?.status} / ${Date.now() - _inicio}ms`);
       return [];
     }
 
     const data = r.data.data;
     if (!data || (Array.isArray(data) && !data.length)) {
-      console.log('[codilo] processo não encontrado');
+      console.log(`[codilo] processo não encontrado / ${Date.now() - _inicio}ms`);
       return [];
     }
 
+    console.log(`[codilo] ✅ resultado em ${tentativas + 1} tentativas / ${Date.now() - _inicio}ms`);
     return extrairMovimentacoes(data);
   } catch (e) {
     console.log('[codilo] erro ao buscar resultado:', e.message);
@@ -286,7 +292,7 @@ async function consultarProcessoCompleto(numeroProcesso, tribunal) {
 
   if (!cfg) return consultarAutomaticoCompleto(numeroProcesso);
 
-  for (const query of ['principal', 'unificada', 'recursal']) {
+  for (const query of ['principal', 'recursal']) {
     try {
       const r = await axios.post('https://api.consulta.codilo.com.br/v1/request', {
         source: 'courts', platform: cfg.platform, search: cfg.search, query,
@@ -322,8 +328,11 @@ async function consultarAutomaticoCompleto(numeroProcesso) {
   return null;
 }
 
-async function aguardarResultadoCompleto(requestId, token, tentativas = 0) {
-  if (tentativas > 15) return null;
+async function aguardarResultadoCompleto(requestId, token, tentativas = 0, _inicio = Date.now()) {
+  if (tentativas > 8) {
+    console.log(`[codilo] ⏱ timeout (completo) após ${tentativas} tentativas / ${Date.now() - _inicio}ms`);
+    return null;
+  }
   await new Promise(r => setTimeout(r, 800));
   try {
     const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {
@@ -331,10 +340,17 @@ async function aguardarResultadoCompleto(requestId, token, tentativas = 0) {
     });
     const requested = r.data.requested;
     const status = (requested?.status || '').toLowerCase();
-    if (status === 'pending' || status === 'pendente' || status === 'processing' || status === 'processando') return aguardarResultadoCompleto(requestId, token, tentativas + 1);
-    if (status === 'error' || status === 'erro') return null;
+    if (status === 'pending' || status === 'pendente' || status === 'processing' || status === 'processando') {
+      console.log(`[codilo] aguardando (completo)... tentativa ${tentativas + 1} / ${Date.now() - _inicio}ms`);
+      return aguardarResultadoCompleto(requestId, token, tentativas + 1, _inicio);
+    }
+    if (status === 'error' || status === 'erro') {
+      console.log(`[codilo] erro (completo) / ${Date.now() - _inicio}ms`);
+      return null;
+    }
     const data = r.data.data;
     if (!data || (Array.isArray(data) && !data.length)) return null;
+    console.log(`[codilo] ✅ resultado completo em ${tentativas + 1} tentativas / ${Date.now() - _inicio}ms`);
     return extrairDadosCompletos(data);
   } catch (e) {
     return null;

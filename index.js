@@ -71,37 +71,46 @@ async function buscarMovimentacoesCache(numeroProcesso) {
   // 1. Cache em memória
   const mem = _cacheMovs.get(numeroProcesso);
   if (mem && agora - mem.ts < CACHE_TTL_MEM) {
-    console.log('[cache-mem] hit:', numeroProcesso);
+    console.log(`[cache-mem] ✅ hit: ${numeroProcesso}`);
     return mem.movs;
   }
 
   // 2. Cache no banco (persiste entre restarts do servidor)
   try {
+    const t0 = Date.now();
     const { data: row } = await supabase.from('cache_movimentos')
       .select('movimentos, atualizado_em')
       .eq('numero_processo', numeroProcesso)
       .single();
+    console.log(`[cache-db] consulta: ${Date.now() - t0}ms`);
     if (row && row.movimentos) {
       const idade = agora - new Date(row.atualizado_em).getTime();
       if (idade < CACHE_TTL_DB) {
-        console.log('[cache-db] hit:', numeroProcesso);
+        console.log(`[cache-db] ✅ hit: ${numeroProcesso} (idade: ${Math.round(idade/1000/60)}min)`);
         const movs = row.movimentos;
         _cacheMovs.set(numeroProcesso, { movs, ts: agora });
         return movs;
       }
+      console.log(`[cache-db] expirado (${Math.round(idade/1000/60)}min), buscando na Codilo...`);
+    } else {
+      console.log(`[cache-db] miss: ${numeroProcesso}, buscando na Codilo...`);
     }
   } catch (_) {}
 
   // 3. Busca na Codilo
+  const t1 = Date.now();
   const movs = await buscarMovimentacoes(numeroProcesso);
+  console.log(`[codilo] busca total: ${Date.now() - t1}ms — ${movs?.length ?? 0} movimentações`);
   if (movs && movs.length > 0) {
     _cacheMovs.set(numeroProcesso, { movs, ts: agora });
-    // Salva/atualiza no banco em background
-    supabase.from('cache_movimentos').upsert({
-      numero_processo: numeroProcesso,
-      movimentos: movs,
-      atualizado_em: new Date().toISOString()
-    }, { onConflict: 'numero_processo' }).catch(() => {});
+    // Salva/atualiza no banco em background (async IIFE porque o builder do Supabase não é Promise nativa)
+    (async () => {
+      await supabase.from('cache_movimentos').upsert({
+        numero_processo: numeroProcesso,
+        movimentos: movs,
+        atualizado_em: new Date().toISOString()
+      }, { onConflict: 'numero_processo' });
+    })().catch(() => {});
   }
   return movs;
 }
@@ -456,8 +465,12 @@ app.post('/webhook', async (req, res) => {
 
 
 
+    const tChatbot = Date.now();
     const resposta = await gerarRespostaChatbot(mensagem, processos[0].nome_cliente, processos, escritorio);
+    console.log(`[webhook] ⏱ gerarRespostaChatbot: ${Date.now() - tChatbot}ms`);
+    const tWpp = Date.now();
     await enviarWhatsApp(telefone, resposta);
+    console.log(`[webhook] ⏱ enviarWhatsApp: ${Date.now() - tWpp}ms`);
     await salvarMensagem(processos[0].usuario_id, telefone, processos[0].nome_cliente, 'bot', resposta);
     console.log('Resposta enviada para ' + processos[0].nome_cliente);
     res.sendStatus(200);
@@ -492,6 +505,8 @@ function encontrarClientesMencionados(pergunta, processos) {
 app.post('/chat-advogado', async (req, res) => {
   const { usuario_id, pergunta, processo_id } = req.body;
   if (!usuario_id || !pergunta) return res.status(400).json({ erro: 'Campos obrigatórios.' });
+  const tTotal = Date.now();
+  console.log(`[chat-advogado] ▶ início | pergunta: "${pergunta.substring(0, 60)}..."`);
   try {
     let query = supabase.from('processos').select('*').eq('usuario_id', usuario_id);
     if (processo_id) query = query.eq('id', processo_id);
@@ -503,10 +518,12 @@ app.post('/chat-advogado', async (req, res) => {
     const nomeAdvogado = usuario ? usuario.nome : 'Advogado';
 
     // Busca movimentações de todos os processos em paralelo
+    const tMovs = Date.now();
     const resultados = await Promise.all(processos.map(async p => {
       const movs = await buscarMovimentacoesCache(p.numero_processo);
       return { ...p, movs };
     }));
+    console.log(`[chat-advogado] ⏱ busca movimentações (${processos.length} processos): ${Date.now() - tMovs}ms`);
     const dadosProcessos = resultados;
 
     // Se pergunta sobre movimentações, passa pela IA para explicar cada dia
@@ -534,6 +551,8 @@ app.post('/chat-advogado', async (req, res) => {
         }
       }
 
+      const tOpenAI = Date.now();
+      console.log(`[chat-advogado] ⏱ antes OpenAI (ramo movimentações): ${Date.now() - tTotal}ms`);
       const streamResp = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
@@ -546,6 +565,7 @@ app.post('/chat-advogado', async (req, res) => {
         },
         { headers: { Authorization: 'Bearer ' + OPENAI_KEY }, responseType: 'stream' }
       );
+      console.log(`[chat-advogado] ⏱ OpenAI conectou: ${Date.now() - tOpenAI}ms`);
 
       await new Promise((resolve) => {
         let buf = '';
@@ -566,6 +586,7 @@ app.post('/chat-advogado', async (req, res) => {
         streamResp.data.on('end', resolve);
       });
 
+      console.log(`[chat-advogado] ✅ total: ${Date.now() - tTotal}ms`);
       res.write('data: ' + JSON.stringify({ done: true, mensagens_pendentes: [] }) + '\n\n');
       res.end();
       return;
@@ -590,6 +611,8 @@ app.post('/chat-advogado', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
+    const tOpenAI2 = Date.now();
+    console.log(`[chat-advogado] ⏱ antes OpenAI (ramo geral): ${Date.now() - tTotal}ms`);
     const streamResp = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -602,6 +625,7 @@ app.post('/chat-advogado', async (req, res) => {
       },
       { headers: { Authorization: 'Bearer ' + OPENAI_KEY }, responseType: 'stream' }
     );
+    console.log(`[chat-advogado] ⏱ OpenAI conectou: ${Date.now() - tOpenAI2}ms`);
 
     let respostaFinal = '';
     await new Promise((resolve) => {
@@ -647,6 +671,7 @@ app.post('/chat-advogado', async (req, res) => {
       }
     }
 
+    console.log(`[chat-advogado] ✅ total: ${Date.now() - tTotal}ms`);
     res.write('data: ' + JSON.stringify({ done: true, mensagens_pendentes: mensagensPendentes }) + '\n\n');
     res.end();
   } catch (err) {
