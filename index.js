@@ -579,7 +579,7 @@ app.post('/chat-advogado', async (req, res) => {
           model: 'gpt-4o-mini',
           stream: true,
           messages: [
-            { role: 'system', content: 'Você é o assistente jurídico do escritório ' + escritorio + '. Escreva sempre em português brasileiro correto, com frases completas e sem abreviações. Para cada data, explique detalhadamente o que ocorreu e o que isso significa para o processo, em linguagem simples e clara. Nunca invente informações. Nunca deixe frases incompletas.\n\nDados do processo:\n' + contextoMovs },
+            { role: 'system', content: 'Você é o assistente jurídico do escritório ' + escritorio + '. Os processos já estão identificados abaixo — NUNCA peça o número do processo, nome das partes ou qualquer dado de identificação. Se não houver movimentações, informe que não há novidades registradas no momento. Escreva sempre em português brasileiro correto, com frases completas. Nunca invente informações.\n\nPROCESSOS IDENTIFICADOS:\n' + contextoMovs },
             { role: 'user', content: pergunta }
           ]
         },
@@ -639,7 +639,7 @@ app.post('/chat-advogado', async (req, res) => {
         model: 'gpt-4o-mini',
         stream: true,
         messages: [
-          { role: 'system', content: 'Você é o assistente jurídico do escritório ' + escritorio + ', auxiliando o advogado ' + nomeAdvogado + '.\n\nRegras obrigatórias:\n- Escreva sempre em português brasileiro correto, formal e sem erros gramaticais\n- Nunca abrevie palavras nem deixe frases incompletas\n- Nunca invente informações que não estão nos dados do processo\n- Seja objetivo, cordial e profissional\n\nCapacidades:\n1. Informar e explicar movimentações dos processos com clareza\n2. Sugerir ações ao advogado com base nas movimentações\n3. Redigir mensagens de WhatsApp para clientes quando solicitado\n4. Responder dúvidas jurídicas gerais\n\n' + contexto },
+          { role: 'system', content: 'Você é o assistente jurídico do escritório ' + escritorio + ', auxiliando o advogado ' + nomeAdvogado + '. Os processos já estão identificados — NUNCA peça número de processo, nome das partes ou qualquer dado de identificação.\n\nRegras:\n- Escreva sempre em português brasileiro correto e formal\n- Nunca invente informações que não estão nos dados abaixo\n- Se não houver movimentações, informe que não há novidades no momento\n- Seja objetivo, cordial e profissional\n\nCapacidades:\n1. Explicar movimentações dos processos\n2. Sugerir ações ao advogado\n3. Redigir mensagens de WhatsApp para clientes\n4. Responder dúvidas jurídicas gerais\n\n' + contexto },
           { role: 'user', content: pergunta }
         ]
       },
