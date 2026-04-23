@@ -5,7 +5,6 @@ const axios = require('axios');
 const cron = require('node-cron');
 const { createClient } = require('@supabase/supabase-js');
 const { consultarProcesso, consultarProcessoCompleto } = require('./codilo');
-const { buscarPorTribunal } = require('./scraper');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
@@ -141,32 +140,14 @@ function normalizarTelefone(raw) {
 async function buscarMovimentacoes(numeroProcesso) {
   const tribunal = detectarTribunal(numeroProcesso);
   console.log('Buscando processo:', numeroProcesso, 'no tribunal:', tribunal);
-
-  // 1. Tenta Codilo
   try {
     const movs = await consultarProcesso(numeroProcesso, tribunal);
-    if (movs && movs.length > 0) {
-      console.log('[codilo] movimentos encontrados:', movs.length);
-      return movs;
-    }
-    console.log('[codilo] retornou vazio, tentando scraper...');
+    console.log('[codilo] movimentos encontrados:', movs?.length ?? 0);
+    return movs || [];
   } catch (err) {
-    console.error('[codilo] erro:', err.message, '— tentando scraper...');
+    console.error('[codilo] erro:', err.message);
+    return [];
   }
-
-  // 2. Fallback: scraper direto no tribunal
-  try {
-    const movs = await buscarPorTribunal(numeroProcesso, tribunal);
-    if (movs && movs.length > 0) {
-      console.log('[scraper] movimentos encontrados:', movs.length);
-      return movs;
-    }
-    console.log('[scraper] também retornou vazio');
-  } catch (err) {
-    console.error('[scraper] erro:', err.message);
-  }
-
-  return [];
 }
 
 async function gerarResumo(movimentacao) {
@@ -281,25 +262,8 @@ app.get('/processos/:numero/detalhes', async (req, res) => {
   const numero = decodeURIComponent(req.params.numero);
   const tribunal = detectarTribunal(numero);
   try {
-    let dados = await consultarProcessoCompleto(numero, tribunal);
-
-    // Fallback: se Codilo não retornou nada, tenta o scraper
-    if (!dados || !dados.movimentacoes || dados.movimentacoes.length === 0) {
-      console.log('[detalhes] Codilo sem resultado, tentando scraper...');
-      try {
-        const movsScaper = await buscarPorTribunal(numero, tribunal);
-        if (movsScaper && movsScaper.length > 0) {
-          console.log('[scraper] detalhes encontrados:', movsScaper.length);
-          dados = { capa: dados?.capa || {}, partes: dados?.partes || [], movimentacoes: movsScaper };
-        }
-      } catch (scraperErr) {
-        console.error('[scraper] erro detalhes:', scraperErr.message);
-      }
-    }
-
-    if (!dados || !dados.movimentacoes || dados.movimentacoes.length === 0) {
-      return res.json({ capa: {}, partes: [], movimentacoes: [] });
-    }
+    const dados = await consultarProcessoCompleto(numero, tribunal);
+    if (!dados) return res.json({ capa: {}, partes: [], movimentacoes: [] });
 
     // Filtra movimentações dos últimos 3 anos
     const anosVisiveis = [new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2].map(String);
