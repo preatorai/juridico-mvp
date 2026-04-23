@@ -163,7 +163,29 @@ async function consultarProcesso(numeroProcesso, tribunal) {
     }
   }
 
-  // Fallback: consulta automática
+  // Fallback 1: tenta PJe se o tribunal estava mapeado como ESAJ (alguns TJs usam os dois sistemas)
+  if (cfg.platform === 'esaj') {
+    console.log(`[codilo] esaj sem resultado, tentando pje para ${tribunal}...`);
+    for (const query of ['principal', 'recursal']) {
+      try {
+        const r = await axios.post('https://api.consulta.codilo.com.br/v1/request', {
+          source: 'courts', platform: 'pje', search: cfg.search, query,
+          param: { key: 'cnj', value: cnj }, callbacks: []
+        }, { headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, timeout: 15000 });
+        if (r.data.success && r.data.data?.id) {
+          const resultado = await aguardarResultado(r.data.data.id, token);
+          if (resultado.length > 0) {
+            console.log(`[codilo] ✅ encontrado via pje fallback`);
+            return resultado;
+          }
+        }
+      } catch (e) {
+        console.log('[codilo] pje fallback erro:', e.response?.status, e.message);
+      }
+    }
+  }
+
+  // Fallback 2: consulta automática
   console.log(`[codilo] todas queries sem resultado após ${Date.now() - inicio}ms, tentando auto-request...`);
   return consultarAutomatico(numeroProcesso);
 }

@@ -263,8 +263,9 @@ app.get('/processos/:numero/detalhes', async (req, res) => {
     const dados = await consultarProcessoCompleto(numero, tribunal);
     if (!dados) return res.json({ capa: {}, partes: [], movimentacoes: [] });
 
-    // Filtra movimentações de 2025 e 2026
-    dados.movimentacoes = dados.movimentacoes.filter(m => m.data && (m.data.includes('/2025') || m.data.includes('/2026')));
+    // Filtra movimentações dos últimos 3 anos
+    const anosVisiveis = [new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2].map(String);
+    dados.movimentacoes = dados.movimentacoes.filter(m => m.data && anosVisiveis.some(a => m.data.includes('/' + a)));
 
     // Gera explicações para as movimentações
     const unicos = [...new Set(dados.movimentacoes.map(m => m.nome))].slice(0, 25);
