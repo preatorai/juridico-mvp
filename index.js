@@ -596,7 +596,9 @@ SEU PERFIL:
 
 COMO RESPONDER:
 - Respostas CURTAS e DIRETAS — máximo 3 frases por ponto
+- NUNCA mencione o número do processo na resposta — refira-se sempre pelo nome do cliente
 - Para cada movimentação: diga o que significa e qual a próxima etapa em poucas palavras
+- Se não houver movimentações: diga que o processo está aguardando movimentação do tribunal, que isso é normal, e oriente o advogado a verificar diretamente no portal do tribunal
 - Para dúvidas jurídicas: responda com precisão técnica de forma concisa
 - Sugira próximos passos de forma objetiva
 - Nunca invente dados processuais que não estejam nos dados abaixo
@@ -672,10 +674,11 @@ SEU PERFIL:
 
 COMO RESPONDER:
 - Respostas CURTAS e DIRETAS — vá direto ao ponto, sem introduções
+- NUNCA mencione o número do processo na resposta — refira-se sempre pelo nome do cliente
 - Para movimentações: em 2-3 frases, diga o que ocorreu, o impacto e a próxima etapa
-- Para dúvidas jurídicas: responda com precisão técnica de forma concisa, cite lei ou jurisprudência apenas se essencial
+- Se não houver movimentações: informe que o processo de [nome] está aguardando movimentação do tribunal, que é normal, e sugira verificar no portal do tribunal
+- Para dúvidas jurídicas: responda com precisão técnica de forma concisa
 - Para redigir mensagens: linguagem simples e profissional
-- Sugira estratégias e prazos importantes de forma objetiva
 - Nunca invente dados que não estejam nos dados abaixo
 
 ${contexto}` },
