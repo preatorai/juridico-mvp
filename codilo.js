@@ -214,52 +214,37 @@ async function consultarAutomatico(numeroProcesso) {
   return [];
 }
 
-async function aguardarResultado(requestId, token, tentativas = 0, _inicio = Date.now()) {
-  if (tentativas > 8) {
-    console.log(`[codilo] ⏱ timeout após ${tentativas} tentativas / ${Date.now() - _inicio}ms`);
-    return [];
+async function aguardarResultado(requestId, token) {
+  const inicio = Date.now();
+  const MAX = 10;
+  for (let i = 0; i < MAX; i++) {
+    await new Promise(r => setTimeout(r, 800));
+    try {
+      const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {
+        headers: { Authorization: 'Bearer ' + token },
+        timeout: 10000
+      });
+      const requested = r.data.requested;
+      const status = (requested?.status || '').toLowerCase();
+      console.log(`[codilo] tentativa ${i + 1}/${MAX} status=${status} / ${Date.now() - inicio}ms`);
+
+      if (status === 'pending' || status === 'pendente' || status === 'processing' || status === 'processando') continue;
+      if (status === 'error' || status === 'erro') { console.log('[codilo] erro retornado pelo tribunal'); return []; }
+
+      const data = r.data.data;
+      if (!data || (Array.isArray(data) && !data.length)) { console.log('[codilo] processo não encontrado'); return []; }
+
+      console.log(`[codilo] ✅ resultado em ${i + 1} tentativas / ${Date.now() - inicio}ms`);
+      return extrairMovimentacoes(data);
+    } catch (e) {
+      const s = e.response?.status;
+      console.log(`[codilo] tentativa ${i + 1}/${MAX} erro ${s || 'rede'} / ${Date.now() - inicio}ms`);
+      if (s === 400 || s === 401 || s === 403 || s === 404) return []; // erro definitivo
+      // 500/502/503/504/timeout → continua tentando
+    }
   }
-
-  await new Promise(r => setTimeout(r, 800));
-
-  try {
-    const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {
-      headers: { Authorization: 'Bearer ' + token },
-      timeout: 10000
-    });
-
-    // Status fica em r.data.requested.status, não em r.data.data
-    const requested = r.data.requested;
-    const status = (requested?.status || '').toLowerCase();
-
-    if (status === 'pending' || status === 'pendente' || status === 'processing' || status === 'processando') {
-      console.log(`[codilo] aguardando... tentativa ${tentativas + 1} / ${Date.now() - _inicio}ms`);
-      return aguardarResultado(requestId, token, tentativas + 1, _inicio);
-    }
-
-    if (status === 'error' || status === 'erro') {
-      console.log(`[codilo] erro na consulta, status: ${requested?.status} / ${Date.now() - _inicio}ms`);
-      return [];
-    }
-
-    const data = r.data.data;
-    if (!data || (Array.isArray(data) && !data.length)) {
-      console.log(`[codilo] processo não encontrado / ${Date.now() - _inicio}ms`);
-      return [];
-    }
-
-    console.log(`[codilo] ✅ resultado em ${tentativas + 1} tentativas / ${Date.now() - _inicio}ms`);
-    return extrairMovimentacoes(data);
-  } catch (e) {
-    const status = e.response?.status;
-    // 500 é temporário (tribunal sobrecarregado) — continua tentando
-    if (status === 500 || status === 502 || status === 503 || status === 504 || !status) {
-      console.log(`[codilo] erro ${status || 'rede'} temporário, tentativa ${tentativas + 1} / ${Date.now() - _inicio}ms`);
-      return aguardarResultado(requestId, token, tentativas + 1, _inicio);
-    }
-    console.log('[codilo] erro fatal ao buscar resultado:', status, e.message);
-    return [];
-  }
+  console.log(`[codilo] ⏱ timeout após ${MAX} tentativas / ${Date.now() - inicio}ms`);
+  return [];
 }
 
 function extrairDadosCompletos(data) {
@@ -356,38 +341,35 @@ async function consultarAutomaticoCompleto(numeroProcesso) {
   return null;
 }
 
-async function aguardarResultadoCompleto(requestId, token, tentativas = 0, _inicio = Date.now()) {
-  if (tentativas > 8) {
-    console.log(`[codilo] ⏱ timeout (completo) após ${tentativas} tentativas / ${Date.now() - _inicio}ms`);
-    return null;
+async function aguardarResultadoCompleto(requestId, token) {
+  const inicio = Date.now();
+  const MAX = 10;
+  for (let i = 0; i < MAX; i++) {
+    await new Promise(r => setTimeout(r, 800));
+    try {
+      const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {
+        headers: { Authorization: 'Bearer ' + token }, timeout: 10000
+      });
+      const requested = r.data.requested;
+      const status = (requested?.status || '').toLowerCase();
+      console.log(`[codilo] completo tentativa ${i + 1}/${MAX} status=${status} / ${Date.now() - inicio}ms`);
+
+      if (status === 'pending' || status === 'pendente' || status === 'processing' || status === 'processando') continue;
+      if (status === 'error' || status === 'erro') return null;
+
+      const data = r.data.data;
+      if (!data || (Array.isArray(data) && !data.length)) return null;
+
+      console.log(`[codilo] ✅ completo em ${i + 1} tentativas / ${Date.now() - inicio}ms`);
+      return extrairDadosCompletos(data);
+    } catch (e) {
+      const s = e.response?.status;
+      console.log(`[codilo] completo tentativa ${i + 1}/${MAX} erro ${s || 'rede'}`);
+      if (s === 400 || s === 401 || s === 403 || s === 404) return null;
+    }
   }
-  await new Promise(r => setTimeout(r, 800));
-  try {
-    const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {
-      headers: { Authorization: 'Bearer ' + token }, timeout: 10000
-    });
-    const requested = r.data.requested;
-    const status = (requested?.status || '').toLowerCase();
-    if (status === 'pending' || status === 'pendente' || status === 'processing' || status === 'processando') {
-      console.log(`[codilo] aguardando (completo)... tentativa ${tentativas + 1} / ${Date.now() - _inicio}ms`);
-      return aguardarResultadoCompleto(requestId, token, tentativas + 1, _inicio);
-    }
-    if (status === 'error' || status === 'erro') {
-      console.log(`[codilo] erro (completo) / ${Date.now() - _inicio}ms`);
-      return null;
-    }
-    const data = r.data.data;
-    if (!data || (Array.isArray(data) && !data.length)) return null;
-    console.log(`[codilo] ✅ resultado completo em ${tentativas + 1} tentativas / ${Date.now() - _inicio}ms`);
-    return extrairDadosCompletos(data);
-  } catch (e) {
-    const status = e.response?.status;
-    if (status === 500 || status === 502 || status === 503 || status === 504 || !status) {
-      console.log(`[codilo] erro ${status || 'rede'} temporário (completo), tentativa ${tentativas + 1}`);
-      return aguardarResultadoCompleto(requestId, token, tentativas + 1, _inicio);
-    }
-    return null;
-  }
+  console.log(`[codilo] ⏱ completo timeout após ${MAX} tentativas / ${Date.now() - inicio}ms`);
+  return null;
 }
 
 module.exports = { consultarProcesso, consultarProcessoCompleto };
