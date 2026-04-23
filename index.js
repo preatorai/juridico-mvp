@@ -62,8 +62,8 @@ function detectarTribunal(numeroProcesso) {
 
 // Cache de movimentações — memória (rápido) + Supabase (persiste entre restarts)
 const _cacheMovs = new Map();
-const CACHE_TTL_MEM = 10 * 60 * 1000;  // 10 min em memória
-const CACHE_TTL_DB  = 60 * 60 * 1000;  // 1h no banco
+const CACHE_TTL_MEM = 10 * 60 * 1000;   // 10 min em memória
+const CACHE_TTL_DB  = 24 * 60 * 60 * 1000; // 24h no banco
 
 async function buscarMovimentacoesCache(numeroProcesso) {
   const agora = Date.now();
@@ -150,18 +150,28 @@ async function gerarResumo(movimentacao) {
   return res.data.choices[0].message.content;
 }
 
+function mensagemPerguntaSobreProcesso(msg) {
+  return /processo|moviment|prazo|audiên|decisão|sentença|recurso|andament|atualiz|aconteceu|novidade|status|o que|como (está|tá|ficou)|teve|tem|última|ultimo|recente|passou|ocorreu|andou|julgamento|despacho|intimação|citação/i.test(msg);
+}
+
 async function gerarRespostaChatbot(mensagem, nome, processos, escritorio) {
   let infoProcessos = '';
+
+  // Só consulta Codilo se cliente perguntou sobre o processo — senão usa cache ou responde sem dados
+  const precisaDados = mensagemPerguntaSobreProcesso(mensagem);
+
   for (const processo of processos) {
-    const movs = await buscarMovimentacoes(processo.numero_processo);
-    infoProcessos += '\nProcesso ' + processo.numero_processo + ':\n';
-    if (movs.length > 0) {
-      infoProcessos += 'Ultimas movimentacoes:\n';
-      movs.forEach(m => {
-        infoProcessos += '- ' + m.nome + ' (' + m.data + ')\n';
-      });
-    } else {
-      infoProcessos += 'Sem movimentacoes encontradas no momento.\n';
+    infoProcessos += '\nProcesso ' + processo.numero_processo + ' — cliente: ' + processo.nome_cliente + ':\n';
+    if (precisaDados) {
+      const movs = await buscarMovimentacoesCache(processo.numero_processo);
+      if (movs && movs.length > 0) {
+        infoProcessos += 'Últimas movimentações:\n';
+        movs.slice(0, 10).forEach(m => {
+          infoProcessos += '- ' + m.nome + ' (' + m.data + ')\n';
+        });
+      } else {
+        infoProcessos += 'Sem movimentações encontradas no momento.\n';
+      }
     }
   }
 
@@ -169,10 +179,24 @@ async function gerarRespostaChatbot(mensagem, nome, processos, escritorio) {
     'https://api.openai.com/v1/chat/completions',
     {
       model: 'gpt-4o-mini',
+      temperature: 0.2,
+      max_tokens: 400,
       messages: [
         {
           role: 'system',
-          content: 'Voce e um assistente juridico virtual do escritorio ' + (escritorio || 'de advocacia') + '. Responda de forma simples, clara e educada em portugues. Cliente: ' + nome + '.\n\nInformacoes dos processos:\n' + infoProcessos + '\n\nIMPORTANTE: Use as informacoes acima para responder de forma detalhada sobre as movimentacoes. Explique cada movimentacao em linguagem simples para o cliente entender. Se nao houver movimentacoes, diga para entrar em contato com o escritorio.'
+          content: `Você é o assistente virtual do escritório ${escritorio || 'de advocacia'}. Seu papel é informar o cliente ${nome} sobre o status dos processos cadastrados.
+
+REGRAS:
+- Responda APENAS sobre os processos listados abaixo
+- Nunca invente informações processuais
+- Se não houver dados, oriente o cliente a ligar para o escritório
+- Nunca dê opinião jurídica — apenas informe o status
+- Use linguagem simples, sem juridiquês
+- Máximo 3 parágrafos por resposta
+- Se pergunta for fora do processo, redirecione educadamente
+
+DADOS DOS PROCESSOS:
+${infoProcessos || 'Nenhuma movimentação carregada para esta consulta.'}`
         },
         { role: 'user', content: mensagem }
       ]
