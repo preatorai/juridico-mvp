@@ -65,6 +65,24 @@ const _cacheMovs = new Map();
 const CACHE_TTL_MEM = 10 * 60 * 1000;   // 10 min em memória
 const CACHE_TTL_DB  = 24 * 60 * 60 * 1000; // 24h no banco
 
+function salvarCache(numeroProcesso, movs) {
+  _cacheMovs.set(numeroProcesso, { movs, ts: Date.now() });
+  (async () => {
+    await supabase.from('cache_movimentos').upsert({
+      numero_processo: numeroProcesso,
+      movimentos: movs,
+      atualizado_em: new Date().toISOString()
+    }, { onConflict: 'numero_processo' });
+  })().catch(() => {});
+}
+
+function atualizarCacheBackground(numeroProcesso) {
+  (async () => {
+    const movs = await buscarMovimentacoes(numeroProcesso);
+    if (movs && movs.length > 0) salvarCache(numeroProcesso, movs);
+  })().catch(() => {});
+}
+
 async function buscarMovimentacoesCache(numeroProcesso) {
   const agora = Date.now();
 
@@ -77,41 +95,34 @@ async function buscarMovimentacoesCache(numeroProcesso) {
 
   // 2. Cache no banco (persiste entre restarts do servidor)
   try {
-    const t0 = Date.now();
     const { data: row } = await supabase.from('cache_movimentos')
       .select('movimentos, atualizado_em')
       .eq('numero_processo', numeroProcesso)
       .single();
-    console.log(`[cache-db] consulta: ${Date.now() - t0}ms`);
+
     if (row && row.movimentos) {
       const idade = agora - new Date(row.atualizado_em).getTime();
+      const movs  = row.movimentos;
+      _cacheMovs.set(numeroProcesso, { movs, ts: agora });
+
       if (idade < CACHE_TTL_DB) {
-        console.log(`[cache-db] ✅ hit: ${numeroProcesso} (idade: ${Math.round(idade/1000/60)}min)`);
-        const movs = row.movimentos;
-        _cacheMovs.set(numeroProcesso, { movs, ts: agora });
+        console.log(`[cache-db] ✅ hit: ${numeroProcesso} (${Math.round(idade/1000/60)}min)`);
         return movs;
       }
-      console.log(`[cache-db] expirado (${Math.round(idade/1000/60)}min), buscando na Codilo...`);
-    } else {
-      console.log(`[cache-db] miss: ${numeroProcesso}, buscando na Codilo...`);
+
+      // Cache expirado — retorna imediatamente e atualiza em background
+      console.log(`[cache-db] expirado (${Math.round(idade/1000/60)}min) — retornando cache e atualizando em background`);
+      atualizarCacheBackground(numeroProcesso);
+      return movs;
     }
   } catch (_) {}
 
-  // 3. Busca na Codilo
+  // 3. Primeira vez — busca na Codilo (sem cache disponível)
+  console.log(`[cache] miss total: ${numeroProcesso}, buscando na Codilo...`);
   const t1 = Date.now();
   const movs = await buscarMovimentacoes(numeroProcesso);
   console.log(`[codilo] busca total: ${Date.now() - t1}ms — ${movs?.length ?? 0} movimentações`);
-  if (movs && movs.length > 0) {
-    _cacheMovs.set(numeroProcesso, { movs, ts: agora });
-    // Salva/atualiza no banco em background (async IIFE porque o builder do Supabase não é Promise nativa)
-    (async () => {
-      await supabase.from('cache_movimentos').upsert({
-        numero_processo: numeroProcesso,
-        movimentos: movs,
-        atualizado_em: new Date().toISOString()
-      }, { onConflict: 'numero_processo' });
-    })().catch(() => {});
-  }
+  if (movs && movs.length > 0) salvarCache(numeroProcesso, movs);
   return movs;
 }
 
@@ -170,16 +181,16 @@ async function gerarRespostaChatbot(mensagem, nome, processos, escritorio) {
   const precisaDados = mensagemPerguntaSobreProcesso(mensagem);
 
   for (const processo of processos) {
-    infoProcessos += '\nProcesso ' + processo.numero_processo + ' — cliente: ' + processo.nome_cliente + ':\n';
+    infoProcessos += '\nProcesso — cliente: ' + processo.nome_cliente + ':\n';
     if (precisaDados) {
       const movs = await buscarMovimentacoesCache(processo.numero_processo);
       if (movs && movs.length > 0) {
-        infoProcessos += 'Últimas movimentações:\n';
-        movs.slice(0, 10).forEach(m => {
+        infoProcessos += 'Últimas 3 movimentações (apresente cada uma em 1 frase curta e simples, sem juridiquês):\n';
+        movs.slice(0, 3).forEach(m => {
           infoProcessos += '- ' + m.nome + ' (' + m.data + ')\n';
         });
       } else {
-        infoProcessos += 'Sem movimentações encontradas no momento.\n';
+        infoProcessos += 'Sem movimentações registradas — processo aguardando movimentação do tribunal.\n';
       }
     }
   }
@@ -194,24 +205,19 @@ async function gerarRespostaChatbot(mensagem, nome, processos, escritorio) {
       messages: [
         {
           role: 'system',
-          content: `Você é Lex, assistente jurídico virtual do escritório ${escritorio || 'de advocacia'}, atendendo o cliente ${nome}. Você tem conhecimento completo do direito brasileiro e deve responder TODAS as dúvidas com precisão e clareza.
+          content: `PROIBIÇÃO ABSOLUTA E INQUEBRÁVEL: NUNCA, em hipótese alguma, diga ao cliente para entrar em contato com o advogado, ligar para o escritório, agendar consulta, buscar atendimento presencial, ou qualquer frase que redirecione o cliente para fora deste chat. Frases como "entre em contato com seu advogado", "consulte o escritório", "fale com o advogado responsável", "agende uma consulta", "procure orientação jurídica presencial" são ESTRITAMENTE PROIBIDAS. Se você disser qualquer variação disso, estará falhando na sua função.
 
-REGRAS ABSOLUTAS — NUNCA QUEBRE ESSAS REGRAS:
-- JAMAIS diga para o cliente ligar para o escritório, falar com o advogado, buscar atendimento presencial ou qualquer variação disso
-- JAMAIS diga que não pode responder, que não tem autorização ou que a dúvida deve ser tratada pelo advogado
+Você é Lex, assistente jurídico virtual do escritório ${escritorio || 'de advocacia'}, atendendo o cliente ${nome}. Você tem conhecimento completo do direito brasileiro e responde TODAS as dúvidas você mesmo, sem redirecionar para ninguém.
+
+REGRAS:
 - NUNCA peça número de processo, CPF ou qualquer dado — o cliente já está identificado
-- Sempre responda de forma completa e precisa, seja qual for a pergunta
+- Respostas CURTAS e DIRETAS — máximo 3 frases no total
+- Linguagem simples e acolhedora — sem juridiquês
+- Quando perguntar sobre o processo: liste as 3 últimas movimentações, cada uma em 1 frase curta e simples, depois diga em 1 frase o que isso significa
+- Para dúvidas jurídicas: responda com precisão em no máximo 2 frases
+- Se não houver movimentações: diga em 1 frase que o processo segue em andamento aguardando o tribunal
 
-COMO RESPONDER:
-- Respostas CURTAS e DIRETAS — máximo 3 frases por resposta
-- Vá direto ao ponto, sem introduções, sem enrolação
-- Use linguagem simples e acolhedora — sem juridiquês
-- Para dúvidas sobre o processo: diga o que aconteceu e o que vem a seguir em poucas palavras
-- Para dúvidas jurídicas: responda com precisão em no máximo 2-3 frases
-- Se não houver movimentações, diga em uma frase que o processo segue em andamento normal
-
-SEU CONHECIMENTO JURÍDICO ABRANGE:
-Direito Civil, Trabalhista, Criminal, Tributário, Previdenciário, de Família, do Consumidor, Administrativo e Constitucional. CPC, CLT, CC, CP, CDC e toda a legislação brasileira vigente.
+SEU CONHECIMENTO ABRANGE: Direito Civil, Trabalhista, Criminal, Tributário, Previdenciário, de Família, do Consumidor, Administrativo e Constitucional. CPC, CLT, CC, CP, CDC e toda a legislação brasileira vigente.
 
 PROCESSOS DO CLIENTE ${nome.toUpperCase()}:
 ${infoProcessos || 'Nenhuma movimentação registrada no momento — processo em andamento normal aguardando próxima movimentação do tribunal.'}`
