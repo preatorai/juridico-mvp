@@ -190,6 +190,7 @@ async function gerarRespostaChatbot(mensagem, nome, processos, escritorio) {
       model: 'gpt-4o-mini',
       temperature: 0.2,
       max_tokens: 400,
+      timeout: 20000,
       messages: [
         {
           role: 'system',
@@ -211,7 +212,7 @@ ${infoProcessos || 'Nenhuma movimentação recente. Oriente o cliente a ligar pa
         { role: 'user', content: mensagem }
       ]
     },
-    { headers: { Authorization: 'Bearer ' + OPENAI_KEY } }
+    { headers: { Authorization: 'Bearer ' + OPENAI_KEY }, timeout: 20000 }
   );
   return res.data.choices[0].message.content;
 }
@@ -329,18 +330,27 @@ app.post('/processos/explicar', async (req, res) => {
 app.post('/auth/cadastro', async (req, res) => {
   const { nome, email, senha, escritorio } = req.body;
   if (!nome || !email || !senha || !escritorio) return res.status(400).json({ erro: 'Preencha todos os campos.' });
-  const { data: existe } = await supabase.from('usuarios').select('id').eq('email', email).single();
-  if (existe) return res.status(400).json({ erro: 'Email ja cadastrado.' });
-  const { error } = await supabase.from('usuarios').insert({ nome, email, senha, escritorio });
-  if (error) return res.status(400).json({ erro: error.message });
-  res.json({ sucesso: true });
+  try {
+    const { data: existe } = await supabase.from('usuarios').select('id').eq('email', email).single();
+    if (existe) return res.status(400).json({ erro: 'Email ja cadastrado.' });
+    const { error } = await supabase.from('usuarios').insert({ nome, email, senha, escritorio });
+    if (error) return res.status(400).json({ erro: error.message });
+    res.json({ sucesso: true });
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao cadastrar. Tente novamente.' });
+  }
 });
 
 app.post('/auth/login', async (req, res) => {
   const { email, senha } = req.body;
-  const { data, error } = await supabase.from('usuarios').select('*').eq('email', email).eq('senha', senha).single();
-  if (error || !data) return res.status(401).json({ erro: 'Email ou senha incorretos.' });
-  res.json({ sucesso: true, usuario: { id: data.id, nome: data.nome, email: data.email, escritorio: data.escritorio, telefone: data.telefone || '', oab: data.oab || '', estado: data.estado || '', horario_alerta: data.horario_alerta || '08:00', tipos_alerta: data.tipos_alerta || 'urgente,semana' } });
+  if (!email || !senha) return res.status(400).json({ erro: 'Preencha todos os campos.' });
+  try {
+    const { data, error } = await supabase.from('usuarios').select('*').eq('email', email).eq('senha', senha).single();
+    if (error || !data) return res.status(401).json({ erro: 'Email ou senha incorretos.' });
+    res.json({ sucesso: true, usuario: { id: data.id, nome: data.nome, email: data.email, escritorio: data.escritorio, telefone: data.telefone || '', oab: data.oab || '', estado: data.estado || '', horario_alerta: data.horario_alerta || '08:00', tipos_alerta: data.tipos_alerta || 'urgente,semana' } });
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao fazer login. Tente novamente.' });
+  }
 });
 
 app.post('/processos', async (req, res) => {
@@ -364,18 +374,26 @@ app.post('/processos', async (req, res) => {
 app.get('/processos', async (req, res) => {
   const { usuario_id } = req.query;
   if (!usuario_id) return res.status(400).json({ erro: 'usuario_id obrigatorio.' });
-  const { data } = await supabase.from('processos').select('*').eq('usuario_id', usuario_id);
-  res.json(data);
+  try {
+    const { data } = await supabase.from('processos').select('*').eq('usuario_id', usuario_id);
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao buscar processos.' });
+  }
 });
 
 app.get('/movimentacoes', async (req, res) => {
   const { usuario_id } = req.query;
   if (!usuario_id) return res.json([]);
-  const { data: procs } = await supabase.from('processos').select('id').eq('usuario_id', usuario_id);
-  if (!procs || !procs.length) return res.json([]);
-  const ids = procs.map(p => p.id);
-  const { data } = await supabase.from('movimentacoes').select('*, processos(nome_cliente, numero_processo)').in('processo_id', ids).order('detectado_em', { ascending: false }).limit(20);
-  res.json(data);
+  try {
+    const { data: procs } = await supabase.from('processos').select('id').eq('usuario_id', usuario_id);
+    if (!procs || !procs.length) return res.json([]);
+    const ids = procs.map(p => p.id);
+    const { data } = await supabase.from('movimentacoes').select('*, processos(nome_cliente, numero_processo)').in('processo_id', ids).order('detectado_em', { ascending: false }).limit(20);
+    res.json(data || []);
+  } catch (err) {
+    res.json([]);
+  }
 });
 
 app.post('/perfil/telefone', async (req, res) => {
@@ -686,22 +704,30 @@ app.post('/chat-advogado', async (req, res) => {
 app.get('/mensagens/conversas', async (req, res) => {
   const { usuario_id } = req.query;
   if (!usuario_id) return res.json([]);
-  const { data } = await supabase.from('mensagens').select('*').eq('usuario_id', usuario_id).order('criado_em', { ascending: false });
-  if (!data || !data.length) return res.json([]);
-  const seen = new Set();
-  const conversas = [];
-  for (const msg of data) {
-    if (!seen.has(msg.telefone)) { seen.add(msg.telefone); conversas.push(msg); }
+  try {
+    const { data } = await supabase.from('mensagens').select('*').eq('usuario_id', usuario_id).order('criado_em', { ascending: false });
+    if (!data || !data.length) return res.json([]);
+    const seen = new Set();
+    const conversas = [];
+    for (const msg of data) {
+      if (!seen.has(msg.telefone)) { seen.add(msg.telefone); conversas.push(msg); }
+    }
+    res.json(conversas);
+  } catch (err) {
+    res.json([]);
   }
-  res.json(conversas);
 });
 
 // Histórico completo de uma conversa
 app.get('/mensagens/conversa', async (req, res) => {
   const { usuario_id, telefone } = req.query;
   if (!usuario_id || !telefone) return res.json([]);
-  const { data } = await supabase.from('mensagens').select('*').eq('usuario_id', usuario_id).eq('telefone', telefone).order('criado_em', { ascending: true });
-  res.json(data || []);
+  try {
+    const { data } = await supabase.from('mensagens').select('*').eq('usuario_id', usuario_id).eq('telefone', telefone).order('criado_em', { ascending: true });
+    res.json(data || []);
+  } catch (err) {
+    res.json([]);
+  }
 });
 
 // Advogado envia mensagem pelo dashboard
@@ -734,7 +760,7 @@ const PALAVRAS_PRAZO_AGENDA = ['prazo','audiência','audiencia','decisão','deci
 function detectarUrgencia(descricao, dataMovimentacao) {
   const hoje = new Date();
   const dataM = new Date(dataMovimentacao.split('/').reverse().join('-'));
-  const diffDias = Math.floor((hoje - dataM) / (1000 * 60 * 60 * 24));
+  const diffDias = isNaN(dataM) ? 999 : Math.floor((hoje - dataM) / (1000 * 60 * 60 * 24));
   const desc = descricao.toLowerCase();
   if (desc.includes('audiên') || desc.includes('audienc') || desc.includes('sentença') || desc.includes('sentenca') || desc.includes('decisão') || desc.includes('decisao')) return 'urgente';
   if (diffDias <= 7) return 'esta_semana';
@@ -747,7 +773,7 @@ async function sincronizarPrazos(usuarioId) {
 
   for (const proc of processos) {
     try {
-      const movs = await buscarMovimentacoesCache(proc.numero_processo);
+      const movs = (await buscarMovimentacoesCache(proc.numero_processo)) || [];
       const importantes = movs.filter(m => {
         const n = m.nome.toLowerCase();
         return PALAVRAS_PRAZO_AGENDA.some(p => n.includes(p));
@@ -803,8 +829,12 @@ app.post('/prazos/sincronizar', async (req, res) => {
 
 app.post('/prazos/:id/visto', async (req, res) => {
   const { id } = req.params;
-  await supabase.from('prazos').update({ visto: true }).eq('id', id);
-  res.json({ sucesso: true });
+  try {
+    await supabase.from('prazos').update({ visto: true }).eq('id', id);
+    res.json({ sucesso: true });
+  } catch (err) {
+    res.status(500).json({ erro: 'Erro ao marcar prazo.' });
+  }
 });
 
 async function enviarAlertaPrazos() {
