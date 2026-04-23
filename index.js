@@ -573,17 +573,11 @@ app.post('/chat-advogado', async (req, res) => {
 
       let contextoMovs = '';
       for (const p of dadosProcessos) {
-        contextoMovs += 'Processo ' + p.numero_processo + ' — Cliente: ' + p.nome_cliente + '\n';
+        contextoMovs += 'Cliente: ' + p.nome_cliente + '\n';
         if (p.movs.length) {
-          // Agrupa por data e pega as últimas 15
-          const ultimas = p.movs.slice(0, 8);
-          const porData = {};
-          ultimas.forEach(m => {
-            if (!porData[m.data]) porData[m.data] = [];
-            porData[m.data].push(m.nome);
-          });
-          Object.entries(porData).forEach(([data, nomes]) => {
-            contextoMovs += data + ': ' + nomes.join(', ') + '\n';
+          contextoMovs += 'Últimas 3 movimentações:\n';
+          p.movs.slice(0, 3).forEach(m => {
+            contextoMovs += '- ' + m.nome + ' (' + m.data + ')\n';
           });
         } else {
           contextoMovs += 'Sem movimentações registradas.\n';
@@ -607,12 +601,12 @@ SEU PERFIL:
 - Capacidade de explicar qualquer movimentação processual de forma clara e detalhada
 
 COMO RESPONDER:
-- Respostas CURTAS e DIRETAS — máximo 3 frases por ponto
+- Respostas CURTAS e DIRETAS — máximo 3 frases no total
 - NUNCA mencione o número do processo na resposta — refira-se sempre pelo nome do cliente
-- Para cada movimentação: diga o que significa e qual a próxima etapa em poucas palavras
-- Se não houver movimentações: diga que o processo está aguardando movimentação do tribunal, que isso é normal, e oriente o advogado a verificar diretamente no portal do tribunal
+- NUNCA diga para verificar no portal do tribunal, no sistema, ou em qualquer lugar externo
+- Quando perguntar sobre movimentações: liste as 3 últimas, cada uma em 1 frase, depois diga em 1 frase o que isso significa e qual a próxima etapa
+- Se não houver movimentações: diga apenas que o processo está aguardando movimentação do tribunal
 - Para dúvidas jurídicas: responda com precisão técnica de forma concisa
-- Sugira próximos passos de forma objetiva
 - Nunca invente dados processuais que não estejam nos dados abaixo
 
 PROCESSOS IDENTIFICADOS:
@@ -685,10 +679,11 @@ SEU PERFIL:
 - Capacidade de redigir peças, notificações e mensagens profissionais
 
 COMO RESPONDER:
-- Respostas CURTAS e DIRETAS — vá direto ao ponto, sem introduções
+- Respostas CURTAS e DIRETAS — máximo 3 frases no total
 - NUNCA mencione o número do processo na resposta — refira-se sempre pelo nome do cliente
-- Para movimentações: em 2-3 frases, diga o que ocorreu, o impacto e a próxima etapa
-- Se não houver movimentações: informe que o processo de [nome] está aguardando movimentação do tribunal, que é normal, e sugira verificar no portal do tribunal
+- NUNCA diga para verificar no portal do tribunal, no sistema, ou em qualquer lugar externo
+- Quando perguntar sobre movimentações: liste as 3 últimas, cada uma em 1 frase, depois diga em 1 frase o que significa e qual a próxima etapa
+- Se não houver movimentações: diga apenas que o processo está aguardando movimentação do tribunal
 - Para dúvidas jurídicas: responda com precisão técnica de forma concisa
 - Para redigir mensagens: linguagem simples e profissional
 - Nunca invente dados que não estejam nos dados abaixo
