@@ -195,7 +195,7 @@ async function gerarRespostaChatbot(mensagem, nome, processos, escritorio) {
           infoProcessos += `${i + 1}. ${m.nome} — ${m.data}\n`;
         });
       } else {
-        infoProcessos += 'Sem movimentações registradas — processo aguardando movimentação do tribunal.\n';
+        infoProcessos += 'Dados do processo não disponíveis no momento — o tribunal ainda não disponibilizou as movimentações via sistema eletrônico.\n';
       }
     }
   }
@@ -630,12 +630,7 @@ app.post('/chat-advogado', async (req, res) => {
     // Busca movimentações só dos processos relevantes (max 3)
     const tMovs = Date.now();
     const resultados = await Promise.all(processosAlvo.slice(0, 3).map(async p => {
-      let movs = await buscarMovimentacoesCache(p.numero_processo);
-      if (!movs || movs.length === 0) {
-        console.log(`[chat-advogado] cache vazio para ${p.numero_processo}, tentando busca direta...`);
-        movs = await buscarMovimentacoes(p.numero_processo);
-        if (movs && movs.length > 0) salvarCache(p.numero_processo, movs);
-      }
+      const movs = await buscarMovimentacoesCache(p.numero_processo);
       return { ...p, movs: movs || [] };
     }));
     console.log(`[chat-advogado] ⏱ busca movimentações (${processosAlvo.length} processos): ${Date.now() - tMovs}ms`);
