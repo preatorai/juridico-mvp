@@ -87,34 +87,34 @@ async function salvarCache(numeroProcesso, movs) {
 }
 
 async function buscarMovimentacoesCache(numeroProcesso) {
+  const chave = normalizarCNJ(numeroProcesso); // chave sempre normalizada — evita mismatch
   const agora = Date.now();
-  const CACHE_MEM = 5 * 60 * 1000;   // 5 min
-  const CACHE_DB  = 30 * 60 * 1000;  // 30 min — após isso, atualiza em background mas retorna imediatamente
+  const CACHE_MEM = 5 * 60 * 1000;
+  const CACHE_DB  = 30 * 60 * 1000;
 
-  // 1. Memória — resposta instantânea
-  const mem = _cacheMovs.get(numeroProcesso);
+  // 1. Memória
+  const mem = _cacheMovs.get(chave);
   if (mem && mem.movs.length > 0 && agora - mem.ts < CACHE_MEM) return mem.movs;
 
-  // 2. Banco — rápido (~50ms), retorna imediatamente
+  // 2. Banco
   try {
     const { data: row } = await supabase.from('cache_movimentos')
-      .select('movimentos, atualizado_em').eq('numero_processo', numeroProcesso).single();
+      .select('movimentos, atualizado_em').eq('numero_processo', chave).single();
     if (row && Array.isArray(row.movimentos) && row.movimentos.length > 0) {
-      _cacheMovs.set(numeroProcesso, { movs: row.movimentos, ts: agora });
-      // Se passou de 30 min, atualiza em background sem bloquear
+      _cacheMovs.set(chave, { movs: row.movimentos, ts: agora });
       if (agora - new Date(row.atualizado_em).getTime() > CACHE_DB) {
         (async () => {
-          const novos = await buscarMovimentacoes(numeroProcesso);
-          if (novos && novos.length > 0) salvarCache(numeroProcesso, novos);
+          const novos = await buscarMovimentacoes(chave);
+          if (novos && novos.length > 0) salvarCache(chave, novos);
         })().catch(() => {});
       }
       return row.movimentos;
     }
   } catch (_) {}
 
-  // 3. Sem cache — busca na Codilo (primeira vez ou banco vazio)
-  const movs = await buscarMovimentacoes(numeroProcesso);
-  if (movs && movs.length > 0) { salvarCache(numeroProcesso, movs); return movs; }
+  // 3. Codilo
+  const movs = await buscarMovimentacoes(chave);
+  if (movs && movs.length > 0) { salvarCache(chave, movs); return movs; }
 
   return [];
 }
