@@ -111,11 +111,11 @@ function formatarData(dataStr) {
 // Polling genérico — usado por todos os fluxos
 async function polling(requestId, completo = false) {
   const inicio = Date.now();
-  const MAX    = 6;
+  const MAX    = 10;
   let erros500 = 0;
 
   for (let i = 0; i < MAX; i++) {
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 800));
     try {
       const token = await getToken();
       const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {

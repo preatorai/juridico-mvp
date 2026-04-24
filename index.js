@@ -65,8 +65,8 @@ function detectarTribunal(numeroProcesso) {
 
 // Cache de movimentações — memória (rápido) + Supabase (persiste entre restarts)
 const _cacheMovs = new Map();
-const CACHE_TTL_MEM = 10 * 60 * 1000;   // 10 min em memória
-const CACHE_TTL_DB  = 24 * 60 * 60 * 1000; // 24h no banco
+const CACHE_TTL_MEM = 10 * 60 * 1000;        // 10 min em memória
+const CACHE_TTL_DB  = 72 * 60 * 60 * 1000;  // 72h para revalidação (dados antigos são sempre retornados)
 
 function salvarCache(numeroProcesso, movs) {
   _cacheMovs.set(numeroProcesso, { movs, ts: Date.now() });
@@ -120,7 +120,7 @@ async function buscarMovimentacoesCache(numeroProcesso) {
     }
   } catch (_) {}
 
-  // 3. Primeira vez — busca na Codilo (sem cache disponível)
+  // 3. Sem cache válido — busca na Codilo
   console.log(`[cache] miss total: ${numeroProcesso}, buscando na Codilo...`);
   const t1 = Date.now();
   const movs = await buscarMovimentacoes(numeroProcesso);
@@ -129,6 +129,21 @@ async function buscarMovimentacoesCache(numeroProcesso) {
     salvarCache(numeroProcesso, movs);
     return movs;
   }
+
+  // 4. Codilo falhou — último recurso: qualquer dado antigo no banco (mesmo que expirado ou não pego antes)
+  try {
+    const { data: antigo } = await supabase.from('cache_movimentos')
+      .select('movimentos, atualizado_em')
+      .eq('numero_processo', numeroProcesso)
+      .single();
+    if (antigo && Array.isArray(antigo.movimentos) && antigo.movimentos.length > 0) {
+      console.log(`[cache] ⚠️ fallback dados antigos (${antigo.atualizado_em}): ${antigo.movimentos.length} movs`);
+      _cacheMovs.set(numeroProcesso, { movs: antigo.movimentos, ts: Date.now() - CACHE_TTL_MEM + 60000 });
+      return antigo.movimentos;
+    }
+  } catch (_) {}
+
+  console.log(`[cache] ❌ sem dados disponíveis para ${numeroProcesso}`);
   return [];
 }
 
