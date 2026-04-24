@@ -192,7 +192,7 @@ async function gerarRespostaChatbot(mensagem, nome, processos, escritorio) {
           infoProcessos += `${i + 1}. ${m.nome} — ${m.data}\n`;
         });
       } else {
-        infoProcessos += 'Dados do processo não disponíveis no momento — o tribunal ainda não disponibilizou as movimentações via sistema eletrônico.\n';
+        infoProcessos += 'DADOS_INDISPONÍVEIS: não foi possível consultar o tribunal agora.\n';
       }
     }
   }
@@ -221,12 +221,12 @@ REGRAS:
 3. *DD de mês de AAAA - Nome da Movimentação*: Explicação clara do que aconteceu, o que significa e o que vem a seguir.
 - Após listar as movimentações, respostas seguintes devem ser CURTAS e diretas (máximo 2-3 linhas)
 - Para dúvidas jurídicas: responda de forma direta e simples
-- Se não houver movimentações: diga que o processo segue em andamento aguardando movimentação do tribunal
+- Se aparecer DADOS_INDISPONÍVEIS: diga que não conseguiu consultar o processo agora e peça para tentar novamente em instantes
 
 SEU CONHECIMENTO ABRANGE: Direito Civil, Trabalhista, Criminal, Tributário, Previdenciário, de Família, do Consumidor, Administrativo e Constitucional. CPC, CLT, CC, CP, CDC e toda a legislação brasileira vigente.
 
 PROCESSOS DO CLIENTE ${nome.toUpperCase()}:
-${infoProcessos || 'Nenhuma movimentação registrada no momento — processo em andamento normal aguardando próxima movimentação do tribunal.'}`
+${infoProcessos || 'DADOS_INDISPONÍVEIS: não foi possível consultar o tribunal agora.'}`
         },
         { role: 'user', content: mensagem }
       ]
@@ -666,7 +666,7 @@ app.post('/chat-advogado', async (req, res) => {
             contextoMovs += '- ' + m.nome + ' (' + m.data + ')\n';
           });
         } else {
-          contextoMovs += 'Sem movimentações registradas.\n';
+          contextoMovs += 'DADOS_INDISPONÍVEIS: não foi possível consultar o tribunal agora.\n';
         }
       }
 
@@ -695,7 +695,7 @@ COMO RESPONDER:
 2. *DD de mês de AAAA - Nome da Movimentação*: O que aconteceu, o que significa e o que vem a seguir.
 3. *DD de mês de AAAA - Nome da Movimentação*: O que aconteceu, o que significa e o que vem a seguir.
 - Após listar movimentações, todas as respostas seguintes devem ser CURTAS (máximo 2-3 linhas)
-- Se não houver movimentações: diga apenas que o processo está aguardando movimentação do tribunal
+- Se aparecer DADOS_INDISPONÍVEIS: diga que não conseguiu consultar o processo agora e peça para tentar novamente em instantes
 - Para dúvidas jurídicas: responda com precisão técnica de forma concisa
 - Nunca invente dados processuais que não estejam nos dados abaixo
 
@@ -742,7 +742,7 @@ ${contextoMovs}` },
           contexto += 'Movimentações:\n';
           p.movs.forEach(m => { contexto += '- ' + m.nome + ' (' + m.data + ')\n'; });
         } else {
-          contexto += 'Sem movimentações recentes.\n';
+          contexto += 'DADOS_INDISPONÍVEIS: não foi possível consultar o tribunal agora.\n';
         }
       }
     }
@@ -777,7 +777,7 @@ COMO RESPONDER:
 2. *DD de mês de AAAA - Nome da Movimentação*: O que aconteceu, o que significa e o que vem a seguir.
 3. *DD de mês de AAAA - Nome da Movimentação*: O que aconteceu, o que significa e o que vem a seguir.
 - Após listar movimentações, todas as respostas seguintes devem ser CURTAS (máximo 2-3 linhas)
-- Se não houver movimentações: diga apenas que o processo está aguardando movimentação do tribunal
+- Se aparecer DADOS_INDISPONÍVEIS: diga que não conseguiu consultar o processo agora e peça para tentar novamente em instantes
 - Para dúvidas jurídicas: responda com precisão técnica de forma concisa
 - Para redigir mensagens: linguagem simples e profissional
 - Nunca invente dados que não estejam nos dados abaixo
