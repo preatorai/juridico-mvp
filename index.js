@@ -421,6 +421,23 @@ app.post('/processos', async (req, res) => {
   }
 
   res.json({ sucesso: true, data });
+
+  // Pré-aquece o cache em background — garante dados prontos quando o chat abrir
+  (async () => {
+    try {
+      const num = normalizarCNJ(numero_processo);
+      console.log(`[cache-prewarm] iniciando busca para ${num}`);
+      const movs = await buscarMovimentacoes(num);
+      if (movs && movs.length > 0) {
+        await salvarCache(num, movs);
+        console.log(`[cache-prewarm] ✅ ${num} — ${movs.length} movimentações salvas`);
+      } else {
+        console.log(`[cache-prewarm] ⚠ ${num} — sem dados no momento`);
+      }
+    } catch (e) {
+      console.log(`[cache-prewarm] erro: ${e.message}`);
+    }
+  })();
 });
 
 app.get('/processos', async (req, res) => {

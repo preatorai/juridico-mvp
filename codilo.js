@@ -111,7 +111,7 @@ function formatarData(dataStr) {
 // Polling genérico — usado por todos os fluxos
 async function polling(requestId, completo = false) {
   const inicio = Date.now();
-  const MAX    = 20;
+  const MAX    = 35;
   let erros500 = 0;
 
   for (let i = 0; i < MAX; i++) {
