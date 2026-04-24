@@ -63,64 +63,25 @@ function detectarTribunal(numeroProcesso) {
   return 'tjal';
 }
 
-// Cache de movimentações — memória (rápido) + Supabase (persiste entre restarts)
+// Cache em memória — só para evitar chamar Codilo duas vezes seguidas na mesma sessão
 const _cacheMovs = new Map();
-const CACHE_TTL_MEM = 10 * 60 * 1000;        // 10 min em memória
-const CACHE_TTL_DB  = 72 * 60 * 60 * 1000;  // 72h para revalidação (dados antigos são sempre retornados)
-
-function salvarCache(numeroProcesso, movs) {
-  _cacheMovs.set(numeroProcesso, { movs, ts: Date.now() });
-  (async () => {
-    await supabase.from('cache_movimentos').upsert({
-      numero_processo: numeroProcesso,
-      movimentos: movs,
-      atualizado_em: new Date().toISOString()
-    }, { onConflict: 'numero_processo' });
-  })().catch(() => {});
-}
-
-function atualizarCacheBackground(numeroProcesso) {
-  (async () => {
-    const movs = await buscarMovimentacoes(numeroProcesso);
-    if (movs && movs.length > 0) salvarCache(numeroProcesso, movs);
-  })().catch(() => {});
-}
 
 async function buscarMovimentacoesCache(numeroProcesso) {
   const agora = Date.now();
 
-  // Cache em memória apenas por 2 min — evita chamar Codilo duas vezes na mesma sessão
+  // Cache em memória 5 min — evita chamar Codilo várias vezes seguidas
   const mem = _cacheMovs.get(numeroProcesso);
-  if (mem && agora - mem.ts < 2 * 60 * 1000) {
-    console.log(`[cache-mem] hit: ${numeroProcesso}`);
+  if (mem && mem.movs.length > 0 && agora - mem.ts < 5 * 60 * 1000) {
     return mem.movs;
   }
 
-  // Codilo é sempre consultado (fonte principal)
-  console.log(`[codilo] buscando ${numeroProcesso}...`);
-  const t1 = Date.now();
+  // Consulta Codilo diretamente
   const movs = await buscarMovimentacoes(numeroProcesso);
-  console.log(`[codilo] ${Date.now() - t1}ms — ${movs?.length ?? 0} movs`);
-
   if (movs && movs.length > 0) {
-    salvarCache(numeroProcesso, movs);
+    _cacheMovs.set(numeroProcesso, { movs, ts: agora });
     return movs;
   }
 
-  // Codilo falhou — fallback: dados anteriores no banco
-  try {
-    const { data: row } = await supabase.from('cache_movimentos')
-      .select('movimentos, atualizado_em')
-      .eq('numero_processo', numeroProcesso)
-      .single();
-    if (row && Array.isArray(row.movimentos) && row.movimentos.length > 0) {
-      console.log(`[cache-db] ⚠️ fallback (Codilo falhou): ${row.movimentos.length} movs de ${row.atualizado_em}`);
-      _cacheMovs.set(numeroProcesso, { movs: row.movimentos, ts: agora });
-      return row.movimentos;
-    }
-  } catch (_) {}
-
-  console.log(`[codilo] ❌ sem dados para ${numeroProcesso}`);
   return [];
 }
 
@@ -146,11 +107,20 @@ function normalizarTelefone(raw) {
 }
 
 
+function normalizarCNJ(numero) {
+  const d = (numero || '').replace(/\D/g, '');
+  if (d.length === 20) {
+    return `${d.slice(0,7)}-${d.slice(7,9)}.${d.slice(9,13)}.${d.slice(13,14)}.${d.slice(14,16)}.${d.slice(16,20)}`;
+  }
+  return numero.trim();
+}
+
 async function buscarMovimentacoes(numeroProcesso) {
-  const tribunal = detectarTribunal(numeroProcesso);
-  console.log('Buscando processo:', numeroProcesso, 'no tribunal:', tribunal);
+  const num = normalizarCNJ(numeroProcesso);
+  const tribunal = detectarTribunal(num);
+  console.log(`[busca] numero="${num}" | tribunal=${tribunal}`);
   try {
-    const movs = await consultarProcesso(numeroProcesso, tribunal);
+    const movs = await consultarProcesso(num, tribunal);
     console.log('[codilo] movimentos encontrados:', movs?.length ?? 0);
     return movs || [];
   } catch (err) {
