@@ -60,7 +60,7 @@ function detectarTribunal(numeroProcesso) {
     const codigo = partes[2] + '.' + partes[3].substring(0,2);
     if (TRIBUNAIS[codigo]) return TRIBUNAIS[codigo];
   }
-  return 'tjal';
+  return null;
 }
 
 const _cacheMovs = new Map();
