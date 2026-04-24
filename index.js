@@ -68,17 +68,18 @@ const _cacheMovs = new Map();
 async function salvarCache(numeroProcesso, movs) {
   _cacheMovs.set(numeroProcesso, { movs, ts: Date.now() });
   try {
-    const { error } = await supabase.from('cache_movimentos').upsert(
-      { numero_processo: numeroProcesso, movimentos: movs, atualizado_em: new Date().toISOString() },
-      { onConflict: 'numero_processo' }
-    );
-    if (error) {
-      console.log(`[cache-db] falha upsert: ${error.message} — tentando insert separado`);
-      await supabase.from('cache_movimentos')
-        .update({ movimentos: movs, atualizado_em: new Date().toISOString() })
-        .eq('numero_processo', numeroProcesso);
+    // Tenta update primeiro; se não existir, faz insert
+    const { data: upd } = await supabase.from('cache_movimentos')
+      .update({ movimentos: movs, atualizado_em: new Date().toISOString() })
+      .eq('numero_processo', numeroProcesso)
+      .select('numero_processo');
+    if (!upd || !upd.length) {
+      const { error: insErr } = await supabase.from('cache_movimentos')
+        .insert({ numero_processo: numeroProcesso, movimentos: movs, atualizado_em: new Date().toISOString() });
+      if (insErr) console.log(`[cache-db] ❌ insert falhou: ${insErr.message}`);
+      else console.log(`[cache-db] ✅ inserido: ${numeroProcesso} (${movs.length} movs)`);
     } else {
-      console.log(`[cache-db] ✅ salvo: ${numeroProcesso} (${movs.length} movs)`);
+      console.log(`[cache-db] ✅ atualizado: ${numeroProcesso} (${movs.length} movs)`);
     }
   } catch (e) {
     console.log(`[cache-db] erro ao salvar: ${e.message}`);
