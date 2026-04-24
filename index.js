@@ -659,14 +659,7 @@ app.post('/chat-advogado', async (req, res) => {
     const processosAlvo = encontrarClientesMencionados(pergunta, processos);
     console.log(`[chat-advogado] processos alvo: ${processosAlvo.length} de ${processos.length}`);
 
-    // Busca movimentações só dos processos relevantes (max 3)
-    const tMovs = Date.now();
-    const resultados = await Promise.all(processosAlvo.slice(0, 3).map(async p => {
-      const movs = await buscarMovimentacoesCache(p.numero_processo);
-      return { ...p, movs: movs || [] };
-    }));
-    console.log(`[chat-advogado] ⏱ busca movimentações (${processosAlvo.length} processos): ${Date.now() - tMovs}ms`);
-    const dadosProcessos = resultados;
+    const dadosProcessos = processosAlvo.slice(0, 3).map(p => ({ ...p, movs: [] }));
 
     // Se pergunta sobre movimentações, passa pela IA para explicar cada dia
     if (perguntaSobreProcesso(pergunta) && !detectarIntencaoEnvio(pergunta)) {
