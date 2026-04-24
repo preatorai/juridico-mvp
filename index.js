@@ -89,65 +89,38 @@ function atualizarCacheBackground(numeroProcesso) {
 async function buscarMovimentacoesCache(numeroProcesso) {
   const agora = Date.now();
 
-  // 1. Cache em memória
+  // Cache em memória apenas por 2 min — evita chamar Codilo duas vezes na mesma sessão
   const mem = _cacheMovs.get(numeroProcesso);
-  if (mem && agora - mem.ts < CACHE_TTL_MEM) {
-    console.log(`[cache-mem] ✅ hit: ${numeroProcesso}`);
+  if (mem && agora - mem.ts < 2 * 60 * 1000) {
+    console.log(`[cache-mem] hit: ${numeroProcesso}`);
     return mem.movs;
   }
 
-  // 2. Cache no banco (persiste entre restarts do servidor)
-  try {
-    const { data: row, error: dbErr } = await supabase.from('cache_movimentos')
-      .select('movimentos, atualizado_em')
-      .eq('numero_processo', numeroProcesso)
-      .single();
-
-    if (dbErr) console.log(`[cache-db] erro na consulta: ${dbErr.message}`);
-    else if (!row) console.log(`[cache-db] sem registro para: ${numeroProcesso}`);
-    else if (!Array.isArray(row.movimentos) || row.movimentos.length === 0) console.log(`[cache-db] registro vazio/inválido para: ${numeroProcesso}`);
-
-    if (row && Array.isArray(row.movimentos) && row.movimentos.length > 0) {
-      const idade = agora - new Date(row.atualizado_em).getTime();
-      const movs  = row.movimentos;
-      _cacheMovs.set(numeroProcesso, { movs, ts: agora });
-
-      if (idade < CACHE_TTL_DB) {
-        console.log(`[cache-db] ✅ hit: ${numeroProcesso} (${Math.round(idade/1000/60)}min)`);
-        return movs;
-      }
-
-      // Cache expirado mas tem dados — retorna imediatamente e atualiza em background
-      console.log(`[cache-db] expirado (${Math.round(idade/1000/60)}min) — retornando ${movs.length} movs e atualizando em background`);
-      atualizarCacheBackground(numeroProcesso);
-      return movs;
-    }
-  } catch (_) {}
-
-  // 3. Sem cache válido — busca na Codilo
-  console.log(`[cache] miss total: ${numeroProcesso}, buscando na Codilo...`);
+  // Codilo é sempre consultado (fonte principal)
+  console.log(`[codilo] buscando ${numeroProcesso}...`);
   const t1 = Date.now();
   const movs = await buscarMovimentacoes(numeroProcesso);
-  console.log(`[codilo] busca total: ${Date.now() - t1}ms — ${movs?.length ?? 0} movimentações`);
+  console.log(`[codilo] ${Date.now() - t1}ms — ${movs?.length ?? 0} movs`);
+
   if (movs && movs.length > 0) {
     salvarCache(numeroProcesso, movs);
     return movs;
   }
 
-  // 4. Codilo falhou — último recurso: qualquer dado antigo no banco (mesmo que expirado ou não pego antes)
+  // Codilo falhou — fallback: dados anteriores no banco
   try {
-    const { data: antigo } = await supabase.from('cache_movimentos')
+    const { data: row } = await supabase.from('cache_movimentos')
       .select('movimentos, atualizado_em')
       .eq('numero_processo', numeroProcesso)
       .single();
-    if (antigo && Array.isArray(antigo.movimentos) && antigo.movimentos.length > 0) {
-      console.log(`[cache] ⚠️ fallback dados antigos (${antigo.atualizado_em}): ${antigo.movimentos.length} movs`);
-      _cacheMovs.set(numeroProcesso, { movs: antigo.movimentos, ts: Date.now() - CACHE_TTL_MEM + 60000 });
-      return antigo.movimentos;
+    if (row && Array.isArray(row.movimentos) && row.movimentos.length > 0) {
+      console.log(`[cache-db] ⚠️ fallback (Codilo falhou): ${row.movimentos.length} movs de ${row.atualizado_em}`);
+      _cacheMovs.set(numeroProcesso, { movs: row.movimentos, ts: agora });
+      return row.movimentos;
     }
   } catch (_) {}
 
-  console.log(`[cache] ❌ sem dados disponíveis para ${numeroProcesso}`);
+  console.log(`[codilo] ❌ sem dados para ${numeroProcesso}`);
   return [];
 }
 
