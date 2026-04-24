@@ -115,8 +115,8 @@ async function polling(requestId, completo = false) {
   let erros500 = 0;
 
   for (let i = 0; i < MAX; i++) {
-    // Primeiras tentativas rápidas, depois espera mais para tribunais lentos
-    const espera = i < 5 ? 600 : 1200;
+    // 300ms para tribunais rápidos, escala para lentos
+    const espera = i < 3 ? 300 : i < 8 ? 700 : 1300;
     await new Promise(r => setTimeout(r, espera));
     try {
       const token = await getToken();
@@ -185,43 +185,51 @@ async function autoRequest(cnj, completo) {
   return null;
 }
 
+// Retorna a primeira promise que resolve com dados válidos
+function primeiroComDados(promises, check) {
+  return new Promise(resolve => {
+    let pendentes = promises.length;
+    if (pendentes === 0) { resolve(null); return; }
+    promises.forEach(p => {
+      Promise.resolve(p).then(res => {
+        if (check(res)) resolve(res);
+        if (--pendentes === 0) resolve(null);
+      }).catch(() => { if (--pendentes === 0) resolve(null); });
+    });
+  });
+}
+
 // Cadeia completa de tentativas para um processo
 async function buscar(numeroProcesso, tribunal, completo) {
   const cnj = formatarCNJ(numeroProcesso);
   const cfg = MAPA_TRIBUNAL[tribunal];
   const vazio = completo ? null : [];
+  const check = res => res && (completo ? res.movimentacoes?.length : res.length);
 
   console.log(`[codilo] buscando ${cnj} | tribunal=${tribunal} | completo=${completo}`);
 
   if (cfg) {
-    // 1. Plataforma mapeada — principal e recursal
-    for (const query of ['principal', 'recursal']) {
-      const res = await submitQuery(cnj, cfg.platform, cfg.search, query, completo);
-      if (res && (completo ? res.movimentacoes?.length : res.length)) {
-        console.log(`[codilo] ✅ encontrado via ${cfg.platform}/${query}`);
-        return res;
-      }
-    }
+    // 1. Plataforma mapeada — principal e recursal em paralelo
+    const res1 = await primeiroComDados(
+      ['principal', 'recursal'].map(q => submitQuery(cnj, cfg.platform, cfg.search, q, completo)),
+      check
+    );
+    if (res1) { console.log(`[codilo] ✅ encontrado via ${cfg.platform}`); return res1; }
 
-    // 2. Se era ESAJ, tenta PJe (alguns TJs operam nos dois sistemas)
+    // 2. Se era ESAJ, tenta PJe em paralelo
     if (cfg.platform === 'esaj') {
-      for (const query of ['principal', 'recursal']) {
-        const res = await submitQuery(cnj, 'pje', cfg.search, query, completo);
-        if (res && (completo ? res.movimentacoes?.length : res.length)) {
-          console.log(`[codilo] ✅ encontrado via pje fallback/${query}`);
-          return res;
-        }
-      }
+      const res2 = await primeiroComDados(
+        ['principal', 'recursal'].map(q => submitQuery(cnj, 'pje', cfg.search, q, completo)),
+        check
+      );
+      if (res2) { console.log('[codilo] ✅ encontrado via pje fallback'); return res2; }
     }
   }
 
   // 3. Autorequest — Codilo detecta o tribunal automaticamente
   console.log('[codilo] tentando autorequest...');
   const res = await autoRequest(cnj, completo);
-  if (res && (completo ? res.movimentacoes?.length : res.length)) {
-    console.log('[codilo] ✅ encontrado via autorequest');
-    return res;
-  }
+  if (check(res)) { console.log('[codilo] ✅ encontrado via autorequest'); return res; }
 
   console.log('[codilo] nenhuma fonte retornou dados para', cnj);
   return vazio;
