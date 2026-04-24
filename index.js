@@ -296,6 +296,7 @@ async function enviarBoasVindas(processo, escritorio) {
 
 
 app.get('/', (req, res) => res.send('Sistema juridico rodando!'));
+app.get('/ping', (req, res) => res.json({ ok: true, ts: Date.now() }));
 
 app.get('/processos/:numero/detalhes', async (req, res) => {
   const numero = decodeURIComponent(req.params.numero);
