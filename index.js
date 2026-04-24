@@ -627,7 +627,7 @@ function detectarIntencaoEnvio(pergunta) {
 // Detecta se a pergunta é sobre o processo (precisa do contexto)
 function perguntaSobreProcesso(pergunta) {
   const p = pergunta.toLowerCase();
-  return /processo|moviment|prazo|audiên|decisão|sentença|recurso|andament|atualiz|aconteceu|novidade|status|cliente|o que|como está|como tá|teve|tem|última|ultimo|recente|passou|ocorreu|andou|sim|não|nao/.test(p);
+  return /processo|moviment|prazo|audiên|decisão|sentença|recurso|andament|atualiz|aconteceu|novidade|status|como está|como tá|teve|última|ultimo|recente|passou|ocorreu|andou/.test(p);
 }
 
 // Encontra o(s) processo(s) mencionados na pergunta pelo nome do cliente
