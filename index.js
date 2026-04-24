@@ -125,8 +125,10 @@ async function buscarMovimentacoesCache(numeroProcesso) {
   const t1 = Date.now();
   const movs = await buscarMovimentacoes(numeroProcesso);
   console.log(`[codilo] busca total: ${Date.now() - t1}ms — ${movs?.length ?? 0} movimentações`);
+  // Salva mesmo vazio para evitar buscas repetidas (TTL curto de 1h para vazios)
+  _cacheMovs.set(numeroProcesso, { movs: movs || [], ts: movs?.length ? Date.now() : Date.now() - CACHE_TTL_MEM + 60*60*1000 });
   if (movs && movs.length > 0) salvarCache(numeroProcesso, movs);
-  return movs;
+  return movs || [];
 }
 
 // Deduplicação de mensagens recebidas via webhook

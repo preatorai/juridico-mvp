@@ -111,14 +111,15 @@ function formatarData(dataStr) {
 // Polling genérico — usado por todos os fluxos
 async function polling(requestId, completo = false) {
   const inicio = Date.now();
-  const MAX    = 12;
+  const MAX    = 6;
+  let erros500 = 0;
 
   for (let i = 0; i < MAX; i++) {
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 500));
     try {
       const token = await getToken();
       const r = await axios.get(`https://api.consulta.codilo.com.br/v1/request/${requestId}`, {
-        headers: { Authorization: 'Bearer ' + token }, timeout: 10000
+        headers: { Authorization: 'Bearer ' + token }, timeout: 8000
       });
 
       const status = (r.data.requested?.status || '').toLowerCase();
@@ -135,16 +136,14 @@ async function polling(requestId, completo = false) {
 
     } catch (e) {
       const s = e.response?.status;
-      if (s === 401) {
-        console.log('[codilo] token expirado, renovando...');
-        await getToken(true);
-        continue;
-      }
+      if (s === 401) { await getToken(true); continue; }
       if (s === 400 || s === 403 || s === 404) { console.log(`[codilo] erro definitivo ${s}`); return null; }
-      console.log(`[codilo] erro temporário ${s || 'rede'}, aguardando...`);
+      erros500++;
+      console.log(`[codilo] erro temporário ${s || 'rede'} (${erros500}x)`);
+      if (erros500 >= 3) { console.log('[codilo] muitos erros 500, desistindo'); return null; }
     }
   }
-  console.log(`[codilo] timeout após ${MAX} tentativas (${MAX * 0.8}s)`);
+  console.log(`[codilo] timeout após ${MAX} tentativas`);
   return null;
 }
 
