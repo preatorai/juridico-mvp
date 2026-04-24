@@ -186,11 +186,17 @@ async function gerarRespostaChatbot(mensagem, nome, processos, escritorio) {
   for (const processo of processos) {
     infoProcessos += '\nProcesso — cliente: ' + processo.nome_cliente + ':\n';
     if (precisaDados) {
-      const movs = await buscarMovimentacoesCache(processo.numero_processo);
+      let movs = await buscarMovimentacoesCache(processo.numero_processo);
+      // Se retornou vazio, tenta busca direta uma vez mais
+      if (!movs || movs.length === 0) {
+        console.log(`[chatbot] cache vazio, tentando busca direta para ${processo.numero_processo}`);
+        movs = await buscarMovimentacoes(processo.numero_processo);
+        if (movs && movs.length > 0) salvarCache(processo.numero_processo, movs);
+      }
       if (movs && movs.length > 0) {
-        infoProcessos += 'Últimas 3 movimentações (apresente cada uma em 1 frase curta e simples, sem juridiquês):\n';
-        movs.slice(0, 3).forEach(m => {
-          infoProcessos += '- ' + m.nome + ' (' + m.data + ')\n';
+        infoProcessos += 'Últimas 3 movimentações:\n';
+        movs.slice(0, 3).forEach((m, i) => {
+          infoProcessos += `${i + 1}. ${m.nome} — ${m.data}\n`;
         });
       } else {
         infoProcessos += 'Sem movimentações registradas — processo aguardando movimentação do tribunal.\n';
