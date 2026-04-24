@@ -103,7 +103,7 @@ async function buscarMovimentacoesCache(numeroProcesso) {
       .eq('numero_processo', numeroProcesso)
       .single();
 
-    if (row && row.movimentos) {
+    if (row && Array.isArray(row.movimentos) && row.movimentos.length > 0) {
       const idade = agora - new Date(row.atualizado_em).getTime();
       const movs  = row.movimentos;
       _cacheMovs.set(numeroProcesso, { movs, ts: agora });
@@ -113,8 +113,8 @@ async function buscarMovimentacoesCache(numeroProcesso) {
         return movs;
       }
 
-      // Cache expirado — retorna imediatamente e atualiza em background
-      console.log(`[cache-db] expirado (${Math.round(idade/1000/60)}min) — retornando cache e atualizando em background`);
+      // Cache expirado mas tem dados — retorna imediatamente e atualiza em background
+      console.log(`[cache-db] expirado (${Math.round(idade/1000/60)}min) — retornando ${movs.length} movs e atualizando em background`);
       atualizarCacheBackground(numeroProcesso);
       return movs;
     }
@@ -125,10 +125,11 @@ async function buscarMovimentacoesCache(numeroProcesso) {
   const t1 = Date.now();
   const movs = await buscarMovimentacoes(numeroProcesso);
   console.log(`[codilo] busca total: ${Date.now() - t1}ms — ${movs?.length ?? 0} movimentações`);
-  // Salva mesmo vazio para evitar buscas repetidas (TTL curto de 1h para vazios)
-  _cacheMovs.set(numeroProcesso, { movs: movs || [], ts: movs?.length ? Date.now() : Date.now() - CACHE_TTL_MEM + 60*60*1000 });
-  if (movs && movs.length > 0) salvarCache(numeroProcesso, movs);
-  return movs || [];
+  if (movs && movs.length > 0) {
+    salvarCache(numeroProcesso, movs);
+    return movs;
+  }
+  return [];
 }
 
 // Deduplicação de mensagens recebidas via webhook
