@@ -253,6 +253,7 @@ function extrairDadosCompletos(data) {
     if (it.steps && Array.isArray(it.steps)) steps.push(...it.steps);
   }
   console.log('[codilo] steps encontrados:', steps.length);
+  if (steps.length === 0) console.log('[codilo] estrutura raw:', JSON.stringify(items[0]).substring(0, 500));
 
   const movimentacoes = steps
     .filter(s => s.title || s.description)
