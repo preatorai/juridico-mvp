@@ -626,18 +626,22 @@ app.post('/chat-advogado', async (req, res) => {
     const escritorio = usuario ? usuario.escritorio : 'nosso escritório';
     const nomeAdvogado = usuario ? usuario.nome : 'Advogado';
 
-    // Busca movimentações de todos os processos em paralelo
+    // Filtra só os processos mencionados na pergunta antes de buscar na Codilo
+    const processosAlvo = encontrarClientesMencionados(pergunta, processos);
+    console.log(`[chat-advogado] processos alvo: ${processosAlvo.length} de ${processos.length}`);
+
+    // Busca movimentações só dos processos relevantes (max 3)
     const tMovs = Date.now();
-    const resultados = await Promise.all(processos.map(async p => {
+    const resultados = await Promise.all(processosAlvo.slice(0, 3).map(async p => {
       let movs = await buscarMovimentacoesCache(p.numero_processo);
-      // Se cache retornou vazio, tenta busca completa ignorando cache
       if (!movs || movs.length === 0) {
         console.log(`[chat-advogado] cache vazio para ${p.numero_processo}, tentando busca direta...`);
         movs = await buscarMovimentacoes(p.numero_processo);
+        if (movs && movs.length > 0) salvarCache(p.numero_processo, movs);
       }
       return { ...p, movs: movs || [] };
     }));
-    console.log(`[chat-advogado] ⏱ busca movimentações (${processos.length} processos): ${Date.now() - tMovs}ms`);
+    console.log(`[chat-advogado] ⏱ busca movimentações (${processosAlvo.length} processos): ${Date.now() - tMovs}ms`);
     const dadosProcessos = resultados;
 
     // Se pergunta sobre movimentações, passa pela IA para explicar cada dia
