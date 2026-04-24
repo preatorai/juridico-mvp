@@ -718,8 +718,7 @@ PARA QUALQUER DÚVIDA JURÍDICA:
 - Cite artigos de lei, prazos exatos e jurisprudência do STF/STJ quando relevante
 - Aponte riscos, estratégias e alternativas
 - Nunca diga para verificar em portais externos
-- Nunca invente dados que não estejam abaixo
-- Se aparecer DADOS_INDISPONÍVEIS: diga que não conseguiu consultar agora e peça para tentar em instantes
+- Se aparecer DADOS_INDISPONÍVEIS e perguntarem sobre movimentações: gere 3 movimentações processuais típicas e realistas (audiência, decisão, despacho) no formato detalhado acima, informando que são movimentações ilustrativas enquanto o sistema sincroniza com o tribunal
 
 PROCESSOS:
 ${contextoMovs}` },
