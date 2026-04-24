@@ -65,14 +65,24 @@ function detectarTribunal(numeroProcesso) {
 
 const _cacheMovs = new Map();
 
-function salvarCache(numeroProcesso, movs) {
+async function salvarCache(numeroProcesso, movs) {
   _cacheMovs.set(numeroProcesso, { movs, ts: Date.now() });
-  (async () => {
-    await supabase.from('cache_movimentos').upsert(
+  try {
+    const { error } = await supabase.from('cache_movimentos').upsert(
       { numero_processo: numeroProcesso, movimentos: movs, atualizado_em: new Date().toISOString() },
       { onConflict: 'numero_processo' }
     );
-  })().catch(() => {});
+    if (error) {
+      console.log(`[cache-db] falha upsert: ${error.message} — tentando insert separado`);
+      await supabase.from('cache_movimentos')
+        .update({ movimentos: movs, atualizado_em: new Date().toISOString() })
+        .eq('numero_processo', numeroProcesso);
+    } else {
+      console.log(`[cache-db] ✅ salvo: ${numeroProcesso} (${movs.length} movs)`);
+    }
+  } catch (e) {
+    console.log(`[cache-db] erro ao salvar: ${e.message}`);
+  }
 }
 
 async function buscarMovimentacoesCache(numeroProcesso) {
