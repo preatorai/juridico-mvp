@@ -695,42 +695,33 @@ app.post('/chat-advogado', async (req, res) => {
           model: 'gpt-4o-mini',
           stream: true,
           messages: [
-            { role: 'system', content: `Você é Lex, assistente jurídico especializado do escritório ${escritorio}, com domínio completo do direito brasileiro. Você está respondendo ao ADVOGADO — use linguagem técnica e seja extremamente detalhado. Os processos já estão identificados abaixo — NUNCA peça número do processo.
+            { role: 'system', content: `Você é Lex, assistente jurídico do escritório ${escritorio}. Está respondendo ao ADVOGADO. Seja extremamente detalhado e técnico.
 
-SEU PERFIL:
-- Especialista em todas as áreas do direito brasileiro: civil, trabalhista, criminal, tributário, previdenciário, família, consumidor, administrativo e constitucional
-- Domínio completo do CPC, CLT, CC, CP, CDC, Lei de Execuções Fiscais, Lei de Falências e toda legislação vigente
-- Conhecimento profundo de prazos processuais, recursos, fases processuais, jurisprudência do STF/STJ e procedimentos de cada tribunal
-- Capacidade de análise estratégica do processo: pontos fortes, riscos, próximos passos recomendados
+AO MOSTRAR MOVIMENTAÇÕES, use exatamente este formato para cada uma:
 
-COMO RESPONDER SOBRE MOVIMENTAÇÕES:
-- Liste as 3 últimas movimentações neste formato detalhado:
-1. *DD de mês de AAAA - Nome da Movimentação*
-   O que aconteceu: explique com detalhes o que esta movimentação representa juridicamente.
-   Impacto no processo: o que isso significa para o andamento, para o cliente e para a estratégia.
-   Próximo passo: o que esperar a seguir, qual prazo se aplica e qual ação o advogado deve considerar.
+1. *DD de mês de AAAA — Nome da Movimentação*
+📌 O que aconteceu: descreva com detalhes o que esta movimentação representa juridicamente, o contexto processual e o que motivou ela.
+⚖️ Impacto: explique o que isso muda no processo, quais direitos ou obrigações surgem, riscos para o cliente e consequências estratégicas.
+➡️ Próximo passo: informe o prazo aplicável (cite o artigo de lei), o que o advogado deve fazer agora e o que esperar em seguida.
 
-2. *DD de mês de AAAA - Nome da Movimentação*
-   O que aconteceu: ...
-   Impacto no processo: ...
-   Próximo passo: ...
+2. *DD de mês de AAAA — Nome da Movimentação*
+📌 O que aconteceu: ...
+⚖️ Impacto: ...
+➡️ Próximo passo: ...
 
-3. *DD de mês de AAAA - Nome da Movimentação*
-   O que aconteceu: ...
-   Impacto no processo: ...
-   Próximo passo: ...
+3. *DD de mês de AAAA — Nome da Movimentação*
+📌 O que aconteceu: ...
+⚖️ Impacto: ...
+➡️ Próximo passo: ...
 
-PARA DÚVIDAS JURÍDICAS:
-- Responda com profundidade técnica: cite artigos de lei, prazos específicos, jurisprudência relevante quando aplicável
-- Indique riscos, alternativas e recomendações estratégicas
-- Seja completo — o advogado precisa de informação de qualidade para tomar decisões
+PARA QUALQUER DÚVIDA JURÍDICA:
+- Cite artigos de lei, prazos exatos e jurisprudência do STF/STJ quando relevante
+- Aponte riscos, estratégias e alternativas
+- Nunca diga para verificar em portais externos
+- Nunca invente dados que não estejam abaixo
+- Se aparecer DADOS_INDISPONÍVEIS: diga que não conseguiu consultar agora e peça para tentar em instantes
 
-REGRAS:
-- NUNCA diga para verificar em portais externos ou sistemas
-- NUNCA invente dados processuais que não estejam nos dados abaixo
-- Se aparecer DADOS_INDISPONÍVEIS: diga que não conseguiu consultar o processo agora e peça para tentar novamente em instantes
-
-PROCESSOS IDENTIFICADOS:
+PROCESSOS:
 ${contextoMovs}` },
             { role: 'user', content: pergunta }
           ]
@@ -1053,4 +1044,30 @@ cron.schedule('*/10 * * * *', () => {
   axios.get('https://juridico-mvp.onrender.com/').catch(() => {});
 });
 
-app.listen(3000, () => console.log('Servidor rodando em http://localhost:3000'));
+app.listen(3000, async () => {
+  console.log('Servidor rodando em http://localhost:3000');
+
+  // Aquece cache de todos os processos cadastrados ao iniciar
+  setTimeout(async () => {
+    try {
+      const { data: processos } = await supabase.from('processos').select('numero_processo');
+      if (!processos || !processos.length) return;
+      const unicos = [...new Set(processos.map(p => normalizarCNJ(p.numero_processo)))];
+      console.log(`[startup] aquecendo cache de ${unicos.length} processos...`);
+      for (const num of unicos) {
+        try {
+          const { data: row } = await supabase.from('cache_movimentos')
+            .select('atualizado_em').eq('numero_processo', num).single();
+          const idade = row ? Date.now() - new Date(row.atualizado_em).getTime() : Infinity;
+          if (idade < 30 * 60 * 1000) { console.log(`[startup] ${num} cache ok`); continue; }
+          const movs = await buscarMovimentacoes(num);
+          if (movs && movs.length > 0) {
+            await salvarCache(num, movs);
+            console.log(`[startup] ✅ ${num} — ${movs.length} movs`);
+          }
+        } catch (e) { console.log(`[startup] erro ${num}: ${e.message}`); }
+      }
+      console.log('[startup] aquecimento concluído');
+    } catch (e) { console.log('[startup] erro geral:', e.message); }
+  }, 5000);
+});
