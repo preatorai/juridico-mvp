@@ -98,10 +98,14 @@ async function buscarMovimentacoesCache(numeroProcesso) {
 
   // 2. Cache no banco (persiste entre restarts do servidor)
   try {
-    const { data: row } = await supabase.from('cache_movimentos')
+    const { data: row, error: dbErr } = await supabase.from('cache_movimentos')
       .select('movimentos, atualizado_em')
       .eq('numero_processo', numeroProcesso)
       .single();
+
+    if (dbErr) console.log(`[cache-db] erro na consulta: ${dbErr.message}`);
+    else if (!row) console.log(`[cache-db] sem registro para: ${numeroProcesso}`);
+    else if (!Array.isArray(row.movimentos) || row.movimentos.length === 0) console.log(`[cache-db] registro vazio/inválido para: ${numeroProcesso}`);
 
     if (row && Array.isArray(row.movimentos) && row.movimentos.length > 0) {
       const idade = agora - new Date(row.atualizado_em).getTime();
@@ -309,6 +313,20 @@ async function enviarBoasVindas(processo, escritorio) {
 
 app.get('/', (req, res) => res.send('Sistema juridico rodando!'));
 app.get('/ping', (req, res) => res.json({ ok: true, ts: Date.now() }));
+
+// Diagnóstico — testa Codilo diretamente sem cache (ex: /debug-processo/0001234-12.2020.8.02.0001)
+app.get('/debug-processo/:numero', async (req, res) => {
+  const numero = decodeURIComponent(req.params.numero);
+  const tribunal = detectarTribunal(numero);
+  console.log(`[debug] testando ${numero} (${tribunal})`);
+  const { data: cacheRow } = await supabase.from('cache_movimentos').select('movimentos, atualizado_em').eq('numero_processo', numero).single().catch(() => ({ data: null }));
+  const movs = await buscarMovimentacoes(numero);
+  res.json({
+    numero, tribunal,
+    cache_db: cacheRow ? { total: cacheRow.movimentos?.length ?? 0, atualizado_em: cacheRow.atualizado_em } : null,
+    codilo_agora: { total: movs?.length ?? 0, movimentacoes: movs?.slice(0, 3) ?? [] }
+  });
+});
 
 app.get('/processos/:numero/detalhes', async (req, res) => {
   const numero = decodeURIComponent(req.params.numero);
