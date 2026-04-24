@@ -11,6 +11,8 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY;
 const OPENAI_KEY = process.env.OPENAI_KEY;
 const EVOLUTION_URL = process.env.EVOLUTION_URL;
 const EVOLUTION_CLIENT_TOKEN = process.env.EVOLUTION_CLIENT_TOKEN;
+const SPURNOW_KEY   = process.env.SPURNOW_KEY;
+const SPURNOW_PHONE = process.env.SPURNOW_PHONE;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const app = express();
@@ -237,6 +239,23 @@ async function salvarMensagem(usuario_id, telefone, nome_cliente, remetente, con
 async function jaFoiEnviada(processoId, descricao) {
   const { data } = await supabase.from('movimentacoes').select('id').eq('processo_id', processoId).eq('descricao', descricao).single();
   return !!data;
+}
+
+async function enviarWhatsAppSpurnow(telefone, mensagem) {
+  const nums = telefone.replace(/\D/g, '');
+  const fone = nums.startsWith('55') ? nums : '55' + nums;
+  console.log('[spurnow] enviando para:', fone);
+  const res = await axios.post(
+    'https://api.spurnow.com/send-message',
+    {
+      to: fone,
+      channel: 'whatsapp',
+      content: { type: 'text', text: { body: mensagem } },
+      options: { from: SPURNOW_PHONE }
+    },
+    { headers: { Authorization: 'Bearer ' + SPURNOW_KEY }, timeout: 10000 }
+  );
+  console.log('[spurnow] resposta:', res.status);
 }
 
 async function enviarWhatsApp(telefone, mensagem) {
@@ -511,6 +530,49 @@ app.post('/webhook', async (req, res) => {
   } catch (err) {
     console.error('Erro webhook:', err.message);
     res.sendStatus(200);
+  }
+});
+
+// Webhook do Spurnow (API oficial Meta — sem risco de ban)
+app.post('/webhook-spurnow', async (req, res) => {
+  res.sendStatus(200); // responde imediatamente para o spurnow não reenviar
+  try {
+    const body = req.body;
+    console.log('[spurnow-webhook] payload:', JSON.stringify(body));
+
+    // Tenta extrair ID, telefone e mensagem dos formatos possíveis do spurnow
+    const msgId = body.id || body.messageId || body.data?.id || body.data?.messageId;
+    if (jaProcessada(msgId)) return;
+
+    const telefone = normalizarTelefone(
+      body.from || body.phone ||
+      body.data?.from || body.data?.phone ||
+      body.contact?.phone || body.contact?.number || ''
+    );
+    const mensagem =
+      body.message || body.text ||
+      body.data?.message || body.data?.text ||
+      body.content?.text?.body || null;
+
+    console.log('[spurnow-webhook] tel:', telefone, '| msg:', mensagem);
+    if (!telefone || !mensagem) return;
+
+    const { data: processos } = await supabase.from('processos').select('*').eq('telefone_cliente', telefone);
+    if (!processos || !processos.length) {
+      await enviarWhatsAppSpurnow(telefone, 'Olá! Não encontrei seu cadastro no sistema.');
+      return;
+    }
+
+    const { data: usuario } = await supabase.from('usuarios').select('escritorio').eq('id', processos[0].usuario_id).single();
+    const escritorio = usuario ? usuario.escritorio : 'nosso escritório';
+
+    await salvarMensagem(processos[0].usuario_id, telefone, processos[0].nome_cliente, 'cliente', mensagem);
+    const resposta = await gerarRespostaChatbot(mensagem, processos[0].nome_cliente, processos, escritorio);
+    await enviarWhatsAppSpurnow(telefone, resposta);
+    await salvarMensagem(processos[0].usuario_id, telefone, processos[0].nome_cliente, 'bot', resposta);
+    console.log('[spurnow-webhook] ✅ resposta enviada para', processos[0].nome_cliente);
+  } catch (err) {
+    console.error('[spurnow-webhook] erro:', err.message);
   }
 });
 
