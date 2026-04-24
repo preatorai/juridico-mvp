@@ -11,8 +11,9 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY;
 const OPENAI_KEY = process.env.OPENAI_KEY;
 const EVOLUTION_URL = process.env.EVOLUTION_URL;
 const EVOLUTION_CLIENT_TOKEN = process.env.EVOLUTION_CLIENT_TOKEN;
-const SPURNOW_KEY   = process.env.SPURNOW_KEY;
-const SPURNOW_PHONE = process.env.SPURNOW_PHONE;
+const SPURNOW_KEY    = process.env.SPURNOW_KEY;
+const SPURNOW_PHONE  = process.env.SPURNOW_PHONE;
+const SPURNOW_SECRET = process.env.SPURNOW_SECRET;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const app = express();
@@ -535,7 +536,13 @@ app.post('/webhook', async (req, res) => {
 
 // Webhook do Spurnow (API oficial Meta — sem risco de ban)
 app.post('/webhook-spurnow', async (req, res) => {
-  res.sendStatus(200); // responde imediatamente para o spurnow não reenviar
+  // Valida segredo se configurado
+  const segredo = req.headers['x-webhook-secret'] || req.headers['x-spur-secret'] || req.query.secret;
+  if (SPURNOW_SECRET && segredo !== SPURNOW_SECRET) {
+    console.log('[spurnow-webhook] segredo inválido:', segredo);
+    return res.sendStatus(401);
+  }
+  res.sendStatus(200);
   try {
     const body = req.body;
     console.log('[spurnow-webhook] payload:', JSON.stringify(body));
