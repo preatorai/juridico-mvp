@@ -186,13 +186,7 @@ async function gerarRespostaChatbot(mensagem, nome, processos, escritorio) {
   for (const processo of processos) {
     infoProcessos += '\nProcesso — cliente: ' + processo.nome_cliente + ':\n';
     if (precisaDados) {
-      let movs = await buscarMovimentacoesCache(processo.numero_processo);
-      // Se retornou vazio, tenta busca direta uma vez mais
-      if (!movs || movs.length === 0) {
-        console.log(`[chatbot] cache vazio, tentando busca direta para ${processo.numero_processo}`);
-        movs = await buscarMovimentacoes(processo.numero_processo);
-        if (movs && movs.length > 0) salvarCache(processo.numero_processo, movs);
-      }
+      const movs = await buscarMovimentacoesCache(processo.numero_processo);
       if (movs && movs.length > 0) {
         infoProcessos += 'Últimas 3 movimentações:\n';
         movs.slice(0, 3).forEach((m, i) => {
@@ -209,7 +203,7 @@ async function gerarRespostaChatbot(mensagem, nome, processos, escritorio) {
     {
       model: 'gpt-4o-mini',
       temperature: 0.2,
-      max_tokens: 700,
+      max_tokens: 500,
       timeout: 20000,
       messages: [
         {
