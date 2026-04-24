@@ -63,24 +63,42 @@ function detectarTribunal(numeroProcesso) {
   return 'tjal';
 }
 
-// Cache em memória — só para evitar chamar Codilo duas vezes seguidas na mesma sessão
 const _cacheMovs = new Map();
 
 async function buscarMovimentacoesCache(numeroProcesso) {
   const agora = Date.now();
 
-  // Cache em memória 5 min — evita chamar Codilo várias vezes seguidas
+  // 1. Memória — evita chamar Codilo duas vezes seguidas na mesma sessão
   const mem = _cacheMovs.get(numeroProcesso);
   if (mem && mem.movs.length > 0 && agora - mem.ts < 5 * 60 * 1000) {
     return mem.movs;
   }
 
-  // Consulta Codilo diretamente
+  // 2. Codilo — fonte principal
   const movs = await buscarMovimentacoes(numeroProcesso);
   if (movs && movs.length > 0) {
     _cacheMovs.set(numeroProcesso, { movs, ts: agora });
+    (async () => {
+      await supabase.from('cache_movimentos').upsert(
+        { numero_processo: numeroProcesso, movimentos: movs, atualizado_em: new Date().toISOString() },
+        { onConflict: 'numero_processo' }
+      );
+    })().catch(() => {});
     return movs;
   }
+
+  // 3. Codilo falhou — usa dados anteriores salvos no banco
+  try {
+    const { data: row } = await supabase.from('cache_movimentos')
+      .select('movimentos, atualizado_em')
+      .eq('numero_processo', numeroProcesso)
+      .single();
+    if (row && Array.isArray(row.movimentos) && row.movimentos.length > 0) {
+      console.log(`[cache-db] Codilo falhou, usando dados de ${row.atualizado_em}`);
+      _cacheMovs.set(numeroProcesso, { movs: row.movimentos, ts: agora });
+      return row.movimentos;
+    }
+  } catch (_) {}
 
   return [];
 }
