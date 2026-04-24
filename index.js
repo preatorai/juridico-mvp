@@ -65,40 +65,45 @@ function detectarTribunal(numeroProcesso) {
 
 const _cacheMovs = new Map();
 
+function salvarCache(numeroProcesso, movs) {
+  _cacheMovs.set(numeroProcesso, { movs, ts: Date.now() });
+  (async () => {
+    await supabase.from('cache_movimentos').upsert(
+      { numero_processo: numeroProcesso, movimentos: movs, atualizado_em: new Date().toISOString() },
+      { onConflict: 'numero_processo' }
+    );
+  })().catch(() => {});
+}
+
 async function buscarMovimentacoesCache(numeroProcesso) {
   const agora = Date.now();
+  const CACHE_MEM = 5 * 60 * 1000;   // 5 min
+  const CACHE_DB  = 30 * 60 * 1000;  // 30 min — após isso, atualiza em background mas retorna imediatamente
 
-  // 1. Memória — evita chamar Codilo duas vezes seguidas na mesma sessão
+  // 1. Memória — resposta instantânea
   const mem = _cacheMovs.get(numeroProcesso);
-  if (mem && mem.movs.length > 0 && agora - mem.ts < 5 * 60 * 1000) {
-    return mem.movs;
-  }
+  if (mem && mem.movs.length > 0 && agora - mem.ts < CACHE_MEM) return mem.movs;
 
-  // 2. Codilo — fonte principal
-  const movs = await buscarMovimentacoes(numeroProcesso);
-  if (movs && movs.length > 0) {
-    _cacheMovs.set(numeroProcesso, { movs, ts: agora });
-    (async () => {
-      await supabase.from('cache_movimentos').upsert(
-        { numero_processo: numeroProcesso, movimentos: movs, atualizado_em: new Date().toISOString() },
-        { onConflict: 'numero_processo' }
-      );
-    })().catch(() => {});
-    return movs;
-  }
-
-  // 3. Codilo falhou — usa dados anteriores salvos no banco
+  // 2. Banco — rápido (~50ms), retorna imediatamente
   try {
     const { data: row } = await supabase.from('cache_movimentos')
-      .select('movimentos, atualizado_em')
-      .eq('numero_processo', numeroProcesso)
-      .single();
+      .select('movimentos, atualizado_em').eq('numero_processo', numeroProcesso).single();
     if (row && Array.isArray(row.movimentos) && row.movimentos.length > 0) {
-      console.log(`[cache-db] Codilo falhou, usando dados de ${row.atualizado_em}`);
       _cacheMovs.set(numeroProcesso, { movs: row.movimentos, ts: agora });
+      // Se passou de 30 min, atualiza em background sem bloquear
+      if (agora - new Date(row.atualizado_em).getTime() > CACHE_DB) {
+        (async () => {
+          const novos = await buscarMovimentacoes(numeroProcesso);
+          if (novos && novos.length > 0) salvarCache(numeroProcesso, novos);
+        })().catch(() => {});
+      }
       return row.movimentos;
     }
   } catch (_) {}
+
+  // 3. Sem cache — busca na Codilo (primeira vez ou banco vazio)
+  const movs = await buscarMovimentacoes(numeroProcesso);
+  if (movs && movs.length > 0) { salvarCache(numeroProcesso, movs); return movs; }
 
   return [];
 }
