@@ -1,596 +1,1011 @@
-<!DOCTYPE html> <html lang="pt-BR"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Praetor AI</title> <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet"> <style>:root{
-  --gold:#f0b429;--gold-dark:#c98a00;--gold-light:rgba(240,180,41,0.12);
-  --bg:#0a0c10;--bg2:#111318;--bg3:#1a1d24;--bg4:#22262f;
-  --text:#f0f2f5;--muted:#6b7280;--border:rgba(255,255,255,0.07);
-  --success:#22c55e;--success-bg:rgba(34,197,94,0.12);
-  --card-shadow:0 2px 8px rgba(0,0,0,0.4);
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Praetor AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold:#d4a017;--gold-2:#e8b84b;--gold-dark:#a07810;--gold-bg:rgba(212,160,23,.08);--gold-border:rgba(212,160,23,.2);
+  --bg:#080a0f;--bg2:#0d1018;--bg3:#131720;--bg4:#1a1f2e;--bg5:#222840;
+  --text:#e2e6f0;--text2:#9aa3bc;--muted:#525c75;--border:rgba(255,255,255,.055);--border2:rgba(255,255,255,.1);
+  --green:#22c55e;--green-bg:rgba(34,197,94,.1);--red:#ef4444;--red-bg:rgba(239,68,68,.1);
+  --blue:#60a5fa;--blue-bg:rgba(96,165,250,.1);--orange:#fb923c;--orange-bg:rgba(251,146,60,.1);
+  --sidebar-w:240px;--topbar-h:60px;--radius:12px;--radius-sm:8px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;}
 
-/* LOGIN */
-.login-wrap{display:flex;min-height:100vh;}
+/* ── LOGIN ── */
+.login-wrap{min-height:100vh;display:flex;background:var(--bg);}
 .login-left{flex:1;display:flex;align-items:center;justify-content:center;padding:48px;background:var(--bg2);}
-.login-right{width:45%;background:linear-gradient(135deg,#111318 0%,#1a1608 50%,#0a0c10 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;text-align:center;border-left:1px solid var(--border);}
-.login-right h2{color:var(--gold);font-size:28px;font-weight:700;margin-bottom:16px;}
-.login-right p{color:rgba(255,255,255,0.5);font-size:15px;line-height:1.7;}
-.login-icon{font-size:52px;margin-bottom:20px;}
+.login-right{width:400px;flex-shrink:0;background:linear-gradient(160deg,#0d1018 0%,#141008 50%,#0a0d14 100%);border-left:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 40px;text-align:center;position:relative;overflow:hidden;}
+.login-right::before{content:'';position:absolute;width:320px;height:320px;background:radial-gradient(circle,rgba(212,160,23,.12) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}
+.login-brand-icon{width:72px;height:72px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 8px 32px rgba(212,160,23,.25);}
+.login-brand-icon svg{width:34px;height:34px;color:#0a0c10;}
+.login-right h2{font-size:24px;font-weight:800;color:var(--text);margin-bottom:10px;letter-spacing:-.5px;}
+.login-right p{color:var(--text2);font-size:13px;line-height:1.7;max-width:270px;}
+.login-features{margin-top:32px;display:flex;flex-direction:column;gap:12px;width:100%;max-width:270px;}
+.login-feature{display:flex;align-items:center;gap:12px;text-align:left;}
+.login-feature-icon{width:30px;height:30px;background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.login-feature-icon svg{width:14px;height:14px;color:var(--gold);}
+.login-feature span{font-size:12px;color:var(--text2);}
 .login-box{width:100%;max-width:400px;}
-.login-box h1{font-size:26px;font-weight:700;margin-bottom:6px;color:var(--text);}
-.login-box .sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
-.tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--border);}
-.tab{padding:10px 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;}
-.tab.active{color:var(--gold);border-bottom:2px solid var(--gold);}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px;}
+.login-logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.login-logo-icon svg{width:18px;height:18px;color:#0a0c10;}
+.login-logo-name{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.5px;}
+.login-box h1{font-size:24px;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:-.4px;}
+.login-box .sub{color:var(--text2);font-size:13px;margin-bottom:28px;}
+.tabs{display:flex;background:var(--bg3);border-radius:10px;padding:4px;margin-bottom:24px;}
+.tab{flex:1;padding:8px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-radius:7px;text-align:center;transition:all .15s;}
+.tab.active{background:var(--bg4);color:var(--text);font-weight:600;}
 .form-login,.form-cadastro{display:none;}
 .form-login.active,.form-cadastro.active{display:block;}
 .field{margin-bottom:14px;}
-.field label{display:block;font-size:12px;font-weight:500;margin-bottom:6px;color:var(--muted);}
-.field input{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:'Sora',sans-serif;outline:none;transition:border-color 0.2s;background:var(--bg3);color:var(--text);}
-.field input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,180,41,0.1);}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;}
+.field input{width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:all .15s;}
+.field input:focus{border-color:var(--gold);background:var(--bg4);box-shadow:0 0 0 3px rgba(212,160,23,.1);}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.btn-login{width:100%;padding:12px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:'Sora',sans-serif;cursor:pointer;margin-top:8px;transition:opacity 0.2s;}
-.btn-login:hover{opacity:0.9;}
-.auth-error{margin-top:12px;padding:10px 14px;background:rgba(220,38,38,0.15);color:#f87171;border-radius:8px;font-size:12px;display:none;border:1px solid rgba(220,38,38,0.2);}
-.auth-success{margin-top:12px;padding:10px 14px;background:var(--success-bg);color:var(--success);border-radius:8px;font-size:12px;display:none;}
+.btn-login{width:100%;padding:12px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;margin-top:8px;transition:all .15s;}
+.btn-login:hover{opacity:.9;transform:translateY(-1px);}
+.auth-error{margin-top:12px;padding:10px 14px;background:var(--red-bg);color:var(--red);border-radius:var(--radius-sm);font-size:12px;display:none;border:1px solid rgba(239,68,68,.15);}
+.auth-success{margin-top:12px;padding:10px 14px;background:var(--green-bg);color:var(--green);border-radius:var(--radius-sm);font-size:12px;display:none;}
 
-/* APP */
+/* ── APP SHELL ── */
 .app{display:none;}
-.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
-.topbar-left{display:flex;align-items:center;gap:12px;}
-.logo-box{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
-.topbar-name{font-size:15px;font-weight:700;color:var(--text);}
-.topbar-sub{font-size:11px;color:var(--muted);}
-.topbar-right{display:flex;align-items:center;gap:10px;}
-.user-info{text-align:right;}
-.user-info .uname{font-size:13px;font-weight:500;color:var(--text);}
-.user-info .uesc{font-size:11px;color:var(--muted);}
-.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0a0c10;}
-.btn-sair{padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:none;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--muted);}
-.btn-sair:hover{border-color:var(--gold);color:var(--gold);}
+.topbar{height:var(--topbar-h);background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.topbar-logo{display:flex;align-items:center;gap:10px;}
+.topbar-logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));border-radius:9px;display:flex;align-items:center;justify-content:center;}
+.topbar-logo-icon svg{width:15px;height:15px;color:#0a0c10;}
+.topbar-brand{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.3px;}
+.topbar-divider{width:1px;height:18px;background:var(--border);}
+.topbar-office{font-size:13px;color:var(--text2);font-weight:500;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.topbar-user{display:flex;align-items:center;gap:10px;}
+.topbar-user-info{text-align:right;}
+.topbar-user-name{font-size:13px;font-weight:600;color:var(--text);}
+.topbar-user-email{font-size:11px;color:var(--muted);}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-dark));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0a0c10;flex-shrink:0;}
+.btn-sair{padding:7px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:none;font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:6px;}
+.btn-sair:hover{border-color:var(--red);color:var(--red);}
+.btn-sair svg{width:13px;height:13px;}
 
-/* LAYOUT */
+/* ── LAYOUT ── */
 .layout{display:flex;}
-.sidebar{width:230px;background:var(--bg2);border-right:1px solid var(--border);min-height:calc(100vh - 64px);padding:16px 12px;flex-shrink:0;}
-.sidebar-section{font-size:10px;font-weight:600;color:#374151;text-transform:uppercase;letter-spacing:.08em;padding:0 12px;margin:16px 0 6px;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer;transition:all 0.15s;margin-bottom:2px;}
+.sidebar{width:var(--sidebar-w);background:var(--bg2);border-right:1px solid var(--border);min-height:calc(100vh - var(--topbar-h));padding:14px 10px;flex-shrink:0;}
+.sidebar-section{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:0 10px;margin:18px 0 4px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--radius-sm);font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;margin-bottom:1px;font-weight:500;}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;}
 .nav-item:hover{background:var(--bg3);color:var(--text);}
-.nav-item.active{background:var(--gold-light);color:var(--gold);font-weight:600;border:1px solid rgba(240,180,41,0.2);}
-.main{flex:1;padding:20px 32px 32px;}
+.nav-item.active{background:var(--gold-bg);color:var(--gold);font-weight:600;border:1px solid var(--gold-border);}
+.main{flex:1;min-width:0;}
 .page{display:none;}
 .page.active{display:block;}
-.page-title{font-size:22px;font-weight:700;margin-bottom:2px;color:var(--text);}
-.page-sub{font-size:13px;color:var(--muted);margin-bottom:20px;}
+#page-dashboard.active,#page-processos.active,#page-config.active,#page-agenda.active{position:fixed!important;display:block!important;top:var(--topbar-h);left:var(--sidebar-w);right:0;bottom:0;overflow-y:auto;padding:28px 32px;background:var(--bg);z-index:5;}
+#page-cadastrar.active{position:fixed!important;display:flex!important;flex-direction:column;align-items:center;top:var(--topbar-h);left:var(--sidebar-w);right:0;bottom:0;overflow-y:auto;padding:28px 32px;background:var(--bg);z-index:5;}
+#page-mensagens.active{position:fixed!important;display:flex!important;flex-direction:column;top:var(--topbar-h);left:var(--sidebar-w);right:0;bottom:0;padding:24px;background:var(--bg);z-index:5;}
 
-/* METRICS */
-.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px;}
-.metric{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--card-shadow);position:relative;overflow:hidden;}
-.metric::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent);}
-.metric-label{font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:500;}
-.metric-value{font-size:32px;font-weight:800;margin-bottom:4px;color:var(--text);}
-.metric-delta{font-size:12px;color:var(--success);font-weight:500;}
+/* ── PAGE HEADER ── */
+.page-header{margin-bottom:24px;display:flex;align-items:flex-end;justify-content:space-between;}
+.page-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.5px;margin-bottom:2px;}
+.page-sub{font-size:13px;color:var(--text2);}
 
-/* CARDS */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px;box-shadow:var(--card-shadow);}
-.card-title{font-size:15px;font-weight:700;margin-bottom:18px;color:var(--text);}
+/* ── METRICS ── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:border-color .15s;}
+.metric:hover{border-color:var(--border2);}
+.metric-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.metric-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.metric-icon svg{width:18px;height:18px;}
+.metric-icon-gold{background:var(--gold-bg);border:1px solid var(--gold-border);}
+.metric-icon-gold svg{color:var(--gold);}
+.metric-icon-green{background:var(--green-bg);}
+.metric-icon-green svg{color:var(--green);}
+.metric-icon-blue{background:var(--blue-bg);}
+.metric-icon-blue svg{color:var(--blue);}
+.metric-icon-orange{background:var(--orange-bg);}
+.metric-icon-orange svg{color:var(--orange);}
+.metric-label{font-size:12px;color:var(--text2);font-weight:500;}
+.metric-value{font-size:34px;font-weight:800;color:var(--text);letter-spacing:-1px;line-height:1;margin-bottom:5px;}
+.metric-delta{font-size:12px;color:var(--green);font-weight:500;}
+.metric-delta-muted{font-size:12px;color:var(--muted);font-weight:500;}
 
-/* TABLE */
+/* ── DASHBOARD GRID ── */
+.dashboard-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;}
+
+/* ── CARDS ── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:20px;}
+.card:last-child{margin-bottom:0;}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.card-title{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.card-title svg{width:15px;height:15px;color:var(--gold);}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;}
 table{width:100%;border-collapse:collapse;}
-th{font-size:11px;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);font-weight:600;text-transform:uppercase;letter-spacing:0.05em;}
-td{font-size:13px;padding:12px;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text);}
+th{font-size:11px;font-weight:600;color:var(--muted);text-align:left;padding:10px 14px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;}
+td{font-size:13px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.035);color:var(--text);vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
-tr:hover td{background:rgba(240,180,41,0.04);}
-.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
-.badge-green{background:var(--success-bg);color:var(--success);}
+tr:hover td{background:rgba(255,255,255,.015);}
+.td-mono{font-family:'SF Mono','Fira Code',monospace;font-size:11.5px;color:var(--text2);}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;}
+.badge-green{background:var(--green-bg);color:var(--green);}
+.badge-blue{background:var(--blue-bg);color:var(--blue);}
+.badge-orange{background:var(--orange-bg);color:var(--orange);}
 
-/* FORMS */
-.form-group{margin-bottom:16px;}
-.form-group label{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;}
-.form-group input,.form-group select{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:'Sora',sans-serif;outline:none;transition:all 0.2s;background:var(--bg3);color:var(--text);}
-.form-group input:focus,.form-group select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,180,41,0.08);}
-.form-group select option{background:var(--bg3);}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.btn,.btn-primary{padding:11px 24px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:'Sora',sans-serif;cursor:pointer;transition:opacity 0.2s;display:inline-flex;align-items:center;gap:6px;}
-.btn:hover,.btn-primary:hover{opacity:0.88;}
-.btn-ghost{padding:10px 20px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:'Sora',sans-serif;cursor:pointer;}
+/* ── BUTTONS ── */
+.btn,.btn-primary{padding:9px 18px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover,.btn-primary:hover{opacity:.9;transform:translateY(-1px);}
+.btn svg,.btn-primary svg{width:14px;height:14px;}
+.btn-ghost{padding:9px 18px;background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
-.form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
-.alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-top:14px;display:none;}
-.alert-success{background:var(--success-bg);color:var(--success);}
-.alert-error{background:rgba(220,38,38,0.15);color:#f87171;}
-
-/* MENSAGENS */
-.msg-item{padding:14px;background:var(--bg3);border-radius:12px;border:1px solid var(--border);margin-bottom:10px;}
-.msg-header{display:flex;justify-content:space-between;margin-bottom:6px;}
-.msg-name{font-size:13px;font-weight:600;color:var(--gold);}
-.msg-time{font-size:11px;color:var(--muted);}
-.msg-process{font-size:11px;color:var(--muted);font-family:monospace;margin-bottom:6px;}
-.msg-text{font-size:12px;color:#9ca3af;line-height:1.6;}
-.loading{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
-
-/* CHAT IA */
-.ai-bubble{max-width:80%;padding:11px 15px;border-radius:14px;font-size:13px;line-height:1.65;word-break:break-word;}
-.ai-bubble-user{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;font-weight:500;align-self:flex-end;border-bottom-right-radius:4px;}
-.ai-bubble-ai{background:var(--bg3);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px;color:var(--text);}
-.ai-input-bar{display:flex;gap:10px;}
-.ai-input{flex:1;padding:11px 16px;border:1px solid var(--border);border-radius:24px;font-size:13px;font-family:'Sora',sans-serif;outline:none;transition:all 0.2s;background:var(--bg3);color:var(--text);}
-.ai-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,180,41,0.08);}
-.ai-send-btn{padding:11px 22px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;border:none;border-radius:24px;font-size:13px;font-weight:700;font-family:'Sora',sans-serif;cursor:pointer;}
-.ai-send-btn:hover{opacity:0.9;}
-.ai-send-btn:disabled{opacity:0.4;cursor:not-allowed;}
-.ai-typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);margin:0 2px;animation:typing 1.2s infinite;}
-.ai-typing-dots span:nth-child(2){animation-delay:0.2s;}
-.ai-typing-dots span:nth-child(3){animation-delay:0.4s;}
-@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:0.3;}30%{transform:translateY(-5px);opacity:1;}}
-#page-mensagens.active{position:fixed!important;display:flex!important;flex-direction:column;top:64px;left:230px;right:0;bottom:0;padding:24px;background:var(--bg);box-sizing:border-box;z-index:5;}
-#page-processos.active,#page-dashboard.active,#page-config.active{position:fixed!important;display:block!important;top:64px;left:230px;right:0;bottom:0;padding:24px 32px;background:var(--bg);box-sizing:border-box;z-index:5;overflow-y:auto;}
-#page-cadastrar.active{position:fixed!important;display:flex!important;flex-direction:column;align-items:center;justify-content:flex-start;top:64px;left:230px;right:0;bottom:0;padding:32px;background:var(--bg);box-sizing:border-box;z-index:5;overflow-y:auto;}
-#page-agenda.active{position:fixed!important;display:block!important;top:64px;left:230px;right:0;bottom:0;padding:24px 32px;background:var(--bg);box-sizing:border-box;z-index:5;overflow-y:auto;}
-.ai-split{display:flex;flex:1;gap:14px;min-height:0;width:100%;}
-.ai-proc-list{width:210px;flex-shrink:0;overflow-y:auto;background:var(--bg2);border:1px solid var(--border);border-radius:12px;}
-.ai-proc-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s;}
-.ai-proc-item:last-child{border-bottom:none;}
-.ai-proc-item:hover{background:var(--bg3);}
-.ai-proc-item.active{background:var(--gold-light);border-left:2px solid var(--gold);}
-.ai-proc-item.active .ai-proc-name{color:var(--gold);}
-.ai-proc-item.active .ai-proc-num{color:rgba(240,180,41,0.6);}
-.ai-proc-name{font-size:13px;font-weight:600;color:var(--text);}
-.ai-proc-num{font-size:10px;color:var(--muted);font-family:monospace;margin-top:2px;}
-.ai-chat-area{flex:1;display:flex;flex-direction:column;min-width:0;}
-.ai-chat-placeholder{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;}
-.ai-chat-wrap{display:flex;flex-direction:column;flex:1;min-height:0;}
-.ai-chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg2);border-radius:12px;border:1px solid var(--border);margin-bottom:14px;min-height:0;}
-.ai-preview-card{background:rgba(240,180,41,0.08);border:1.5px solid rgba(240,180,41,0.3);border-radius:12px;padding:14px;margin-top:4px;align-self:flex-start;max-width:90%;width:100%;}
-.ai-preview-title{font-size:12px;font-weight:600;color:var(--gold);margin-bottom:8px;}
-.ai-preview-textarea{width:100%;min-height:80px;padding:8px 10px;border:1px solid rgba(240,180,41,0.2);border-radius:8px;font-size:12px;font-family:'Sora',sans-serif;resize:vertical;outline:none;background:var(--bg3);color:var(--text);}
-.ai-preview-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
-.ai-preview-name{font-size:11px;color:var(--muted);}
-.ai-preview-btn{padding:6px 16px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;border:none;border-radius:8px;font-size:12px;font-weight:700;font-family:'Sora',sans-serif;cursor:pointer;}
-.ai-preview-btn:hover{opacity:0.9;}
-.ai-preview-btn:disabled{opacity:0.4;cursor:not-allowed;}
-
-/* MODAL */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
-.modal-overlay.open{display:flex;}
-.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:90%;max-width:700px;max-height:87vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.6);}
-.modal-header{padding:22px 28px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
-.modal-header-info h2{font-size:16px;font-weight:700;color:var(--text);}
-.modal-header-info p{font-size:12px;color:var(--muted);margin-top:3px;}
-.modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
-.modal-close:hover{background:var(--bg3);color:var(--text);}
-.modal-body{overflow-y:auto;padding:24px 28px;flex:1;}
-.timeline-item{display:flex;gap:14px;padding-bottom:20px;position:relative;}
-.timeline-item:not(:last-child):before{content:'';position:absolute;left:15px;top:32px;bottom:0;width:2px;background:var(--border);}
-.timeline-dot{width:32px;height:32px;border-radius:50%;background:var(--gold-light);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;}
-.timeline-content{flex:1;padding-top:4px;}
-.timeline-date{font-size:11px;font-weight:700;color:var(--gold);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;}
-.timeline-nome{font-size:13px;font-weight:600;color:var(--text);}
-.btn-ver{background:var(--gold-light);color:var(--gold);border:1px solid rgba(240,180,41,0.2);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.15s;}
+.btn-ver{padding:5px 12px;background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s;}
 .btn-ver:hover{background:var(--gold);color:#0a0c10;}
 
-/* AGENDA */
-.prazo-card{background:var(--bg2);border-radius:12px;padding:14px 16px;margin-bottom:10px;border-left:3px solid var(--border);box-shadow:var(--card-shadow);}
-.prazo-urgente{border-left-color:#ef4444;}
+/* ── FORMS ── */
+.form-group{margin-bottom:16px;}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+.form-group input,.form-group select{width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:all .15s;}
+.form-group input:focus,.form-group select:focus{border-color:var(--gold);background:var(--bg4);box-shadow:0 0 0 3px rgba(212,160,23,.08);}
+.form-group select option{background:var(--bg3);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid var(--border);}
+.alert{padding:12px 16px;border-radius:var(--radius-sm);font-size:13px;margin-top:14px;display:none;}
+.alert-success{background:var(--green-bg);color:var(--green);border:1px solid rgba(34,197,94,.2);}
+.alert-error{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2);}
+.loading{display:flex;align-items:center;justify-content:center;padding:48px;color:var(--muted);font-size:14px;gap:10px;}
+
+/* ── CHAT ── */
+.ai-split{display:flex;flex:1;gap:16px;min-height:0;width:100%;}
+.ai-proc-list{width:220px;flex-shrink:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow-y:auto;display:flex;flex-direction:column;}
+.ai-proc-header{padding:14px 14px 10px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.ai-proc-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03);transition:background .12s;}
+.ai-proc-item:last-child{border-bottom:none;}
+.ai-proc-item:hover{background:var(--bg3);}
+.ai-proc-item.active{background:var(--gold-bg);border-left:2px solid var(--gold);}
+.ai-proc-item.active .ai-proc-name{color:var(--gold);}
+.ai-proc-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.ai-proc-num{font-size:10.5px;color:var(--muted);font-family:monospace;}
+.ai-chat-area{flex:1;display:flex;flex-direction:column;min-width:0;}
+.ai-chat-placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);gap:10px;}
+.ai-chat-placeholder svg{width:32px;height:32px;opacity:.4;}
+.ai-chat-wrap{display:flex;flex-direction:column;flex:1;min-height:0;}
+.ai-chat-msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;background:var(--bg2);border:1px solid var(--border);border-top:none;border-bottom:none;min-height:0;}
+.ai-chat-header{padding:13px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.ai-chat-header-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);}
+.ai-chat-header-name{font-size:13px;font-weight:700;color:var(--text);}
+.ai-chat-header-num{font-size:11px;color:var(--muted);font-family:monospace;}
+.ai-bubble{max-width:80%;padding:12px 16px;border-radius:14px;font-size:13px;line-height:1.65;word-break:break-word;}
+.ai-bubble-user{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;font-weight:500;align-self:flex-end;border-bottom-right-radius:4px;}
+.ai-bubble-ai{background:var(--bg3);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px;color:var(--text);}
+.ai-typing-dots{display:flex;align-items:center;gap:4px;padding:4px 0;}
+.ai-typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);animation:typing 1.2s infinite;}
+.ai-typing-dots span:nth-child(2){animation-delay:.2s;}
+.ai-typing-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:.3;}30%{transform:translateY(-5px);opacity:1;}}
+.ai-input-bar{display:flex;gap:10px;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);border-top:1px solid var(--border);}
+.ai-input{flex:1;padding:10px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:24px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:all .15s;}
+.ai-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,160,23,.08);}
+.ai-send-btn{padding:10px 22px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;border:none;border-radius:24px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.ai-send-btn:hover{opacity:.9;}
+.ai-send-btn:disabled{opacity:.4;cursor:not-allowed;}
+.ai-preview-card{background:rgba(212,160,23,.06);border:1.5px solid var(--gold-border);border-radius:var(--radius);padding:14px;margin-top:4px;align-self:flex-start;max-width:92%;width:100%;}
+.ai-preview-title{font-size:12px;font-weight:600;color:var(--gold);margin-bottom:10px;}
+.ai-preview-textarea{width:100%;min-height:80px;padding:10px 12px;border:1px solid var(--gold-border);border-radius:var(--radius-sm);font-size:12px;font-family:'Inter',sans-serif;resize:vertical;outline:none;background:var(--bg3);color:var(--text);}
+.ai-preview-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+.ai-preview-name{font-size:11px;color:var(--muted);}
+.ai-preview-btn{padding:6px 16px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;border:none;border-radius:6px;font-size:12px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;}
+.ai-preview-btn:hover{opacity:.9;}
+.ai-preview-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ── CONFIG ── */
+.config-wrap{display:grid;grid-template-columns:200px 1fr;gap:24px;max-width:820px;}
+.config-nav{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:8px;align-self:flex-start;}
+.config-nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);font-size:13px;color:var(--text2);cursor:pointer;transition:all .12s;font-weight:500;margin-bottom:1px;}
+.config-nav-item svg{width:15px;height:15px;flex-shrink:0;}
+.config-nav-item:hover{background:var(--bg3);color:var(--text);}
+.config-nav-item.active{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold-border);}
+.config-panel{display:none;}
+.config-panel.active{display:block;}
+.config-section{margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid var(--border);}
+.config-section:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.config-section-title{font-size:12px;font-weight:700;color:var(--text2);margin-bottom:16px;text-transform:uppercase;letter-spacing:.06em;}
+.checkbox-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.03);}
+.checkbox-row:last-child{border-bottom:none;}
+.checkbox-row label{font-size:13px;color:var(--text);cursor:pointer;flex:1;}
+.checkbox-row input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:var(--gold);}
+.status-msg{font-size:12px;margin-top:10px;display:none;}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:18px;width:90%;max-width:720px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.7);}
+.modal-header{padding:22px 26px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;background:var(--bg3);}
+.modal-header-info h2{font-size:15px;font-weight:700;color:var(--text);font-family:monospace;}
+.modal-header-info p{font-size:12px;color:var(--muted);margin-top:3px;}
+.modal-close{background:var(--bg4);border:1px solid var(--border);font-size:18px;cursor:pointer;color:var(--text2);line-height:1;width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;}
+.modal-close:hover{background:var(--red-bg);color:var(--red);}
+.modal-body{overflow-y:auto;padding:24px 26px;flex:1;}
+.timeline-item{display:flex;gap:14px;padding-bottom:24px;position:relative;}
+.timeline-item:not(:last-child)::before{content:'';position:absolute;left:15px;top:34px;bottom:0;width:1px;background:var(--border);}
+.timeline-dot{width:32px;height:32px;border-radius:50%;background:var(--gold-bg);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;font-weight:700;color:var(--gold);}
+.timeline-content{flex:1;padding-top:4px;}
+.timeline-date{font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.timeline-nome{font-size:13px;font-weight:600;color:var(--text);}
+
+/* ── AGENDA ── */
+.prazo-card{background:var(--bg2);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;border-left:3px solid var(--border);}
+.prazo-urgente{border-left-color:var(--red);}
 .prazo-semana{border-left-color:var(--gold);}
-.prazo-normal{border-left-color:#3b82f6;}
+.prazo-normal{border-left-color:var(--blue);}
 .prazo-desc{font-size:14px;font-weight:600;color:var(--text);}
 .prazo-info{font-size:12px;color:var(--muted);margin-top:3px;}
 .prazo-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
-.btn-visto{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--muted);}
-.btn-visto:hover{border-color:var(--gold);color:var(--gold);}
-.cal-day-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:2px;}
-</style> </head> <body> <div class="login-wrap" id="login-wrap"> <div class="login-left"> <div class="login-box"> <div class="login-icon">⚖️</div> <h1>Praetor AI</h1> <p class="sub">Gestão inteligente de processos jurídicos</p> <div class="tabs"> <div class="tab active" id="tab-login" onclick="trocarTab('login')">Entrar</div> <div class="tab" id="tab-cadastro" onclick="trocarTab('cadastro')">Criar conta</div> </div> <div class="form-login active" id="form-login"> <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="seu@email.com"></div> <div class="field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••"></div> <button class="btn-login" id="btn-entrar">Entrar</button> <div class="auth-error" id="login-error">Email ou senha incorretos.</div> </div> <div class="form-cadastro" id="form-cadastro"> <div class="field-row"> <div class="field"><label>Seu nome</label><input type="text" id="cad-nome" placeholder="João Silva"></div> <div class="field"><label>Nome do escritório</label><input type="text" id="cad-escritorio" placeholder="Silva Advocacia"></div> </div> <div class="field"><label>Email</label><input type="email" id="cad-email" placeholder="joao@escritorio.com.br"></div> <div class="field"><label>Senha</label><input type="password" id="cad-senha" placeholder="mínimo 6 caracteres"></div> <button class="btn-login" id="btn-cadastrar-conta">Criar conta</button> <div class="auth-error" id="cad-error"></div> <div class="auth-success" id="cad-success">Conta criada! Faça login para continuar.</div> </div> </div> </div> <div class="login-right"> <div class="login-icon">⚖️</div> <h2>Praetor AI</h2> <p>Inteligência processual para escritórios modernos. Acompanhe processos, automatize atualizações e melhore a comunicação com seus clientes.</p> </div> </div> <div class="app" id="app"> <div class="topbar"> <div class="topbar-left"> <div class="logo-box">⚖️</div> <div> <div class="topbar-name">Praetor AI</div> <div class="topbar-sub" id="topbar-escritorio">—</div> </div> </div> <div class="topbar-right"> <div class="user-info"> <div class="uname" id="topbar-nome">—</div> <div class="uesc" id="topbar-email">—</div> </div> <div class="avatar" id="topbar-avatar">—</div> <button class="btn-sair" id="btn-sair">Sair</button> </div> </div> <div class="layout"> <div class="sidebar"> <div class="nav-item active" id="nav-dashboard">◈ Dashboard</div> <div class="nav-item" id="nav-processos">☰ Processos</div> <div class="nav-item" id="nav-cadastrar">＋ Cadastrar</div> <div class="nav-item" id="nav-mensagens">🤖 Assistente IA</div> <div class="nav-item" id="nav-agenda">📅 Agenda</div> <div class="nav-item" id="nav-config">⚙ Configurações</div> </div> <div class="main"> <div class="page active" id="page-dashboard"> <div class="page-title">Dashboard</div> <div class="page-sub" id="dash-sub">Visão geral do escritório</div> <div class="metrics"> <div class="metric"><div class="metric-label">Processos ativos</div><div class="metric-value" id="total-processos">—</div></div> <div class="metric"><div class="metric-label">Mensagens enviadas</div><div class="metric-value" id="total-mensagens">—</div></div> <div class="metric"><div class="metric-label">Clientes notificados</div><div class="metric-value" id="total-clientes">—</div></div> <div class="metric"><div class="metric-label">Verificações</div><div class="metric-value">Auto</div><div class="metric-delta">a cada 6h</div></div></div> <div class="card" style="max-width:480px;margin-bottom:20px"> <div class="card-title">🔔 Alertas de prazo — seu WhatsApp</div> <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Receba alertas automáticos quando houver audiências, decisões ou prazos nos seus processos.</div> <div style="display:flex;gap:10px;align-items:flex-end"> <div class="form-group" style="flex:1;margin:0"><label>Seu número (DDD + número)</label><input type="text" id="tel-advogado" placeholder="82999998888"></div> <button class="btn-primary" style="height:42px" onclick="salvarTelefoneAdvogado()">Salvar</button> </div> <div id="tel-msg" style="font-size:12px;margin-top:8px;display:none"></div> </div> </div> </div> <div class="page" id="page-processos"> <div class="page-title">Processos</div> <div class="page-sub">Todos os processos monitorados</div> <div class="card"><div id="tabela-processos"><div class="loading">Carregando...</div></div></div> </div> <div class="page" id="page-cadastrar"> <div class="page-title" style="text-align:center">Cadastrar processo</div> <div class="page-sub" style="text-align:center">Adicionar novo processo ao monitoramento</div> <div class="card" style="width:520px;max-width:100%"> <div class="form-group"><label>Número do processo</label><input type="text" id="numero" placeholder="0000000-00.0000.8.02.0001"></div> <div class="form-row"> <div class="form-group"><label>Nome do cliente</label><input type="text" id="nome" placeholder="João da Silva"></div> <div class="form-group"><label>Telefone (WhatsApp)</label><input type="text" id="telefone" placeholder="82999998888"></div> </div> <div style="font-size:12px;color:var(--muted);background:var(--blue-light);padding:10px 14px;border-radius:8px;margin-bottom:4px">🔍 O tribunal é detectado automaticamente pelo número do processo (TJ, TRF, TRT, TRE, STJ, STF e mais).</div> <div class="form-actions"> <button class="btn-ghost" id="btn-limpar">Limpar</button> <button class="btn-primary" id="btn-cadastrar">Salvar e monitorar</button> </div> <div class="alert alert-success" id="msg-ok">Processo cadastrado com sucesso!</div> <div class="alert alert-error" id="msg-erro">Erro ao cadastrar. Verifique os dados.</div> </div></div> </div> <div class="page" id="page-config"> <div class="page-title">Configurações</div> <div class="page-sub">Em construção</div> <div style="display:flex;align-items:center;justify-content:center;min-height:300px;flex-direction:column;gap:16px;color:var(--muted)"> <div style="font-size:48px">🔧</div> <div style="font-size:18px;font-weight:600;color:var(--text)">Em construção</div> <div style="font-size:14px;text-align:center">Esta funcionalidade estará disponível em breve.</div> </div> </div> <div class="page" id="page-agenda"> <div class="page-title">Agenda</div> <div class="page-sub">Em construção</div> <div style="display:flex;align-items:center;justify-content:center;min-height:300px;flex-direction:column;gap:16px;color:var(--muted)"> <div style="font-size:48px">📅</div> <div style="font-size:18px;font-weight:600;color:var(--text)">Em construção</div> <div style="font-size:14px;text-align:center">Esta funcionalidade estará disponível em breve.</div> </div> </div> <div class="page" id="page-mensagens"> <div class="page-title">Assistente IA</div> <div class="page-sub">Selecione um processo para conversar</div> <div class="ai-split"> <div class="ai-proc-list" id="ai-proc-list"><div class="loading">Carregando...</div></div> <div class="ai-chat-area" id="ai-chat-area"> <div class="ai-chat-placeholder" id="ai-placeholder">← Selecione um processo</div> </div> </div> </div> </div> </div> </div> <script> var API = 'https://juridico-mvp.onrender.com'; var usuario = null; function abrirApp(u) { usuario = u; document.getElementById('login-wrap').style.display = 'none'; document.getElementById('app').style.display = 'block'; document.getElementById('topbar-nome').textContent = usuario.nome; document.getElementById('topbar-email').textContent = usuario.email; document.getElementById('topbar-escritorio').textContent = usuario.escritorio; document.getElementById('topbar-avatar').textContent = usuario.nome.charAt(0).toUpperCase(); document.getElementById('dash-sub').textContent = 'Bem-vindo, ' + usuario.nome + ' — ' + usuario.escritorio; if (usuario.telefone) document.getElementById('tel-advogado').value = usuario.telefone; carregarDashboard(); } var _salvo = sessionStorage.getItem('praetor_usuario'); if (_salvo) { try { abrirApp(JSON.parse(_salvo)); } catch(e) { sessionStorage.removeItem('praetor_usuario'); } } function trocarTab(tab) { document.getElementById('tab-login').classList.toggle('active', tab === 'login'); document.getElementById('tab-cadastro').classList.toggle('active', tab === 'cadastro'); document.getElementById('form-login').classList.toggle('active', tab === 'login'); document.getElementById('form-cadastro').classList.toggle('active', tab === 'cadastro'); } document.getElementById('btn-entrar').addEventListener('click', function() { var email = document.getElementById('login-email').value.trim(); var senha = document.getElementById('login-senha').value; fetch(API + '/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email, senha: senha }) }).then(function(r) { return r.json(); }).then(function(data) { if (data.sucesso) { sessionStorage.setItem('praetor_usuario', JSON.stringify(data.usuario)); abrirApp(data.usuario); } else { var err = document.getElementById('login-error'); err.style.display = 'block'; err.textContent = data.erro || 'Email ou senha incorretos.'; } }).catch(function() { var err = document.getElementById('login-error'); err.style.display = 'block'; err.textContent = 'Erro ao conectar. Tente novamente.'; }); }); document.getElementById('btn-cadastrar-conta').addEventListener('click', function() { var nome = document.getElementById('cad-nome').value.trim(); var escritorio = document.getElementById('cad-escritorio').value.trim(); var email = document.getElementById('cad-email').value.trim(); var senha = document.getElementById('cad-senha').value; var err = document.getElementById('cad-error'); var suc = document.getElementById('cad-success'); if (!nome || !escritorio || !email || !senha) { err.style.display = 'block'; err.textContent = 'Preencha todos os campos.'; return; } if (senha.length < 6) { err.style.display = 'block'; err.textContent = 'Senha deve ter mínimo 6 caracteres.'; return; } fetch(API + '/auth/cadastro', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nome: nome, escritorio: escritorio, email: email, senha: senha }) }).then(function(r) { return r.json(); }).then(function(data) { if (data.sucesso) { suc.style.display = 'block'; err.style.display = 'none'; setTimeout(function() { trocarTab('login'); }, 2000); } else { err.style.display = 'block'; err.textContent = data.erro || 'Erro ao criar conta.'; } }).catch(function() { err.style.display = 'block'; err.textContent = 'Erro ao conectar. Tente novamente.'; }); }); document.getElementById('btn-sair').addEventListener('click', function() { usuario = null; sessionStorage.removeItem('praetor_usuario'); document.getElementById('login-wrap').style.display = 'flex'; document.getElementById('app').style.display = 'none'; }); document.getElementById('nav-dashboard').addEventListener('click', function() { navegar('dashboard'); carregarDashboard(); }); document.getElementById('nav-processos').addEventListener('click', function() { navegar('processos'); carregarProcessos(); }); document.getElementById('nav-cadastrar').addEventListener('click', function() { navegar('cadastrar'); }); document.getElementById('nav-mensagens').addEventListener('click', function() { navegar('mensagens'); carregarMensagens(); }); document.getElementById('nav-agenda').addEventListener('click', function() { navegar('agenda'); }); document.getElementById('nav-config').addEventListener('click', function() { navegar('config'); }); document.getElementById('btn-limpar').addEventListener('click', function() { document.getElementById('numero').value = ''; document.getElementById('nome').value = ''; document.getElementById('telefone').value = ''; }); document.getElementById('btn-cadastrar').addEventListener('click', function() { var numero = document.getElementById('numero').value.trim(); var nome = document.getElementById('nome').value.trim(); var telefone = document.getElementById('telefone').value.trim(); if (!numero || !nome || !telefone) { document.getElementById('msg-erro').style.display = 'block'; document.getElementById('msg-ok').style.display = 'none'; return; } fetch(API + '/processos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ numero_processo: numero, nome_cliente: nome, telefone_cliente: telefone, usuario_id: usuario.id }) }).then(function(r) { return r.json(); }).then(function(data) { if (data.sucesso) { document.getElementById('msg-ok').style.display = 'block'; document.getElementById('msg-erro').style.display = 'none'; document.getElementById('numero').value = ''; document.getElementById('nome').value = ''; document.getElementById('telefone').value = ''; } else { document.getElementById('msg-erro').style.display = 'block'; document.getElementById('msg-erro').textContent = data.erro || 'Erro ao cadastrar.'; } }).catch(function() { document.getElementById('msg-erro').style.display = 'block'; }); }); function navegar(id) { document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); }); document.getElementById('nav-' + id).classList.add('active'); document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); }); document.getElementById('page-' + id).classList.add('active'); } function carregarDashboard() { fetch(API + '/processos?usuario_id=' + usuario.id).then(function(r) { return r.json(); }).then(function(processos) { var lista = processos || []; document.getElementById('total-processos').textContent = lista.length; document.getElementById('total-clientes').textContent = lista.length; var container = document.getElementById('atividade-container'); if (!lista.length) { container.innerHTML = '<div class="loading">Nenhum processo cadastrado ainda.</div>'; return; } container.innerHTML = '<table><thead><tr><th>Número</th><th>Cliente</th><th>Telefone</th><th>Cadastrado em</th><th></th></tr></thead><tbody>' + lista.slice(0,5).map(function(p) { return '<tr><td style="font-family:monospace;font-size:12px;color:var(--blue)">' + p.numero_processo + '</td><td>' + p.nome_cliente + '</td><td>' + p.telefone_cliente + '</td><td>' + new Date(p.criado_em).toLocaleDateString('pt-BR') + '</td><td><button class="btn-ver" onclick="abrirDetalheProcesso(this.dataset.n, this.dataset.c)" data-n="' + p.numero_processo + '" data-c="' + p.nome_cliente + '">Ver</button></td></tr>'; }).join('') + '</tbody></table>'; }).catch(function() {}); fetch(API + '/movimentacoes?usuario_id=' + usuario.id).then(function(r) { return r.json(); }).then(function(movs) { document.getElementById('total-mensagens').textContent = (movs || []).length; }).catch(function() {}); } function carregarProcessos() { var container = document.getElementById('tabela-processos'); fetch(API + '/processos?usuario_id=' + usuario.id).then(function(r) { return r.json(); }).then(function(processos) { var lista = processos || []; if (!lista.length) { container.innerHTML = '<div class="loading">Nenhum processo cadastrado.</div>'; return; } container.innerHTML = '<table><thead><tr><th>Número</th><th>Cliente</th><th>Telefone</th><th>Status</th><th>Cadastrado em</th><th></th></tr></thead><tbody>' + lista.map(function(p) { return '<tr><td style="font-family:monospace;font-size:12px;color:var(--blue)">' + p.numero_processo + '</td><td>' + p.nome_cliente + '</td><td>' + p.telefone_cliente + '</td><td><span class="badge badge-green">Ativo</span></td><td>' + new Date(p.criado_em).toLocaleDateString('pt-BR') + '</td><td><button class="btn-ver" onclick="abrirDetalheProcesso(this.dataset.n,this.dataset.c)" data-n="' + p.numero_processo + '" data-c="' + p.nome_cliente + '">Ver</button></td></tr>'; }).join('') + '</tbody></table>'; }).catch(function() { container.innerHTML = '<div class="loading">Erro ao carregar.</div>'; }); } var _chatHistorico = {}; var _processoAtivo = null; var _processosCache = []; function carregarMensagens() { fetch(API + '/processos?usuario_id=' + usuario.id).then(function(r){return r.json();}).then(function(lista){ _processosCache = lista || []; var list = document.getElementById('ai-proc-list'); if (!_processosCache.length) { list.innerHTML = '<div class="loading">Nenhum processo.</div>'; return; } list.innerHTML = _processosCache.map(function(p){ return '<div class="ai-proc-item" id="proc-item-'+p.id+'" onclick="selecionarProcesso(\''+p.id+'\')">'+'<div class="ai-proc-name">'+p.nome_cliente+'</div>'+'<div class="ai-proc-num">'+p.numero_processo+'</div>'+'</div>'; }).join(''); if (_processosCache.length === 1) selecionarProcesso(_processosCache[0].id); }).catch(function(){ document.getElementById('ai-proc-list').innerHTML = '<div class="loading">Erro.</div>'; }); } function selecionarProcesso(id) { var proc = _processosCache.find(function(p){ return String(p.id) === String(id); }); _processoAtivo = proc; document.querySelectorAll('.ai-proc-item').forEach(function(el){ el.classList.remove('active'); }); var item = document.getElementById('proc-item-' + proc.id); if (item) item.classList.add('active'); var area = document.getElementById('ai-chat-area'); if (!_chatHistorico[proc.id]) { _chatHistorico[proc.id] = '<div class="ai-bubble ai-bubble-ai">Olá! Estou pronto para falar sobre o processo de <b>'+proc.nome_cliente+'</b>.<br>Pergunte sobre movimentações, prazos ou peça para enviar um aviso ao cliente.</div>'; } area.innerHTML = '<div class="ai-chat-msgs" id="ai-msgs">'+_chatHistorico[proc.id]+'</div>'+'<div class="ai-input-bar">'+'<input type="text" class="ai-input" id="ai-input" placeholder="Pergunte sobre este processo..." onkeydown="if(event.key===\'Enter\')enviarChatAdvogado()">'+'<button class="ai-send-btn" id="ai-send-btn" onclick="enviarChatAdvogado()">Enviar</button>'+'</div>'; var msgs = document.getElementById('ai-msgs'); msgs.scrollTop = msgs.scrollHeight; document.getElementById('ai-input').focus(); } function enviarChatAdvogado() {
-  var input = document.getElementById('ai-input');
-  var btn = document.getElementById('ai-send-btn');
-  if (!input || !input.value.trim() || !_processoAtivo) return;
-  var pergunta = input.value.trim();
-  input.value = '';
-  input.disabled = true;
-  btn.disabled = true;
-  var msgs = document.getElementById('ai-msgs');
-  var userBubble = document.createElement('div');
-  userBubble.className = 'ai-bubble ai-bubble-user';
-  userBubble.textContent = pergunta;
-  msgs.appendChild(userBubble);
-  var loadingBubble = document.createElement('div');
-  loadingBubble.className = 'ai-bubble ai-bubble-ai';
-  loadingBubble.style.padding = '10px 16px';
-  loadingBubble.innerHTML = '<div class="ai-typing-dots"><span></span><span></span><span></span></div>';
-  msgs.appendChild(loadingBubble);
-  msgs.scrollTop = msgs.scrollHeight;
-  fetch(API + '/chat-advogado', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ usuario_id: usuario.id, pergunta: pergunta, processo_id: _processoAtivo.id })
-  }).then(function(response) {
-    var reader = response.body.getReader();
-    var decoder = new TextDecoder();
-    var buffer = '';
-    var aiBubble = null;
-    var textoCompleto = '';
-    function lerChunk(done, value) {
-      if (done) return;
-      buffer += decoder.decode(value, { stream: true });
-      var lines = buffer.split('\n');
-      buffer = lines.pop();
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        if (!line.startsWith('data: ')) continue;
-        try {
-          var parsed = JSON.parse(line.slice(6));
-          if (parsed.token) {
-            if (!aiBubble) {
-              loadingBubble.remove();
-              aiBubble = document.createElement('div');
-              aiBubble.className = 'ai-bubble ai-bubble-ai';
-              msgs.appendChild(aiBubble);
-            }
-            textoCompleto += parsed.token;
-            aiBubble.innerHTML = textoCompleto.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-            msgs.scrollTop = msgs.scrollHeight;
-          }
-          if (parsed.done) {
-            if (parsed.mensagens_pendentes && parsed.mensagens_pendentes.length) {
-              parsed.mensagens_pendentes.forEach(function(mp, idx) {
-                var cardId = 'preview-' + Date.now() + '-' + idx;
-                var card = document.createElement('div');
-                card.className = 'ai-preview-card';
-                card.id = cardId;
-                var textarea = document.createElement('textarea');
-                textarea.className = 'ai-preview-textarea';
-                textarea.id = 'txt-' + cardId;
-                textarea.value = mp.mensagem;
-                var btn2 = document.createElement('button');
-                btn2.id = 'btn-' + cardId;
-                btn2.className = 'ai-preview-btn';
-                btn2.textContent = 'Enviar agora';
-                btn2.onclick = (function(cid, tel, nome) {
-                  return function() { confirmarEnvio(cid, tel, nome); };
-                })(cardId, mp.telefone_cliente, mp.nome_cliente);
-                var footer = document.createElement('div');
-                footer.className = 'ai-preview-footer';
-                footer.innerHTML = '<span class="ai-preview-name">📱 ' + mp.telefone_cliente + '</span>';
-                footer.appendChild(btn2);
-                card.innerHTML = '<div class="ai-preview-title">✏️ Mensagem para ' + mp.nome_cliente + ' — edite antes de enviar</div>';
-                card.appendChild(textarea);
-                card.appendChild(footer);
-                msgs.appendChild(card);
-              });
-            }
-            if (_processoAtivo) _chatHistorico[_processoAtivo.id] = msgs.innerHTML;
-            msgs.scrollTop = msgs.scrollHeight;
-            input.disabled = false;
-            btn.disabled = false;
-            input.focus();
-            return;
-          }
-          if (parsed.erro) {
-            loadingBubble.remove();
-            var errBubble = document.createElement('div');
-            errBubble.className = 'ai-bubble ai-bubble-ai';
-            errBubble.textContent = 'Erro: ' + parsed.erro;
-            msgs.appendChild(errBubble);
-            input.disabled = false;
-            btn.disabled = false;
-            return;
-          }
-        } catch(e) {}
-      }
-      reader.read().then(function(r){ lerChunk(r.done, r.value); });
-    }
-    reader.read().then(function(r){ lerChunk(r.done, r.value); });
-  }).catch(function() {
-    loadingBubble.remove();
-    var errBubble = document.createElement('div');
-    errBubble.className = 'ai-bubble ai-bubble-ai';
-    errBubble.textContent = 'Erro ao consultar. Tente novamente.';
-    msgs.appendChild(errBubble);
-    input.disabled = false;
-    btn.disabled = false;
-  });
+.btn-visto{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;color:var(--muted);transition:all .12s;}
+.btn-visto:hover{border-color:var(--green);color:var(--green);}
+
+/* ── HELPERS ── */
+.hint{font-size:12px;color:var(--muted);background:var(--bg3);padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:4px;line-height:1.5;}
+.divider{height:1px;background:var(--border);margin:20px 0;}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ LOGIN ═══════════════ -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-left">
+    <div class="login-box">
+      <div class="login-logo">
+        <div class="login-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><path d="M6 21h12"/><path d="M3 9l3-6 3 6a3 3 0 0 1-6 0"/><path d="M15 9l3-6 3 6a3 3 0 0 1-6 0"/></svg>
+        </div>
+        <span class="login-logo-name">Praetor AI</span>
+      </div>
+      <h1>Bem-vindo</h1>
+      <p class="sub">Acesse sua plataforma jurídica inteligente</p>
+      <div class="tabs">
+        <div class="tab active" id="tab-login" onclick="trocarTab('login')">Entrar</div>
+        <div class="tab" id="tab-cadastro" onclick="trocarTab('cadastro')">Criar conta</div>
+      </div>
+      <div class="form-login active" id="form-login">
+        <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="seu@email.com"></div>
+        <div class="field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••"></div>
+        <button class="btn-login" id="btn-entrar">Entrar na plataforma</button>
+        <div class="auth-error" id="login-error">Email ou senha incorretos.</div>
+      </div>
+      <div class="form-cadastro" id="form-cadastro">
+        <div class="field-row">
+          <div class="field"><label>Seu nome</label><input type="text" id="cad-nome" placeholder="João Silva"></div>
+          <div class="field"><label>Nome do escritório</label><input type="text" id="cad-escritorio" placeholder="Silva Advocacia"></div>
+        </div>
+        <div class="field"><label>Email</label><input type="email" id="cad-email" placeholder="joao@escritorio.com.br"></div>
+        <div class="field"><label>Senha (mín. 6 caracteres)</label><input type="password" id="cad-senha" placeholder="••••••••"></div>
+        <button class="btn-login" id="btn-cadastrar-conta">Criar conta gratuita</button>
+        <div class="auth-error" id="cad-error"></div>
+        <div class="auth-success" id="cad-success">Conta criada! Faça login para continuar.</div>
+      </div>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="login-brand-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><path d="M6 21h12"/><path d="M3 9l3-6 3 6a3 3 0 0 1-6 0"/><path d="M15 9l3-6 3 6a3 3 0 0 1-6 0"/></svg>
+    </div>
+    <h2>Gestão jurídica inteligente</h2>
+    <p>Monitore processos, automatize comunicações com clientes e receba alertas de prazos em tempo real.</p>
+    <div class="login-features">
+      <div class="login-feature">
+        <div class="login-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <span>Monitoramento automático de movimentações</span>
+      </div>
+      <div class="login-feature">
+        <div class="login-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <span>Respostas automáticas por WhatsApp via IA</span>
+      </div>
+      <div class="login-feature">
+        <div class="login-feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <span>Alertas de prazos e audiências</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP ═══════════════ -->
+<div class="app" id="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">
+        <div class="topbar-logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><path d="M6 21h12"/><path d="M3 9l3-6 3 6a3 3 0 0 1-6 0"/><path d="M15 9l3-6 3 6a3 3 0 0 1-6 0"/></svg>
+        </div>
+        <span class="topbar-brand">Praetor AI</span>
+      </div>
+      <div class="topbar-divider"></div>
+      <span class="topbar-office" id="topbar-escritorio">—</span>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <div class="topbar-user-info">
+          <div class="topbar-user-name" id="topbar-nome">—</div>
+          <div style="font-size:11px;color:var(--muted)" id="topbar-email">—</div>
+        </div>
+        <div class="avatar" id="topbar-avatar">—</div>
+      </div>
+      <button class="btn-sair" id="btn-sair">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-section">Principal</div>
+      <div class="nav-item active" id="nav-dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-item" id="nav-processos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Processos
+      </div>
+      <div class="nav-item" id="nav-cadastrar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Cadastrar Processo
+      </div>
+      <div class="sidebar-section">Ferramentas</div>
+      <div class="nav-item" id="nav-mensagens">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Assistente IA
+      </div>
+      <div class="nav-item" id="nav-agenda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Agenda
+      </div>
+      <div class="sidebar-section">Conta</div>
+      <div class="nav-item" id="nav-config">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Configurações
+      </div>
+    </nav>
+
+    <div class="main">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="page active" id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Dashboard</div>
+            <div class="page-sub" id="dash-sub">Visão geral do escritório</div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-top">
+              <div>
+                <div class="metric-label">Processos ativos</div>
+              </div>
+              <div class="metric-icon metric-icon-gold">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="total-processos">—</div>
+            <div class="metric-delta-muted">monitorados</div>
+          </div>
+          <div class="metric">
+            <div class="metric-top">
+              <div><div class="metric-label">Movimentações</div></div>
+              <div class="metric-icon metric-icon-blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="total-mensagens">—</div>
+            <div class="metric-delta-muted">registradas</div>
+          </div>
+          <div class="metric">
+            <div class="metric-top">
+              <div><div class="metric-label">Clientes</div></div>
+              <div class="metric-icon metric-icon-green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" id="total-clientes">—</div>
+            <div class="metric-delta-muted">cadastrados</div>
+          </div>
+          <div class="metric">
+            <div class="metric-top">
+              <div><div class="metric-label">Verificações</div></div>
+              <div class="metric-icon metric-icon-orange">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+            </div>
+            <div class="metric-value" style="font-size:22px;padding-top:8px">Auto</div>
+            <div class="metric-delta">a cada 6 horas</div>
+          </div>
+        </div>
+
+        <div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Processos recentes
+                </div>
+              </div>
+              <div id="atividade-container"><div class="loading">Carregando...</div></div>
+            </div>
+          </div>
+          <div style="display:none">
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-title" style="margin-bottom:12px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Alertas WhatsApp
+              </div>
+              <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Receba notificações de prazos, decisões e audiências diretamente no seu WhatsApp.</p>
+              <div class="form-group" style="margin-bottom:10px">
+                <label>Seu número (DDD + número)</label>
+                <input type="text" id="tel-advogado" placeholder="82999998888">
+              </div>
+              <button class="btn-primary" style="width:100%;justify-content:center" onclick="salvarTelefoneAdvogado()">Salvar número</button>
+              <div id="tel-msg" style="font-size:12px;margin-top:8px;display:none"></div>
+            </div>
+            <div class="card">
+              <div class="card-title" style="margin-bottom:12px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Status do sistema
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">Codilo API</span><span class="badge badge-green">Online</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">OpenAI</span><span class="badge badge-green">Online</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">WhatsApp Bot</span><span class="badge badge-green">Ativo</span></div>
+              </div>
+            </div>
+          </div>
+      </div>
+
+      <!-- ── PROCESSOS ── -->
+      <div class="page" id="page-processos">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Processos</div>
+            <div class="page-sub">Todos os processos monitorados</div>
+          </div>
+        </div>
+        <div class="card">
+          <div id="tabela-processos"><div class="loading">Carregando...</div></div>
+        </div>
+      </div>
+
+      <!-- ── CADASTRAR ── -->
+      <div class="page" id="page-cadastrar">
+        <div style="width:100%;max-width:560px">
+          <div class="page-header" style="display:block">
+            <div class="page-title">Cadastrar Processo</div>
+            <div class="page-sub">Adicionar novo processo ao monitoramento automático</div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="form-group">
+              <label>Número do processo (CNJ)</label>
+              <input type="text" id="numero" placeholder="0000000-00.0000.8.02.0001">
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nome do cliente</label>
+                <input type="text" id="nome" placeholder="João da Silva">
+              </div>
+              <div class="form-group">
+                <label>WhatsApp do cliente</label>
+                <input type="text" id="telefone" placeholder="82999998888">
+              </div>
+            </div>
+            <div class="hint">O tribunal é detectado automaticamente pelo número do processo (TJAL, TJSP, TRT, TRF, STJ, STF e mais).</div>
+            <div class="form-actions" style="border-top:none;padding-top:0;margin-top:16px">
+              <button class="btn-ghost" id="btn-limpar">Limpar</button>
+              <button class="btn-primary" id="btn-cadastrar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                Salvar e monitorar
+              </button>
+            </div>
+            <div class="alert alert-success" id="msg-ok">Processo cadastrado com sucesso!</div>
+            <div class="alert alert-error" id="msg-erro">Erro ao cadastrar. Verifique os dados.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ASSISTENTE IA ── -->
+      <div class="page" id="page-mensagens">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-shrink:0">
+          <div>
+            <div class="page-title">Assistente IA</div>
+            <div class="page-sub">Selecione um processo para consultar ou enviar mensagens</div>
+          </div>
+        </div>
+        <div class="ai-split">
+          <div class="ai-proc-list" id="ai-proc-list">
+            <div class="ai-proc-header">Processos</div>
+            <div class="loading" style="padding:24px">Carregando...</div>
+          </div>
+          <div class="ai-chat-area" id="ai-chat-area">
+            <div class="ai-chat-placeholder" id="ai-placeholder">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Selecione um processo para começar
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── AGENDA ── -->
+      <div class="page" id="page-agenda">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Agenda</div>
+            <div class="page-sub">Prazos e audiências dos seus processos</div>
+          </div>
+          <button class="btn" id="btn-sync-prazos" onclick="sincronizarPrazos()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Sincronizar processos
+          </button>
+        </div>
+        <div class="card">
+          <div id="lista-prazos"><div class="loading">Carregando agenda...</div></div>
+        </div>
+      </div>
+
+      <!-- ── CONFIGURAÇÕES ── -->
+      <div class="page" id="page-config">
+        <div class="page-header" style="display:block">
+          <div class="page-title">Configurações</div>
+          <div class="page-sub">Gerencie seu perfil e preferências</div>
+        </div>
+        <div class="config-wrap">
+          <div class="config-nav">
+            <div class="config-nav-item active" id="cfg-nav-escritorio" onclick="trocarConfigPanel('escritorio')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              Escritório
+            </div>
+            <div class="config-nav-item" id="cfg-nav-whatsapp" onclick="trocarConfigPanel('whatsapp')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              WhatsApp
+            </div>
+            <div class="config-nav-item" id="cfg-nav-senha" onclick="trocarConfigPanel('senha')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              Segurança
+            </div>
+          </div>
+
+          <div>
+            <!-- Escritório -->
+            <div class="config-panel active card" id="cfg-panel-escritorio">
+              <div class="config-section-title">Dados do Escritório</div>
+              <div class="form-row">
+                <div class="form-group"><label>Nome do escritório</label><input type="text" id="cfg-escritorio" placeholder="Silva & Associados"></div>
+                <div class="form-group"><label>Número OAB</label><input type="text" id="cfg-oab" placeholder="12345"></div>
+              </div>
+              <div class="form-group">
+                <label>Estado (seccional OAB)</label>
+                <select id="cfg-estado">
+                  <option value="">Selecione...</option>
+                  <option value="AC">Acre</option><option value="AL">Alagoas</option><option value="AP">Amapá</option>
+                  <option value="AM">Amazonas</option><option value="BA">Bahia</option><option value="CE">Ceará</option>
+                  <option value="DF">Distrito Federal</option><option value="ES">Espírito Santo</option><option value="GO">Goiás</option>
+                  <option value="MA">Maranhão</option><option value="MT">Mato Grosso</option><option value="MS">Mato Grosso do Sul</option>
+                  <option value="MG">Minas Gerais</option><option value="PA">Pará</option><option value="PB">Paraíba</option>
+                  <option value="PR">Paraná</option><option value="PE">Pernambuco</option><option value="PI">Piauí</option>
+                  <option value="RJ">Rio de Janeiro</option><option value="RN">Rio Grande do Norte</option><option value="RS">Rio Grande do Sul</option>
+                  <option value="RO">Rondônia</option><option value="RR">Roraima</option><option value="SC">Santa Catarina</option>
+                  <option value="SP">São Paulo</option><option value="SE">Sergipe</option><option value="TO">Tocantins</option>
+                </select>
+              </div>
+              <div class="form-actions">
+                <button class="btn-primary" onclick="salvarConfigEscritorio()">Salvar alterações</button>
+              </div>
+              <div id="cfg-esc-msg" class="status-msg"></div>
+            </div>
+
+            <!-- WhatsApp -->
+            <div class="config-panel card" id="cfg-panel-whatsapp">
+              <div class="config-section-title">Número para Alertas</div>
+              <div class="form-row">
+                <div class="form-group"><label>Seu WhatsApp (DDD + número)</label><input type="text" id="cfg-telefone" placeholder="82999998888"></div>
+                <div class="form-group"><label>Horário dos alertas</label><input type="time" id="cfg-horario" value="08:00"></div>
+              </div>
+              <div class="config-section-title" style="margin-top:20px">Tipos de alerta</div>
+              <div class="checkbox-row"><input type="checkbox" id="cfg-alerta-urgente"><label for="cfg-alerta-urgente">Urgente — prazos em até 24h</label></div>
+              <div class="checkbox-row"><input type="checkbox" id="cfg-alerta-semana"><label for="cfg-alerta-semana">Esta semana — prazos em até 7 dias</label></div>
+              <div class="checkbox-row"><input type="checkbox" id="cfg-alerta-normal"><label for="cfg-alerta-normal">Normal — todas as movimentações</label></div>
+              <div class="form-actions">
+                <button class="btn-primary" onclick="salvarConfigWhatsapp()">Salvar configurações</button>
+              </div>
+              <div id="cfg-wp-msg" class="status-msg"></div>
+            </div>
+
+            <!-- Segurança -->
+            <div class="config-panel card" id="cfg-panel-senha">
+              <div class="config-section-title">Alterar Senha</div>
+              <div class="form-group"><label>Senha atual</label><input type="password" id="cfg-senha-atual" placeholder="••••••••"></div>
+              <div class="form-row">
+                <div class="form-group"><label>Nova senha</label><input type="password" id="cfg-senha-nova" placeholder="mínimo 6 caracteres"></div>
+                <div class="form-group"><label>Confirmar nova senha</label><input type="password" id="cfg-senha-confirmar" placeholder="••••••••"></div>
+              </div>
+              <div class="form-actions">
+                <button class="btn-primary" onclick="salvarConfigSenha()">Alterar senha</button>
+              </div>
+              <div id="cfg-senha-msg" class="status-msg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /layout -->
+</div><!-- /app -->
+
+<!-- ═══════════════ MODAL ═══════════════ -->
+<div class="modal-overlay" id="modal-processo">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-header-info">
+        <h2 id="modal-numero"></h2>
+        <p id="modal-cliente"></p>
+      </div>
+      <button class="modal-close" onclick="fecharModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <div class="loading">Carregando movimentações...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+var API = 'http://localhost:3000';
+var usuario = null;
+
+function abrirApp(u) {
+  usuario = u;
+  document.getElementById('login-wrap').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('topbar-nome').textContent = usuario.nome;
+  document.getElementById('topbar-email').textContent = usuario.email;
+  document.getElementById('topbar-escritorio').textContent = usuario.escritorio;
+  document.getElementById('topbar-avatar').textContent = usuario.nome.charAt(0).toUpperCase();
+  document.getElementById('dash-sub').textContent = 'Bem-vindo, ' + usuario.nome + ' — ' + usuario.escritorio;
+  if (usuario.telefone) document.getElementById('tel-advogado').value = usuario.telefone;
+  carregarDashboard();
 }
-function confirmarEnvio(cardId, telefone, nomeCliente) { var textarea = document.getElementById('txt-' + cardId); var btnEnviar = document.getElementById('btn-' + cardId); if (!textarea || !textarea.value.trim()) return; var conteudo = textarea.value.trim(); btnEnviar.disabled = true; btnEnviar.textContent = 'Enviando...'; fetch(API + '/mensagens/enviar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ usuario_id: usuario.id, telefone: telefone, conteudo: conteudo, nome_cliente: nomeCliente }) }).then(function(r) { return r.json(); }).then(function(data) { if (data.sucesso) { var card = document.getElementById(cardId); if (card) { card.innerHTML = '<div class="ai-preview-title" style="color:#16a34a">✅ Mensagem enviada para ' + nomeCliente.replace(/</g,'&lt;') + '</div><div style="font-size:12px;color:#4a5568;margin-top:6px;white-space:pre-wrap">' + conteudo.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>'; card.style.background = 'rgba(22,163,74,0.12)'; card.style.borderColor = '#16a34a'; } } else { btnEnviar.disabled = false; btnEnviar.textContent = 'Enviar agora'; alert('Erro ao enviar: ' + (data.erro || 'Tente novamente.')); } }).catch(function() { btnEnviar.disabled = false; btnEnviar.textContent = 'Enviar agora'; alert('Erro ao conectar. Tente novamente.'); }); }function abrirDetalheProcesso(numero, cliente) {
-  document.getElementById('modal-numero').textContent = numero;
-  document.getElementById('modal-cliente').textContent = 'Cliente: ' + cliente;
-  document.getElementById('modal-body').innerHTML = '<div class="loading">Carregando...</div>';
-  document.getElementById('modal-processo').classList.add('open');
-  fetch(API + '/processos/' + encodeURIComponent(numero) + '/detalhes')
-    .then(function(r){return r.json();})
-    .then(function(d){
-      var body = document.getElementById('modal-body');
-      var html = '';
 
-      // Capa do processo
-      var capaKeys = Object.keys(d.capa || {});
-      if(capaKeys.length) {
-        html += '<div style="background:var(--bg3);border-radius:10px;padding:14px 16px;margin-bottom:18px">';
-        html += '<div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Dados do Processo</div>';
-        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px">';
-        capaKeys.forEach(function(k){
-          html += '<div><div style="font-size:10px;color:var(--muted);font-weight:600">' + k + '</div><div style="font-size:12px;color:var(--text);font-weight:500">' + d.capa[k] + '</div></div>';
-        });
-        html += '</div></div>';
-      }
+var _salvo = sessionStorage.getItem('praetor_usuario');
+if (_salvo) { try { abrirApp(JSON.parse(_salvo)); } catch(e) { sessionStorage.removeItem('praetor_usuario'); } }
 
-      // Partes
-      if(d.partes && d.partes.length) {
-        html += '<div style="background:var(--bg3);border-radius:10px;padding:14px 16px;margin-bottom:18px">';
-        html += '<div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Partes</div>';
-        d.partes.forEach(function(p){
-          html += '<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--muted)">' + p.polo + (p.tipo?' — '+p.tipo:'') + '</div>';
-          html += '<div style="font-size:13px;font-weight:600">' + p.nome + '</div>';
-          if(p.advogados && p.advogados.length) {
-            html += '<div style="font-size:11px;color:var(--muted);margin-top:2px">Adv: ' + p.advogados.join(', ') + '</div>';
-          }
-          html += '</div>';
-        });
-        html += '</div>';
-      }
+function trocarTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-cadastro').classList.toggle('active', tab === 'cadastro');
+  document.getElementById('form-login').classList.toggle('active', tab === 'login');
+  document.getElementById('form-cadastro').classList.toggle('active', tab === 'cadastro');
+}
 
-      // Movimentações
-      if(!d.movimentacoes || !d.movimentacoes.length) {
-        html += '<div class="loading">Nenhuma movimentação encontrada.</div>';
-      } else {
-        html += '<div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Movimentações</div>';
-        html += d.movimentacoes.map(function(m, i){
-          var meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-          var partes = m.data.split('/');
-          var dataExt = partes.length===3 ? partes[0] + ' de ' + meses[parseInt(partes[1])-1] + ' de ' + partes[2] : m.data;
-          return '<div class="timeline-item"><div class="timeline-dot">' + (i+1) + '</div><div class="timeline-content"><div class="timeline-date">' + dataExt + '</div><div class="timeline-nome">' + m.nome + '</div>' + (m.resumo?'<div style="font-size:12px;color:#4a5568;margin-top:6px;line-height:1.6">' + m.resumo + '</div>':'') + '</div></div>';
-        }).join('');
-      }
+document.getElementById('btn-entrar').addEventListener('click', function() {
+  var email = document.getElementById('login-email').value.trim();
+  var senha = document.getElementById('login-senha').value;
+  fetch(API + '/auth/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({email:email,senha:senha}) })
+    .then(function(r){return r.json();}).then(function(data){
+      if (data.sucesso) { sessionStorage.setItem('praetor_usuario', JSON.stringify(data.usuario)); abrirApp(data.usuario); }
+      else { var err = document.getElementById('login-error'); err.style.display='block'; err.textContent=data.erro||'Email ou senha incorretos.'; }
+    }).catch(function(){ var err=document.getElementById('login-error'); err.style.display='block'; err.textContent='Erro ao conectar. Tente novamente.'; });
+});
 
-      body.innerHTML = html;
-    })
-    .catch(function(){ document.getElementById('modal-body').innerHTML='<div class="loading">Erro ao carregar.</div>'; });
-} 
-var _agendaMes = new Date().getMonth();
-var _agendaAno = new Date().getFullYear();
-var _agendaPrazos = [];
+document.getElementById('btn-cadastrar-conta').addEventListener('click', function() {
+  var nome=document.getElementById('cad-nome').value.trim(), escritorio=document.getElementById('cad-escritorio').value.trim();
+  var email=document.getElementById('cad-email').value.trim(), senha=document.getElementById('cad-senha').value;
+  var err=document.getElementById('cad-error'), suc=document.getElementById('cad-success');
+  if (!nome||!escritorio||!email||!senha){err.style.display='block';err.textContent='Preencha todos os campos.';return;}
+  if (senha.length<6){err.style.display='block';err.textContent='Senha deve ter mínimo 6 caracteres.';return;}
+  fetch(API+'/auth/cadastro',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,escritorio,email,senha})})
+    .then(r=>r.json()).then(data=>{
+      if(data.sucesso){suc.style.display='block';err.style.display='none';setTimeout(()=>trocarTab('login'),2000);}
+      else{err.style.display='block';err.textContent=data.erro||'Erro ao criar conta.';}
+    }).catch(()=>{err.style.display='block';err.textContent='Erro ao conectar.';});
+});
 
-function carregarAgenda() {
-  if (!usuario) return;
-  // Mostra o calendário imediatamente (vazio) sem esperar o fetch
-  renderCalendario();
-  fetch(API + '/prazos?usuario_id=' + usuario.id)
-    .then(function(r) { return r.json(); })
-    .then(function(prazos) {
-      _agendaPrazos = prazos || [];
-      // Navega automaticamente para o mês com o prazo mais recente
-      if (_agendaPrazos.length) {
-        var datas = _agendaPrazos.map(function(p) {
-          if (!p.data_movimentacao || !p.data_movimentacao.includes('/')) return null;
-          var pts = p.data_movimentacao.split('/');
-          return new Date(parseInt(pts[2]), parseInt(pts[1])-1, parseInt(pts[0]));
-        }).filter(Boolean);
-        if (datas.length) {
-          var mais_recente = datas.reduce(function(a,b){ return b > a ? b : a; });
-          _agendaMes = mais_recente.getMonth();
-          _agendaAno = mais_recente.getFullYear();
+document.getElementById('btn-sair').addEventListener('click', function() {
+  usuario=null; sessionStorage.removeItem('praetor_usuario');
+  document.getElementById('login-wrap').style.display='flex';
+  document.getElementById('app').style.display='none';
+});
+
+document.getElementById('nav-dashboard').addEventListener('click', function(){navegar('dashboard');carregarDashboard();});
+document.getElementById('nav-processos').addEventListener('click', function(){navegar('processos');carregarProcessos();});
+document.getElementById('nav-cadastrar').addEventListener('click', function(){navegar('cadastrar');});
+document.getElementById('nav-mensagens').addEventListener('click', function(){navegar('mensagens');carregarMensagens();});
+document.getElementById('nav-agenda').addEventListener('click', function(){navegar('agenda');carregarAgenda();});
+document.getElementById('nav-config').addEventListener('click', function(){navegar('config');carregarConfig();});
+
+document.getElementById('btn-limpar').addEventListener('click', function(){
+  document.getElementById('numero').value=''; document.getElementById('nome').value=''; document.getElementById('telefone').value='';
+});
+
+document.getElementById('btn-cadastrar').addEventListener('click', function(){
+  var numero=document.getElementById('numero').value.trim(), nome=document.getElementById('nome').value.trim(), telefone=document.getElementById('telefone').value.trim();
+  if(!numero||!nome||!telefone){document.getElementById('msg-erro').style.display='block';document.getElementById('msg-ok').style.display='none';return;}
+  fetch(API+'/processos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numero_processo:numero,nome_cliente:nome,telefone_cliente:telefone,usuario_id:usuario.id})})
+    .then(r=>r.json()).then(data=>{
+      if(data.sucesso){document.getElementById('msg-ok').style.display='block';document.getElementById('msg-erro').style.display='none';document.getElementById('numero').value='';document.getElementById('nome').value='';document.getElementById('telefone').value='';}
+      else{document.getElementById('msg-erro').style.display='block';document.getElementById('msg-erro').textContent=data.erro||'Erro ao cadastrar.';}
+    }).catch(()=>{document.getElementById('msg-erro').style.display='block';});
+});
+
+function navegar(id) {
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('nav-'+id).classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+}
+
+function _movsHtml(movs) {
+  if (!movs || !movs.length) return '<span style="color:var(--muted);font-size:11px">Aguardando dados...</span>';
+  return movs.slice(0,2).map(function(m){
+    return '<div style="font-size:11px;color:var(--text2);line-height:1.4;margin-bottom:2px">'
+      +'<span style="color:var(--muted)">'+m.data+'</span> — '+m.nome+'</div>';
+  }).join('');
+}
+
+function carregarDashboard() {
+  fetch(API+'/processos/resumo?usuario_id='+usuario.id).then(r=>r.json()).then(lista=>{
+    lista = lista || [];
+    document.getElementById('total-processos').textContent = lista.length;
+    document.getElementById('total-clientes').textContent = lista.length;
+    var c = document.getElementById('atividade-container');
+    if (!lista.length) { c.innerHTML='<div class="loading">Nenhum processo cadastrado ainda.</div>'; return; }
+    c.innerHTML='<div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Últimas movimentações</th><th></th></tr></thead><tbody>'+
+      lista.slice(0,5).map(function(p){
+        return '<tr><td><div style="font-weight:600;margin-bottom:2px">'+p.nome_cliente+'</div><div class="td-mono" style="font-size:10.5px">'+p.numero_processo+'</div></td>'
+          +'<td>'+_movsHtml(p.ultimas_movimentacoes)+'</td>'
+          +'<td><button class="btn-ver" onclick="abrirDetalheProcesso(this.dataset.n,this.dataset.c)" data-n="'+p.numero_processo+'" data-c="'+p.nome_cliente+'">Ver</button></td></tr>';
+      }).join('')+'</tbody></table></div>';
+  }).catch(function(){});
+  fetch(API+'/movimentacoes?usuario_id='+usuario.id).then(r=>r.json()).then(function(movs){ document.getElementById('total-mensagens').textContent=(movs||[]).length; }).catch(function(){});
+}
+
+function carregarProcessos() {
+  var c = document.getElementById('tabela-processos');
+  fetch(API+'/processos/resumo?usuario_id='+usuario.id).then(r=>r.json()).then(function(lista){
+    lista = lista || [];
+    if (!lista.length) { c.innerHTML='<div class="loading">Nenhum processo cadastrado.</div>'; return; }
+    c.innerHTML='<div class="table-wrap"><table><thead><tr><th>Número</th><th>Cliente</th><th>WhatsApp</th><th>Últimas movimentações</th><th>Status</th><th></th></tr></thead><tbody>'+
+      lista.map(function(p){
+        return '<tr><td class="td-mono">'+p.numero_processo+'</td>'
+          +'<td style="font-weight:600">'+p.nome_cliente+'</td>'
+          +'<td style="color:var(--text2)">'+p.telefone_cliente+'</td>'
+          +'<td style="max-width:300px">'+_movsHtml(p.ultimas_movimentacoes)+'</td>'
+          +'<td><span class="badge badge-green">Ativo</span></td>'
+          +'<td><button class="btn-ver" onclick="abrirDetalheProcesso(this.dataset.n,this.dataset.c)" data-n="'+p.numero_processo+'" data-c="'+p.nome_cliente+'">Ver</button></td></tr>';
+      }).join('')+'</tbody></table></div>';
+  }).catch(function(){ c.innerHTML='<div class="loading">Erro ao carregar.</div>'; });
+}
+
+var _chatHistorico={}, _processoAtivo=null, _processosCache=[];
+
+function carregarMensagens() {
+  fetch(API+'/processos?usuario_id='+usuario.id).then(r=>r.json()).then(lista=>{
+    _processosCache=lista||[];
+    var list=document.getElementById('ai-proc-list');
+    if(!_processosCache.length){list.innerHTML='<div class="ai-proc-header">Processos</div><div class="loading" style="padding:24px">Nenhum processo.</div>';return;}
+    list.innerHTML='<div class="ai-proc-header">Processos</div>'+_processosCache.map(p=>'<div class="ai-proc-item" id="proc-item-'+p.id+'" onclick="selecionarProcesso(\''+p.id+'\')">'+'<div class="ai-proc-name">'+p.nome_cliente+'</div><div class="ai-proc-num">'+p.numero_processo+'</div></div>').join('');
+    if(_processosCache.length===1) selecionarProcesso(_processosCache[0].id);
+  }).catch(()=>{document.getElementById('ai-proc-list').innerHTML='<div class="ai-proc-header">Processos</div><div class="loading">Erro.</div>';});
+}
+
+function selecionarProcesso(id) {
+  var proc=_processosCache.find(p=>String(p.id)===String(id));
+  _processoAtivo=proc;
+  document.querySelectorAll('.ai-proc-item').forEach(el=>el.classList.remove('active'));
+  var item=document.getElementById('proc-item-'+proc.id); if(item) item.classList.add('active');
+  var area=document.getElementById('ai-chat-area');
+  if(!_chatHistorico[proc.id]){_chatHistorico[proc.id]='<div class="ai-bubble ai-bubble-ai">Olá! Estou pronto para falar sobre o processo de <b>'+proc.nome_cliente+'</b>.<br>Pergunte sobre movimentações, prazos ou peça para enviar um aviso ao cliente.</div>';}
+  area.innerHTML='<div class="ai-chat-header"><div class="ai-chat-header-dot"></div><div><div class="ai-chat-header-name">'+proc.nome_cliente+'</div><div class="ai-chat-header-num">'+proc.numero_processo+'</div></div></div>'+
+    '<div class="ai-chat-msgs" id="ai-msgs">'+_chatHistorico[proc.id]+'</div>'+
+    '<div class="ai-input-bar"><input type="text" class="ai-input" id="ai-input" placeholder="Pergunte sobre este processo..." onkeydown="if(event.key===\'Enter\')enviarChatAdvogado()"><button class="ai-send-btn" id="ai-send-btn" onclick="enviarChatAdvogado()">Enviar</button></div>';
+  var msgs=document.getElementById('ai-msgs'); msgs.scrollTop=msgs.scrollHeight;
+  document.getElementById('ai-input').focus();
+}
+
+function enviarChatAdvogado() {
+  var input=document.getElementById('ai-input'), btn=document.getElementById('ai-send-btn');
+  if(!input||!input.value.trim()||!_processoAtivo) return;
+  var pergunta=input.value.trim(); input.value=''; input.disabled=true; btn.disabled=true;
+  var msgs=document.getElementById('ai-msgs');
+  var userBubble=document.createElement('div'); userBubble.className='ai-bubble ai-bubble-user'; userBubble.textContent=pergunta; msgs.appendChild(userBubble);
+  var loadingBubble=document.createElement('div'); loadingBubble.className='ai-bubble ai-bubble-ai'; loadingBubble.style.padding='10px 16px'; loadingBubble.innerHTML='<div class="ai-typing-dots"><span></span><span></span><span></span></div>'; msgs.appendChild(loadingBubble);
+  msgs.scrollTop=msgs.scrollHeight;
+  fetch(API+'/chat-advogado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id,pergunta:pergunta,processo_id:_processoAtivo.id})})
+    .then(function(response){
+      var reader=response.body.getReader(), decoder=new TextDecoder(), buffer='', aiBubble=null, textoCompleto='';
+      function lerChunk(done,value){
+        if(done)return; buffer+=decoder.decode(value,{stream:true});
+        var lines=buffer.split('\n'); buffer=lines.pop();
+        for(var i=0;i<lines.length;i++){
+          var line=lines[i]; if(!line.startsWith('data: ')) continue;
+          try{
+            var parsed=JSON.parse(line.slice(6));
+            if(parsed.token){
+              if(!aiBubble){loadingBubble.remove();aiBubble=document.createElement('div');aiBubble.className='ai-bubble ai-bubble-ai';msgs.appendChild(aiBubble);}
+              textoCompleto+=parsed.token;
+              aiBubble.innerHTML=textoCompleto.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+              msgs.scrollTop=msgs.scrollHeight;
+            }
+            if(parsed.done){
+              if(parsed.mensagens_pendentes&&parsed.mensagens_pendentes.length){
+                parsed.mensagens_pendentes.forEach(function(mp,idx){
+                  var cardId='preview-'+Date.now()+'-'+idx;
+                  var card=document.createElement('div'); card.className='ai-preview-card'; card.id=cardId;
+                  var textarea=document.createElement('textarea'); textarea.className='ai-preview-textarea'; textarea.id='txt-'+cardId; textarea.value=mp.mensagem;
+                  var btn2=document.createElement('button'); btn2.id='btn-'+cardId; btn2.className='ai-preview-btn'; btn2.textContent='Enviar agora';
+                  btn2.onclick=(function(cid,tel,nome){return function(){confirmarEnvio(cid,tel,nome);};})(cardId,mp.telefone_cliente,mp.nome_cliente);
+                  var footer=document.createElement('div'); footer.className='ai-preview-footer'; footer.innerHTML='<span class="ai-preview-name">📱 '+mp.telefone_cliente+'</span>'; footer.appendChild(btn2);
+                  card.innerHTML='<div class="ai-preview-title">✏️ Mensagem para '+mp.nome_cliente+' — edite antes de enviar</div>'; card.appendChild(textarea); card.appendChild(footer); msgs.appendChild(card);
+                });
+              }
+              if(_processoAtivo) _chatHistorico[_processoAtivo.id]=msgs.innerHTML;
+              msgs.scrollTop=msgs.scrollHeight; input.disabled=false; btn.disabled=false; input.focus(); return;
+            }
+          }catch(e){}
         }
+        reader.read().then(function(r){lerChunk(r.done,r.value);});
       }
-      renderCalendario();
-    })
-    .catch(function() { renderCalendario(); });
-}
-
-function renderCalendario() {
-  try {
-  var container = document.getElementById('lista-prazos');
-  if (!container) return;
-  var mes = _agendaMes;
-  var ano = _agendaAno;
-  var hoje = new Date();
-  var nomesMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  var diasSem = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-
-  // Mapear prazos por dia "dd/mm/yyyy" → lista de prazos
-  var porDia = {};
-  _agendaPrazos.forEach(function(p) {
-    if (!p.data_movimentacao) return;
-    // data no formato dd/mm/yyyy
-    var parts = p.data_movimentacao.split('/');
-    if (parts.length !== 3) return;
-    var d = parseInt(parts[0]), m = parseInt(parts[1])-1, a = parseInt(parts[2]);
-    if (m === mes && a === ano) {
-      var key = d;
-      if (!porDia[key]) porDia[key] = [];
-      porDia[key].push(p);
-    }
-  });
-
-  var primeiroDia = new Date(ano, mes, 1).getDay(); // 0=dom
-  var totalDias = new Date(ano, mes+1, 0).getDate();
-
-  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
-    '<button onclick="mudarMesAgenda(-1)" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:16px">‹</button>' +
-    '<span style="font-weight:700;font-size:17px">' + nomesMes[mes] + ' ' + ano + '</span>' +
-    '<button onclick="mudarMesAgenda(1)" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:16px">›</button>' +
-    '</div>';
-
-  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">';
-  diasSem.forEach(function(d) {
-    html += '<div style="text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:4px 0">' + d + '</div>';
-  });
-  html += '</div>';
-
-  html += '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">';
-
-  // Células vazias antes do primeiro dia
-  for (var i = 0; i < primeiroDia; i++) {
-    html += '<div style="min-height:64px"></div>';
-  }
-
-  for (var dia = 1; dia <= totalDias; dia++) {
-    var isHoje = (dia === hoje.getDate() && mes === hoje.getMonth() && ano === hoje.getFullYear());
-    var prazosNoDia = porDia[dia] || [];
-    var temUrgente = prazosNoDia.some(function(p) { return p.urgencia === 'urgente'; });
-    var temSemana = prazosNoDia.some(function(p) { return p.urgencia === 'esta_semana'; });
-    var cor = temUrgente ? '#ef4444' : temSemana ? '#f59e0b' : prazosNoDia.length ? '#3b82f6' : 'transparent';
-    var bgCell = isHoje ? 'rgba(240,180,41,0.12)' : 'var(--bg2)';
-    var borderCell = isHoje ? '2px solid var(--gold)' : '1.5px solid var(--border)';
-
-    html += '<div style="min-height:64px;background:' + bgCell + ';border:' + borderCell + ';border-radius:10px;padding:6px;cursor:' + (prazosNoDia.length ? 'pointer' : 'default') + '" ' +
-      (prazosNoDia.length ? 'onclick="verPrazosDia(' + dia + ',' + mes + ',' + ano + ')"' : '') + '>' +
-      '<div style="font-size:13px;font-weight:' + (isHoje ? '700' : '500') + ';color:' + (isHoje ? 'var(--gold)' : 'var(--text)') + '">' + dia + '</div>';
-
-    if (prazosNoDia.length) {
-      html += '<div style="margin-top:4px">';
-      prazosNoDia.slice(0,3).forEach(function() {
-        html += '<div style="width:8px;height:8px;border-radius:50%;background:' + cor + ';display:inline-block;margin-right:2px"></div>';
-      });
-      if (prazosNoDia.length > 3) html += '<span style="font-size:9px;color:var(--muted)">+' + (prazosNoDia.length-3) + '</span>';
-      html += '</div>';
-    }
-
-    html += '</div>';
-  }
-  html += '</div>';
-
-  // Legenda
-  html += '<div style="display:flex;gap:16px;margin-top:16px;font-size:12px;color:var(--muted)">' +
-    '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;margin-right:4px"></span>Urgente</span>' +
-    '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:4px"></span>Esta semana</span>' +
-    '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;margin-right:4px"></span>Normal</span>' +
-    '</div>';
-
-  // Painel de detalhe do dia selecionado
-  html += '<div id="painel-dia" style="margin-top:20px"></div>';
-
-  if (!_agendaPrazos.length) {
-    html += '<div style="text-align:center;padding:20px;background:var(--bg2);border-radius:12px;color:var(--muted);font-size:13px;margin-top:16px">' +
-      '📋 Nenhum prazo encontrado. Clique em <strong>Sincronizar processos</strong> para buscar.</div>';
-  }
-
-  container.innerHTML = html;
-  } catch(e) {
-    var c = document.getElementById('lista-prazos');
-    if (c) c.innerHTML = '<div class="loading">Erro ao renderizar calendário: ' + e.message + '</div>';
-  }
-}
-
-function mudarMesAgenda(delta) {
-  _agendaMes += delta;
-  if (_agendaMes < 0) { _agendaMes = 11; _agendaAno--; }
-  if (_agendaMes > 11) { _agendaMes = 0; _agendaAno++; }
-  renderCalendario();
-}
-
-function verPrazosDia(dia, mes, ano) {
-  var painel = document.getElementById('painel-dia');
-  var prazosNoDia = (_agendaPrazos || []).filter(function(p) {
-    if (!p.data_movimentacao) return false;
-    var parts = p.data_movimentacao.split('/');
-    return parseInt(parts[0]) === dia && parseInt(parts[1])-1 === mes && parseInt(parts[2]) === ano;
-  });
-  var nomesMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  var html = '<div style="font-weight:700;font-size:14px;margin-bottom:12px;color:var(--text)">' + dia + ' de ' + nomesMes[mes] + ' de ' + ano + '</div>';
-  prazosNoDia.forEach(function(p) {
-    var cor = p.urgencia === 'urgente' ? '#ef4444' : p.urgencia === 'esta_semana' ? '#f59e0b' : '#3b82f6';
-    html += '<div id="prazo-' + p.id + '" style="background:var(--bg2);border:1.5px solid ' + cor + ';border-left:4px solid ' + cor + ';border-radius:10px;padding:12px 14px;margin-bottom:8px">' +
-      '<div style="font-size:13px;font-weight:600;margin-bottom:4px">' + p.descricao + '</div>' +
-      '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">' + p.nome_cliente + ' — Proc. ' + p.numero_processo + '</div>' +
-      '<button class="btn-visto" data-id="' + p.id + '" onclick="marcarVisto(this)" style="font-size:11px;padding:4px 10px">✓ Marcar como visto</button>' +
-      '</div>';
-  });
-  painel.innerHTML = html;
-}
-function sincronizarPrazos() {
-  var btn = document.getElementById('btn-sync-prazos');
-  var container = document.getElementById('lista-prazos');
-  if (!usuario) return;
-  btn.disabled = true;
-  btn.textContent = '⏳ Sincronizando...';
-  container.innerHTML = '<div class="loading">Buscando movimentações dos seus processos... pode levar até 1 minuto.</div>';
-  fetch(API + '/prazos/sincronizar', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({usuario_id: usuario.id}), signal: AbortSignal.timeout(120000) })
-    .then(function(r) { return r.json(); })
-    .then(function(res) {
-      btn.disabled = false;
-      btn.textContent = '🔄 Sincronizar processos';
-      carregarAgenda();
-    })
-    .catch(function() {
-      btn.disabled = false;
-      btn.textContent = '🔄 Sincronizar processos';
-      container.innerHTML = '<div class="loading">Erro ao sincronizar. Tente novamente.</div>';
+      reader.read().then(function(r){lerChunk(r.done,r.value);});
+    }).catch(function(){
+      loadingBubble.remove();
+      var errBubble=document.createElement('div'); errBubble.className='ai-bubble ai-bubble-ai'; errBubble.textContent='Erro ao consultar. Tente novamente.'; msgs.appendChild(errBubble);
+      input.disabled=false; btn.disabled=false;
     });
 }
-function marcarVisto(btn) {
-  var id = btn.getAttribute('data-id');
-  fetch(API + '/prazos/' + id + '/visto', { method: 'POST' }).then(function() {
-    var el = document.getElementById('prazo-' + id);
-    if (el) { el.style.opacity = '0.4'; btn.disabled = true; btn.textContent = '✓ Visto'; }
-  });
+
+function confirmarEnvio(cardId,telefone,nomeCliente){
+  var textarea=document.getElementById('txt-'+cardId), btnEnviar=document.getElementById('btn-'+cardId);
+  if(!textarea||!textarea.value.trim()) return;
+  var conteudo=textarea.value.trim(); btnEnviar.disabled=true; btnEnviar.textContent='Enviando...';
+  fetch(API+'/mensagens/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id,telefone,conteudo,nome_cliente:nomeCliente})})
+    .then(r=>r.json()).then(data=>{
+      if(data.sucesso){var card=document.getElementById(cardId);if(card){card.innerHTML='<div class="ai-preview-title" style="color:var(--green)">Mensagem enviada para '+nomeCliente.replace(/</g,'&lt;')+'</div><div style="font-size:12px;color:var(--text2);margin-top:6px;white-space:pre-wrap">'+conteudo.replace(/</g,'&lt;')+'</div>';card.style.background='var(--green-bg)';card.style.borderColor='var(--green)';}}
+      else{btnEnviar.disabled=false;btnEnviar.textContent='Enviar agora';alert('Erro: '+(data.erro||'Tente novamente.'));}
+    }).catch(()=>{btnEnviar.disabled=false;btnEnviar.textContent='Enviar agora';alert('Erro ao conectar.');});
 }
+
+function abrirDetalheProcesso(numero,cliente){
+  document.getElementById('modal-numero').textContent=numero;
+  document.getElementById('modal-cliente').textContent='Cliente: '+cliente;
+  document.getElementById('modal-body').innerHTML='<div class="loading">Carregando...</div>';
+  document.getElementById('modal-processo').classList.add('open');
+  fetch(API+'/processos/'+encodeURIComponent(numero)+'/detalhes').then(r=>r.json()).then(d=>{
+    var body=document.getElementById('modal-body'), html='';
+    var capaKeys=Object.keys(d.capa||{});
+    if(capaKeys.length){html+='<div style="background:var(--bg3);border-radius:10px;padding:14px 16px;margin-bottom:18px"><div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Dados do Processo</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px">';capaKeys.forEach(k=>{html+='<div><div style="font-size:10px;color:var(--muted);font-weight:600">'+k+'</div><div style="font-size:12px;font-weight:500">'+d.capa[k]+'</div></div>';});html+='</div></div>';}
+    if(d.partes&&d.partes.length){html+='<div style="background:var(--bg3);border-radius:10px;padding:14px 16px;margin-bottom:18px"><div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">Partes</div>';d.partes.forEach(p=>{html+='<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--muted)">'+p.polo+(p.tipo?' — '+p.tipo:'')+'</div><div style="font-size:13px;font-weight:600">'+p.nome+'</div>'+(p.advogados&&p.advogados.length?'<div style="font-size:11px;color:var(--muted);margin-top:2px">Adv: '+p.advogados.join(', ')+'</div>':'')+'</div>';});html+='</div>';}
+    if(!d.movimentacoes||!d.movimentacoes.length){html+='<div class="loading">Nenhuma movimentação encontrada.</div>';}
+    else{html+='<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:12px;text-transform:uppercase">Movimentações</div>';var meses=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];html+=d.movimentacoes.map((m,i)=>{var pts=m.data.split('/');var dataExt=pts.length===3?pts[0]+' de '+meses[parseInt(pts[1])-1]+' de '+pts[2]:m.data;return'<div class="timeline-item"><div class="timeline-dot">'+(i+1)+'</div><div class="timeline-content"><div class="timeline-date">'+dataExt+'</div><div class="timeline-nome">'+m.nome+'</div>'+(m.resumo?'<div style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.6">'+m.resumo+'</div>':'')+'</div></div>';}).join('');}
+    body.innerHTML=html;
+  }).catch(()=>{document.getElementById('modal-body').innerHTML='<div class="loading">Erro ao carregar.</div>';});
+}
+
+var _agendaMes=new Date().getMonth(), _agendaAno=new Date().getFullYear(), _agendaPrazos=[];
+
+function carregarAgenda(){
+  if(!usuario) return;
+  renderCalendario();
+  fetch(API+'/prazos?usuario_id='+usuario.id).then(r=>r.json()).then(prazos=>{
+    _agendaPrazos=prazos||[];
+    if(_agendaPrazos.length){var datas=_agendaPrazos.map(p=>{if(!p.data_movimentacao||!p.data_movimentacao.includes('/'))return null;var pts=p.data_movimentacao.split('/');return new Date(parseInt(pts[2]),parseInt(pts[1])-1,parseInt(pts[0]));}).filter(Boolean);if(datas.length){var mr=datas.reduce((a,b)=>b>a?b:a);_agendaMes=mr.getMonth();_agendaAno=mr.getFullYear();}}
+    renderCalendario();
+  }).catch(()=>renderCalendario());
+}
+
+function renderCalendario(){
+  try{
+  var c=document.getElementById('lista-prazos'); if(!c)return;
+  var mes=_agendaMes,ano=_agendaAno,hoje=new Date();
+  var nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var diasSem=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  var porDia={};
+  _agendaPrazos.forEach(p=>{if(!p.data_movimentacao)return;var pts=p.data_movimentacao.split('/');if(pts.length!==3)return;var d=parseInt(pts[0]),m=parseInt(pts[1])-1,a=parseInt(pts[2]);if(m===mes&&a===ano){if(!porDia[d])porDia[d]=[];porDia[d].push(p);}});
+  var primeiroDia=new Date(ano,mes,1).getDay(), totalDias=new Date(ano,mes+1,0).getDate();
+  var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><button onclick="mudarMesAgenda(-1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:16px;color:var(--text)">‹</button><span style="font-weight:700;font-size:16px">'+nomesMes[mes]+' '+ano+'</span><button onclick="mudarMesAgenda(1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:16px;color:var(--text)">›</button></div>';
+  html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">';diasSem.forEach(d=>{html+='<div style="text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:4px 0">'+d+'</div>';});html+='</div>';
+  html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">';
+  for(var i=0;i<primeiroDia;i++)html+='<div style="min-height:60px"></div>';
+  for(var dia=1;dia<=totalDias;dia++){var isHoje=(dia===hoje.getDate()&&mes===hoje.getMonth()&&ano===hoje.getFullYear());var pnd=porDia[dia]||[];var temU=pnd.some(p=>p.urgencia==='urgente'),temS=pnd.some(p=>p.urgencia==='esta_semana');var cor=temU?'var(--red)':temS?'var(--gold)':pnd.length?'var(--blue)':'transparent';html+='<div style="min-height:60px;background:'+(isHoje?'var(--gold-bg)':'var(--bg3)')+';border:'+(isHoje?'2px solid var(--gold)':'1px solid var(--border)')+';border-radius:10px;padding:6px;cursor:'+(pnd.length?'pointer':'default')+'" '+(pnd.length?'onclick="verPrazosDia('+dia+','+mes+','+ano+')"':'')+'>'+
+      '<div style="font-size:13px;font-weight:'+(isHoje?700:500)+';color:'+(isHoje?'var(--gold)':'var(--text)')+'">'+dia+'</div>'+
+      (pnd.length?'<div style="margin-top:3px">'+pnd.slice(0,3).map(()=>'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+cor+';margin-right:2px"></span>').join('')+(pnd.length>3?'<span style="font-size:9px;color:var(--muted)">+'+( pnd.length-3)+'</span>':'')+'</div>':'')+'</div>';}
+  html+='</div><div style="display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--muted)"><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:4px"></span>Urgente</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold);margin-right:4px"></span>Esta semana</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:4px"></span>Normal</span></div>';
+  if(!_agendaPrazos.length)html+='<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;margin-top:16px;background:var(--bg3);border-radius:var(--radius)">Nenhum prazo encontrado. Clique em <strong>Sincronizar processos</strong>.</div>';
+  html+='<div id="painel-dia" style="margin-top:20px"></div>';
+  c.innerHTML=html;
+  }catch(e){var c2=document.getElementById('lista-prazos');if(c2)c2.innerHTML='<div class="loading">Erro: '+e.message+'</div>';}
+}
+
+function mudarMesAgenda(delta){_agendaMes+=delta;if(_agendaMes<0){_agendaMes=11;_agendaAno--;}if(_agendaMes>11){_agendaMes=0;_agendaAno++;}renderCalendario();}
+
+function verPrazosDia(dia,mes,ano){
+  var painel=document.getElementById('painel-dia');
+  var pnd=(_agendaPrazos||[]).filter(p=>{if(!p.data_movimentacao)return false;var pts=p.data_movimentacao.split('/');return parseInt(pts[0])===dia&&parseInt(pts[1])-1===mes&&parseInt(pts[2])===ano;});
+  var nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  var html='<div style="font-weight:700;font-size:14px;margin-bottom:12px">'+dia+' de '+nomesMes[mes]+' de '+ano+'</div>';
+  pnd.forEach(p=>{var cor=p.urgencia==='urgente'?'var(--red)':p.urgencia==='esta_semana'?'var(--gold)':'var(--blue)';html+='<div id="prazo-'+p.id+'" class="prazo-card '+(p.urgencia==='urgente'?'prazo-urgente':p.urgencia==='esta_semana'?'prazo-semana':'prazo-normal')+'"><div class="prazo-desc">'+p.descricao+'</div><div class="prazo-info">'+p.nome_cliente+' — '+p.numero_processo+'</div><div class="prazo-footer"><span></span><button class="btn-visto" data-id="'+p.id+'" onclick="marcarVisto(this)">✓ Marcar como visto</button></div></div>';});
+  painel.innerHTML=html;
+}
+
+function sincronizarPrazos(){
+  var btn=document.getElementById('btn-sync-prazos'), c=document.getElementById('lista-prazos');
+  if(!usuario) return;
+  btn.disabled=true; btn.textContent='Sincronizando...';
+  c.innerHTML='<div class="loading">Buscando movimentações... pode levar até 1 minuto.</div>';
+  fetch(API+'/prazos/sincronizar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id}),signal:AbortSignal.timeout(120000)})
+    .then(r=>r.json()).then(()=>{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sincronizar processos';carregarAgenda();})
+    .catch(()=>{btn.disabled=false;btn.textContent='Sincronizar processos';c.innerHTML='<div class="loading">Erro ao sincronizar.</div>';});
+}
+
+function marcarVisto(btn){
+  var id=btn.getAttribute('data-id');
+  fetch(API+'/prazos/'+id+'/visto',{method:'POST'}).then(()=>{var el=document.getElementById('prazo-'+id);if(el){el.style.opacity='.4';btn.disabled=true;btn.textContent='✓ Visto';}});
+}
+
 function fecharModal(){ document.getElementById('modal-processo').classList.remove('open'); }
 
-function carregarConfig() {
-  if (!usuario) return;
-  if (usuario.telefone) document.getElementById('cfg-telefone').value = usuario.telefone;
-  if (usuario.escritorio) document.getElementById('cfg-escritorio').value = usuario.escritorio;
-  if (usuario.oab) document.getElementById('cfg-oab').value = usuario.oab;
-  if (usuario.estado) document.getElementById('cfg-estado').value = usuario.estado;
-  if (usuario.horario_alerta) document.getElementById('cfg-horario').value = usuario.horario_alerta;
-  if (usuario.tipos_alerta) {
-    var tipos = usuario.tipos_alerta.split(',');
-    document.getElementById('cfg-alerta-urgente').checked = tipos.includes('urgente');
-    document.getElementById('cfg-alerta-semana').checked = tipos.includes('semana');
-    document.getElementById('cfg-alerta-normal').checked = tipos.includes('normal');
-  }
+function carregarConfig(){
+  if(!usuario) return;
+  if(usuario.telefone) document.getElementById('cfg-telefone').value=usuario.telefone;
+  if(usuario.escritorio) document.getElementById('cfg-escritorio').value=usuario.escritorio;
+  if(usuario.oab) document.getElementById('cfg-oab').value=usuario.oab;
+  if(usuario.estado) document.getElementById('cfg-estado').value=usuario.estado;
+  if(usuario.horario_alerta) document.getElementById('cfg-horario').value=usuario.horario_alerta;
+  if(usuario.tipos_alerta){var tipos=usuario.tipos_alerta.split(',');document.getElementById('cfg-alerta-urgente').checked=tipos.includes('urgente');document.getElementById('cfg-alerta-semana').checked=tipos.includes('semana');document.getElementById('cfg-alerta-normal').checked=tipos.includes('normal');}
 }
 
-function _msgConfig(id, ok, texto) {
-  var el = document.getElementById(id);
-  el.style.display = 'block';
-  el.style.color = ok ? 'var(--gold)' : '#f87171';
-  el.textContent = texto;
-  setTimeout(function(){ el.style.display = 'none'; }, 3000);
+function trocarConfigPanel(id){
+  document.querySelectorAll('.config-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.config-nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('cfg-panel-'+id).classList.add('active');
+  document.getElementById('cfg-nav-'+id).classList.add('active');
 }
 
-function salvarConfigWhatsapp() {
-  var telefone = document.getElementById('cfg-telefone').value.trim();
-  var horario = document.getElementById('cfg-horario').value;
-  var tipos = [];
-  if (document.getElementById('cfg-alerta-urgente').checked) tipos.push('urgente');
-  if (document.getElementById('cfg-alerta-semana').checked) tipos.push('semana');
-  if (document.getElementById('cfg-alerta-normal').checked) tipos.push('normal');
-  fetch(API + '/perfil/config', { method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ usuario_id: usuario.id, telefone: telefone, horario_alerta: horario, tipos_alerta: tipos.join(',') })
-  }).then(function(r){ return r.json(); }).then(function(d){
-    if (d.sucesso) { usuario.telefone = telefone; usuario.horario_alerta = horario; usuario.tipos_alerta = tipos.join(','); sessionStorage.setItem('praetor_usuario', JSON.stringify(usuario)); _msgConfig('cfg-wp-msg', true, '✓ Configurações salvas!'); }
-    else _msgConfig('cfg-wp-msg', false, d.erro || 'Erro ao salvar.');
-  }).catch(function(){ _msgConfig('cfg-wp-msg', false, 'Erro de conexão.'); });
+function _msgConfig(id,ok,texto){var el=document.getElementById(id);el.style.display='block';el.style.color=ok?'var(--green)':'var(--red)';el.textContent=texto;setTimeout(()=>{el.style.display='none';},3000);}
+
+function salvarConfigWhatsapp(){
+  var telefone=document.getElementById('cfg-telefone').value.trim(), horario=document.getElementById('cfg-horario').value;
+  var tipos=[];if(document.getElementById('cfg-alerta-urgente').checked)tipos.push('urgente');if(document.getElementById('cfg-alerta-semana').checked)tipos.push('semana');if(document.getElementById('cfg-alerta-normal').checked)tipos.push('normal');
+  fetch(API+'/perfil/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id,telefone,horario_alerta:horario,tipos_alerta:tipos.join(',')})})
+    .then(r=>r.json()).then(d=>{if(d.sucesso){usuario.telefone=telefone;usuario.horario_alerta=horario;usuario.tipos_alerta=tipos.join(',');sessionStorage.setItem('praetor_usuario',JSON.stringify(usuario));_msgConfig('cfg-wp-msg',true,'Configurações salvas!');}else _msgConfig('cfg-wp-msg',false,d.erro||'Erro ao salvar.');}).catch(()=>_msgConfig('cfg-wp-msg',false,'Erro de conexão.'));
 }
 
-function salvarConfigEscritorio() {
-  var escritorio = document.getElementById('cfg-escritorio').value.trim();
-  var oab = document.getElementById('cfg-oab').value.trim();
-  var estado = document.getElementById('cfg-estado').value;
-  if (!escritorio) return _msgConfig('cfg-esc-msg', false, 'Informe o nome do escritório.');
-  fetch(API + '/perfil/config', { method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ usuario_id: usuario.id, escritorio: escritorio, oab: oab, estado: estado })
-  }).then(function(r){ return r.json(); }).then(function(d){
-    if (d.sucesso) {
-      usuario.escritorio = escritorio; usuario.oab = oab; usuario.estado = estado;
-      document.getElementById('topbar-escritorio').textContent = escritorio;
-      sessionStorage.setItem('praetor_usuario', JSON.stringify(usuario));
-      _msgConfig('cfg-esc-msg', true, '✓ Dados salvos!');
-    } else _msgConfig('cfg-esc-msg', false, d.erro || 'Erro ao salvar.');
-  }).catch(function(){ _msgConfig('cfg-esc-msg', false, 'Erro de conexão.'); });
+function salvarConfigEscritorio(){
+  var escritorio=document.getElementById('cfg-escritorio').value.trim(), oab=document.getElementById('cfg-oab').value.trim(), estado=document.getElementById('cfg-estado').value;
+  if(!escritorio) return _msgConfig('cfg-esc-msg',false,'Informe o nome do escritório.');
+  fetch(API+'/perfil/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id,escritorio,oab,estado})})
+    .then(r=>r.json()).then(d=>{if(d.sucesso){usuario.escritorio=escritorio;usuario.oab=oab;usuario.estado=estado;document.getElementById('topbar-escritorio').textContent=escritorio;sessionStorage.setItem('praetor_usuario',JSON.stringify(usuario));_msgConfig('cfg-esc-msg',true,'Dados salvos!');}else _msgConfig('cfg-esc-msg',false,d.erro||'Erro ao salvar.');}).catch(()=>_msgConfig('cfg-esc-msg',false,'Erro de conexão.'));
 }
 
-function salvarConfigSenha() {
-  var atual = document.getElementById('cfg-senha-atual').value;
-  var nova = document.getElementById('cfg-senha-nova').value;
-  var confirmar = document.getElementById('cfg-senha-confirmar').value;
-  if (!atual || !nova) return _msgConfig('cfg-senha-msg', false, 'Preencha todos os campos.');
-  if (nova.length < 6) return _msgConfig('cfg-senha-msg', false, 'Nova senha deve ter mínimo 6 caracteres.');
-  if (nova !== confirmar) return _msgConfig('cfg-senha-msg', false, 'As senhas não coincidem.');
-  fetch(API + '/perfil/senha', { method: 'POST', headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ usuario_id: usuario.id, senha_atual: atual, senha_nova: nova })
-  }).then(function(r){ return r.json(); }).then(function(d){
-    if (d.sucesso) { document.getElementById('cfg-senha-atual').value=''; document.getElementById('cfg-senha-nova').value=''; document.getElementById('cfg-senha-confirmar').value=''; _msgConfig('cfg-senha-msg', true, '✓ Senha alterada com sucesso!'); }
-    else _msgConfig('cfg-senha-msg', false, d.erro || 'Erro ao alterar senha.');
-  }).catch(function(){ _msgConfig('cfg-senha-msg', false, 'Erro de conexão.'); });
+function salvarConfigSenha(){
+  var atual=document.getElementById('cfg-senha-atual').value, nova=document.getElementById('cfg-senha-nova').value, confirmar=document.getElementById('cfg-senha-confirmar').value;
+  if(!atual||!nova) return _msgConfig('cfg-senha-msg',false,'Preencha todos os campos.');
+  if(nova.length<6) return _msgConfig('cfg-senha-msg',false,'Nova senha deve ter mínimo 6 caracteres.');
+  if(nova!==confirmar) return _msgConfig('cfg-senha-msg',false,'As senhas não coincidem.');
+  fetch(API+'/perfil/senha',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id,senha_atual:atual,senha_nova:nova})})
+    .then(r=>r.json()).then(d=>{if(d.sucesso){document.getElementById('cfg-senha-atual').value='';document.getElementById('cfg-senha-nova').value='';document.getElementById('cfg-senha-confirmar').value='';_msgConfig('cfg-senha-msg',true,'Senha alterada!');}else _msgConfig('cfg-senha-msg',false,d.erro||'Erro ao alterar.');}).catch(()=>_msgConfig('cfg-senha-msg',false,'Erro de conexão.'));
 }
 
-function salvarConfigTelefone() { salvarConfigWhatsapp(); }</script> <div class="modal-overlay" id="modal-processo"><div class="modal-box"><div class="modal-header"><div class="modal-header-info"><h2 id="modal-numero"></h2><p id="modal-cliente"></p></div><button class="modal-close" onclick="fecharModal()">×</button></div><div class="modal-body" id="modal-body"><div class="loading">Carregando movimentações...</div></div></div></div></body> </html>
+function salvarTelefoneAdvogado(){
+  var telefone=document.getElementById('tel-advogado').value.trim(), msgEl=document.getElementById('tel-msg');
+  if(!telefone){msgEl.style.display='block';msgEl.style.color='var(--red)';msgEl.textContent='Informe o número.';return;}
+  fetch(API+'/perfil/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id,telefone})})
+    .then(r=>r.json()).then(d=>{msgEl.style.display='block';if(d.sucesso){usuario.telefone=telefone;sessionStorage.setItem('praetor_usuario',JSON.stringify(usuario));msgEl.style.color='var(--green)';msgEl.textContent='Número salvo!';}else{msgEl.style.color='var(--red)';msgEl.textContent=d.erro||'Erro ao salvar.';}setTimeout(()=>{msgEl.style.display='none';},3000);}).catch(()=>{msgEl.style.display='block';msgEl.style.color='var(--red)';msgEl.textContent='Erro de conexão.';});
+}
+
+function salvarConfigTelefone(){salvarConfigWhatsapp();}
+</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+import re
+import httpx
+from fastapi import APIRouter, Request, Header
+from app.database import supabase
+from app.config import SPURNOW_SECRET, OPENAI_KEY
+from app.services.whatsapp import enviar_whatsapp, enviar_whatsapp_spurnow
+
+router = APIRouter()
+
+_processadas: set = set()
+
+
+def _ja_processada(msg_id: str | None) -> bool:
+    if not msg_id:
+        return False
+    if msg_id in _processadas:
+        return True
+    _processadas.add(msg_id)
+    if len(_processadas) > 2000:
+        _processadas.pop()
+    return False
+
+
+def _normalizar_telefone(raw: str) -> str:
+    tel = re.sub(r"@c\.us|@s\.whatsapp\.net", "", raw or "")
+    tel = re.sub(r"\D", "", tel)
+    tel = re.sub(r"^55", "", tel)
+    if len(tel) == 10:
+        tel = tel[:2] + "9" + tel[2:]
+    return tel
+
+
+async def _gerar_resposta_whatsapp(mensagem: str, nome: str, processos: list, escritorio: str) -> str:
+    import httpx, json
+    from app.config import OPENAI_KEY
+    from app.services.codilo import buscar_movimentacoes_cache
+
+    info = ""
+    precisa_dados = bool(re.search(
+        r"processo|moviment|prazo|audiên|decisão|sentença|recurso|andament|atualiz|"
+        r"aconteceu|novidade|status|o que|como (está|tá|ficou)|teve|tem|última|ultimo|"
+        r"recente|passou|ocorreu|andou|julgamento|despacho|intimação|citação",
+        mensagem, re.IGNORECASE
+    ))
+
+    for proc in processos:
+        info += f"\nProcesso — cliente: {proc['nome_cliente']}:\n"
+        if precisa_dados:
+            movs = await buscar_movimentacoes_cache(proc["numero_processo"])
+            if movs:
+                info += "Últimas 3 movimentações:\n"
+                for i, m in enumerate(movs[:3], 1):
+                    info += f"{i}. {m['nome']} — {m['data']}\n"
+            else:
+                info += "DADOS_INDISPONÍVEIS: não foi possível consultar o tribunal agora.\n"
+
+    system = (
+        "PROIBIÇÃO ABSOLUTA E INQUEBRÁVEL: NUNCA, em hipótese alguma, diga ao cliente para entrar em contato "
+        "com o advogado, ligar para o escritório, agendar consulta, buscar atendimento presencial, ou qualquer frase "
+        "que redirecione o cliente para fora deste chat.\n\n"
+        f"Você é Lex, assistente jurídico virtual do escritório {escritorio or 'de advocacia'}, atendendo o cliente {nome}. "
+        "Você tem conhecimento completo do direito brasileiro e responde TODAS as dúvidas você mesmo.\n\n"
+        "REGRAS:\n"
+        "- NUNCA peça número de processo, CPF ou qualquer dado — o cliente já está identificado\n"
+        "- Linguagem simples e acolhedora — sem juridiquês\n"
+        "- NUNCA diga para verificar em nenhum portal, sistema ou lugar externo\n"
+        "- Quando perguntar sobre o processo: liste EXATAMENTE as 3 últimas movimentações neste formato:\n"
+        "1. *DD de mês de AAAA - Nome da Movimentação*: Explicação clara.\n"
+        "2. *DD de mês de AAAA - Nome da Movimentação*: Explicação clara.\n"
+        "3. *DD de mês de AAAA - Nome da Movimentação*: Explicação clara.\n"
+        "- Após listar as movimentações, respostas seguintes devem ser CURTAS e diretas (máximo 2-3 linhas)\n"
+        "- Se aparecer DADOS_INDISPONÍVEIS: diga que não conseguiu consultar o processo agora e peça para tentar novamente em instantes — NUNCA invente movimentações\n\n"
+        f"PROCESSOS DO CLIENTE {nome.upper()}:\n"
+        + (info or "DADOS_INDISPONÍVEIS: não foi possível consultar o tribunal agora.")
+    )
+
+    async with httpx.AsyncClient(timeout=20) as client:
+        r = await client.post(
+            "https://api.openai.com/v1/chat/completions",
+            json={
+                "model": "gpt-4o-mini",
+                "temperature": 0.2,
+                "max_tokens": 500,
+                "messages": [
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": mensagem},
+                ],
+            },
+            headers={"Authorization": f"Bearer {OPENAI_KEY}"},
+        )
+    return r.json()["choices"][0]["message"]["content"]
+
+
+def _extrair_audio_url(body: dict) -> str | None:
+    # Z-API: audio PTT (voz)
+    audio = body.get("audio") or body.get("ptt") or {}
+    if isinstance(audio, dict):
+        url = audio.get("audioUrl") or audio.get("url") or audio.get("base64")
+        if url:
+            return url
+    # SpurNow
+    content = (body.get("content") or {})
+    if isinstance(content, dict):
+        audio2 = content.get("audio") or {}
+        if isinstance(audio2, dict):
+            return audio2.get("url") or audio2.get("link")
+    # Fallback genérico
+    return body.get("audioUrl") or body.get("mediaUrl")
+
+
+async def _transcrever_audio(url: str) -> str | None:
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            dl = await client.get(url)
+            dl.raise_for_status()
+            audio_bytes = dl.content
+            r = await client.post(
+                "https://api.openai.com/v1/audio/transcriptions",
+                files={"file": ("audio.ogg", audio_bytes, "audio/ogg")},
+                data={"model": "whisper-1", "language": "pt"},
+                headers={"Authorization": f"Bearer {OPENAI_KEY}"},
+            )
+            r.raise_for_status()
+            texto = r.json().get("text", "").strip()
+            print(f"[whisper] transcrito: {texto[:80]}")
+            return texto or None
+    except Exception as e:
+        print(f"[whisper] erro: {e}")
+        return None
+
+
+async def _salvar_mensagem(usuario_id, telefone, nome_cliente, remetente, conteudo):
+    supabase.from_("mensagens").insert({
+        "usuario_id": usuario_id, "telefone": telefone,
+        "nome_cliente": nome_cliente, "remetente": remetente, "conteudo": conteudo,
+    }).execute()
+
+
+@router.post("/webhook")
+async def webhook_zapi(request: Request):
+    body = await request.json()
+    if not body or body.get("fromMe") or body.get("isGroup"):
+        return 200
+
+    msg_id = body.get("messageId") or body.get("id") or (body.get("data", {}) or {}).get("key", {}).get("id")
+    if _ja_processada(msg_id):
+        return 200
+
+    telefone = _normalizar_telefone(body.get("phone") or body.get("from") or "")
+    mensagem = (
+        (body.get("text") or {}).get("message")
+        or (body.get("texto") or {}).get("mensagem")
+        or body.get("message") or body.get("body")
+    )
+
+    if not mensagem:
+        audio_url = _extrair_audio_url(body)
+        if audio_url:
+            mensagem = await _transcrever_audio(audio_url)
+
+    if not telefone or not mensagem:
+        return 200
+
+    try:
+        procs_res = supabase.from_("processos").select("*").eq("telefone_cliente", telefone).execute()
+        processos = procs_res.data or []
+        if not processos:
+            await enviar_whatsapp(telefone, "Olá! Não encontrei seu cadastro. Entre em contato com o escritório.")
+            return 200
+
+        usu_res = supabase.from_("usuarios").select("escritorio").eq("id", processos[0]["usuario_id"]).single().execute()
+        escritorio = usu_res.data.get("escritorio", "nosso escritório") if usu_res.data else "nosso escritório"
+
+        await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "cliente", mensagem)
+        resposta = await _gerar_resposta_whatsapp(mensagem, processos[0]["nome_cliente"], processos, escritorio)
+        await enviar_whatsapp(telefone, resposta)
+        await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "bot", resposta)
+    except Exception as e:
+        print(f"[webhook] erro: {e}")
+    return 200
+
+
+@router.post("/webhook-spurnow")
+async def webhook_spurnow(request: Request):
+    segredo = request.headers.get("x-webhook-secret") or request.headers.get("x-spur-secret") or request.query_params.get("secret")
+    if SPURNOW_SECRET and segredo != SPURNOW_SECRET:
+        return 401
+
+    try:
+        body = await request.json()
+        print(f"[spurnow-webhook] payload: {body}")
+
+        msg_id = body.get("id") or body.get("messageId") or (body.get("data") or {}).get("id")
+        if _ja_processada(msg_id):
+            return 200
+
+        telefone = _normalizar_telefone(
+            body.get("from") or body.get("phone")
+            or (body.get("data") or {}).get("from")
+            or (body.get("contact") or {}).get("phone") or ""
+        )
+        mensagem = (
+            body.get("message") or body.get("text")
+            or (body.get("data") or {}).get("message")
+            or ((body.get("content") or {}).get("text") or {}).get("body")
+        )
+
+        if not mensagem:
+            audio_url = _extrair_audio_url(body)
+            if audio_url:
+                mensagem = await _transcrever_audio(audio_url)
+
+        if not telefone or not mensagem:
+            return 200
+
+        procs_res = supabase.from_("processos").select("*").eq("telefone_cliente", telefone).execute()
+        processos = procs_res.data or []
+        if not processos:
+            await enviar_whatsapp_spurnow(telefone, "Olá! Não encontrei seu cadastro no sistema.")
+            return 200
+
+        usu_res = supabase.from_("usuarios").select("escritorio").eq("id", processos[0]["usuario_id"]).single().execute()
+        escritorio = usu_res.data.get("escritorio", "nosso escritório") if usu_res.data else "nosso escritório"
+
+        await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "cliente", mensagem)
+        resposta = await _gerar_resposta_whatsapp(mensagem, processos[0]["nome_cliente"], processos, escritorio)
+        await enviar_whatsapp_spurnow(telefone, resposta)
+        await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "bot", resposta)
+        print(f"[spurnow-webhook] ✅ resposta enviada para {processos[0]['nome_cliente']}")
+    except Exception as e:
+        print(f"[spurnow-webhook] erro: {e}")
+    return 200
+
+
+@router.post("/testar-whatsapp")
+async def testar_whatsapp(body: dict):
+    telefone = body.get("telefone", "")
+    nome = body.get("nome", "")
+    try:
+        await enviar_whatsapp(telefone, f"Olá, {nome}! Teste do sistema Praetor AI.")
+        return {"sucesso": True}
+    except Exception as e:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail=str(e))
