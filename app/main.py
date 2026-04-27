@@ -27,6 +27,11 @@ app.include_router(prazos.router)
 
 @app.get("/")
 def root():
+    from fastapi.responses import FileResponse
+    import os
+    html = os.path.join(os.path.dirname(__file__), "..", "index.html")
+    if os.path.exists(html):
+        return FileResponse(html)
     return "Sistema juridico rodando!"
 
 
