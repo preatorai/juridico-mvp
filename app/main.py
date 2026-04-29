@@ -1,5 +1,5 @@
 import asyncio
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import supabase
@@ -39,6 +39,21 @@ def root():
 def ping():
     import time
     return {"ok": True, "ts": int(time.time() * 1000)}
+
+
+@app.post("/deploy")
+async def deploy(request: Request):
+    from app.config import DEPLOY_SECRET
+    secret = request.headers.get("x-deploy-secret") or (await request.json()).get("secret", "")
+    if not DEPLOY_SECRET or secret != DEPLOY_SECRET:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    import subprocess, os
+    subprocess.Popen(
+        ["bash", "-c", "sleep 2 && cd /home/ubuntu/juridico-mvp && git pull && sudo systemctl restart praetor"],
+        preexec_fn=os.setsid
+    )
+    return {"ok": True, "msg": "Deploy iniciado"}
 
 
 @app.on_event("startup")
