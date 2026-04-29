@@ -10,7 +10,7 @@ async def cadastro(body: CadastroBody):
     if not body.nome or not body.email or not body.senha or not body.escritorio:
         return {"erro": "Preencha todos os campos."}, 400
     try:
-        existe = supabase.from_("usuarios").select("id").eq("email", body.email).single().execute()
+        existe = supabase.from_("usuarios").select("id").eq("email", body.email).execute()
         if existe.data:
             from fastapi import HTTPException
             raise HTTPException(status_code=400, detail="Email ja cadastrado.")
