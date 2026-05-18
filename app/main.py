@@ -30,7 +30,7 @@ app.include_router(leads.router)
 def root():
     from fastapi.responses import FileResponse
     import os
-    html = os.path.join(os.path.dirname(__file__), "..", "index.html")
+    html = os.path.join(os.path.dirname(__file__), "..", "dashboard.html")
     if os.path.exists(html):
         return FileResponse(html)
     return "Sistema juridico rodando!"
