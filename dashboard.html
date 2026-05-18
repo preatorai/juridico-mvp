@@ -419,10 +419,10 @@ async function login() {
   const err = document.getElementById('loginError');
   err.style.display = 'none';
   try {
-    const r = await fetch(`${API}/login`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,senha})});
+    const r = await fetch(`${API}/auth/login`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,senha})});
     const d = await r.json();
-    if (!r.ok || !d.id) { err.textContent = d.detail || 'E-mail ou senha inválidos.'; err.style.display='block'; return; }
-    iniciarApp(d);
+    if (!r.ok || !d.usuario) { err.textContent = d.detail || 'E-mail ou senha inválidos.'; err.style.display='block'; return; }
+    iniciarApp(d.usuario);
   } catch { err.textContent='Erro de conexão.'; err.style.display='block'; }
 }
 
@@ -435,10 +435,13 @@ async function cadastrar() {
   err.style.display='none';
   if (!nome||!escritorio||!email||!senha) { err.textContent='Preencha todos os campos.'; err.style.display='block'; return; }
   try {
-    const r = await fetch(`${API}/cadastro`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,escritorio,email,senha})});
+    const r = await fetch(`${API}/auth/cadastro`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,escritorio,email,senha})});
     const d = await r.json();
     if (!r.ok) { err.textContent = d.detail||'Erro ao criar conta.'; err.style.display='block'; return; }
-    iniciarApp(d);
+    const r2 = await fetch(`${API}/auth/login`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,senha})});
+    const d2 = await r2.json();
+    if (!r2.ok || !d2.usuario) { err.textContent='Conta criada! Faça login.'; err.style.display='block'; switchTab('login'); return; }
+    iniciarApp(d2.usuario);
   } catch { err.textContent='Erro de conexão.'; err.style.display='block'; }
 }
 
