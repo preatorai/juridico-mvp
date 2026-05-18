@@ -3,483 +3,679 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Praetor AI</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>Praetor AI — CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--blue:#1a3fa6;--blue-dark:#142e7a;--blue-light:#eef2ff;--text:#0f1a2e;--muted:#6b7a99;--border:#e2e8f0;--success:#16a34a;--success-bg:#dcfce7;}
+:root {
+  --bg: #0f1117;
+  --bg2: #161b27;
+  --bg3: #1e2535;
+  --border: #2a3347;
+  --accent: #6366f1;
+  --accent-hover: #4f52d9;
+  --accent-light: rgba(99,102,241,0.12);
+  --text: #e8ecf4;
+  --muted: #6b7a99;
+  --muted2: #8896b3;
+  --success: #22c55e;
+  --success-bg: rgba(34,197,94,0.1);
+  --warning: #f59e0b;
+  --warning-bg: rgba(245,158,11,0.1);
+  --danger: #ef4444;
+  --danger-bg: rgba(239,68,68,0.1);
+  --info: #3b82f6;
+  --info-bg: rgba(59,130,246,0.1);
+  --purple: #a855f7;
+  --purple-bg: rgba(168,85,247,0.1);
+  --novo: #3b82f6;
+  --qualificado: #a855f7;
+  --proposta: #f59e0b;
+  --fechado: #22c55e;
+  --perdido: #6b7a99;
+}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Sora',sans-serif;background:#f4f6fb;color:var(--text);}
-.login-wrap{display:flex;min-height:100vh;}
-.login-left{flex:1;display:flex;align-items:center;justify-content:center;padding:48px;background:white;}
-.login-right{width:45%;background:var(--blue);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;text-align:center;}
-.login-right h2{color:white;font-size:28px;font-weight:700;margin-bottom:16px;}
-.login-right p{color:rgba(255,255,255,0.8);font-size:15px;line-height:1.7;}
-.login-icon{font-size:48px;margin-bottom:20px;}
-.login-box{width:100%;max-width:400px;}
-.login-box h1{font-size:24px;font-weight:700;margin-bottom:6px;}
-.login-box .sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
-.tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--border);}
-.tab{padding:10px 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;}
-.tab.active{color:var(--blue);border-bottom:2px solid var(--blue);}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;}
+
+/* ── LOGIN ── */
+.login-screen{display:flex;height:100vh;align-items:center;justify-content:center;background:var(--bg);}
+.login-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:48px;width:420px;}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+.login-logo .icon{width:42px;height:42px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.login-logo .brand{font-size:22px;font-weight:700;}
+.login-logo .brand span{color:var(--accent);}
+.login-card h2{font-size:18px;font-weight:600;margin-bottom:6px;}
+.login-card .sub{font-size:13px;color:var(--muted);margin-bottom:28px;}
+.tabs{display:flex;gap:0;margin-bottom:24px;background:var(--bg3);border-radius:10px;padding:4px;}
+.tab{flex:1;padding:8px;text-align:center;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-radius:8px;transition:all 0.2s;}
+.tab.active{background:var(--accent);color:white;}
 .form-login,.form-cadastro{display:none;}
 .form-login.active,.form-cadastro.active{display:block;}
 .field{margin-bottom:14px;}
-.field label{display:block;font-size:12px;font-weight:500;margin-bottom:6px;}
-.field input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:'Sora',sans-serif;outline:none;transition:border-color 0.2s;}
-.field input:focus{border-color:var(--blue);}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.btn-login{width:100%;padding:12px;background:var(--blue);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;margin-top:8px;}
-.btn-login:hover{background:var(--blue-dark);}
-.auth-error{margin-top:12px;padding:10px 14px;background:#fee2e2;color:#dc2626;border-radius:8px;font-size:12px;display:none;}
-.auth-success{margin-top:12px;padding:10px 14px;background:var(--success-bg);color:var(--success);border-radius:8px;font-size:12px;display:none;}
-.app{display:none;}
-.topbar{background:white;border-bottom:1px solid var(--border);padding:0 28px;height:64px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
-.topbar-left{display:flex;align-items:center;gap:12px;}
-.logo-box{width:36px;height:36px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;}
-.topbar-name{font-size:15px;font-weight:600;}
-.topbar-sub{font-size:11px;color:var(--muted);}
-.topbar-right{display:flex;align-items:center;gap:10px;}
-.user-info{text-align:right;}
-.user-info .uname{font-size:13px;font-weight:500;}
-.user-info .uesc{font-size:11px;color:var(--muted);}
-.avatar{width:34px;height:34px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue);}
-.btn-sair{padding:7px 14px;border:1px solid var(--border);border-radius:8px;background:none;font-size:12px;font-family:'Sora',sans-serif;cursor:pointer;color:var(--muted);}
-.btn-sair:hover{border-color:var(--blue);color:var(--blue);}
-.layout{display:flex;}
-.sidebar{width:220px;background:white;border-right:1px solid var(--border);min-height:calc(100vh - 64px);padding:20px 12px;flex-shrink:0;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer;transition:all 0.15s;margin-bottom:4px;}
-.nav-item:hover{background:var(--blue-light);color:var(--blue);}
-.nav-item.active{background:var(--blue);color:white;font-weight:500;}
-.main{flex:1;padding:32px;}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500;}
+.field input{width:100%;padding:11px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:border-color 0.2s;}
+.field input:focus{border-color:var(--accent);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.btn-primary{width:100%;padding:12px;background:var(--accent);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;margin-top:4px;transition:background 0.2s;}
+.btn-primary:hover{background:var(--accent-hover);}
+.auth-error{margin-top:12px;padding:10px 14px;background:var(--danger-bg);color:var(--danger);border-radius:8px;font-size:12px;display:none;}
+
+/* ── APP LAYOUT ── */
+.app{display:none;height:100vh;flex-direction:column;}
+.app.visible{display:flex;}
+.app-body{display:flex;flex:1;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 12px;flex-shrink:0;}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:24px;}
+.sidebar-brand .icon{width:34px;height:34px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.sidebar-brand .name{font-size:15px;font-weight:700;}
+.sidebar-brand .name span{color:var(--accent);}
+.nav-section{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;padding:0 12px;margin-bottom:8px;margin-top:8px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;font-size:13px;color:var(--muted2);cursor:pointer;transition:all 0.15s;margin-bottom:2px;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:var(--accent-light);color:var(--accent);font-weight:500;}
+.nav-item .ico{font-size:16px;width:20px;text-align:center;}
+.sidebar-bottom{margin-top:auto;}
+.user-chip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;}
+.user-chip:hover{background:var(--bg3);}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:white;flex-shrink:0;}
+.user-chip .info .name{font-size:12px;font-weight:500;}
+.user-chip .info .esc{font-size:11px;color:var(--muted);}
+.btn-sair{width:100%;padding:8px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;margin-top:8px;transition:all 0.2s;}
+.btn-sair:hover{border-color:var(--danger);color:var(--danger);}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.topbar{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar-title{font-size:18px;font-weight:700;}
+.topbar-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.topbar-actions{display:flex;gap:10px;}
+.btn-sm{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;border:none;transition:all 0.2s;}
+.btn-sm-ghost{background:var(--bg3);color:var(--muted2);border:1px solid var(--border);}
+.btn-sm-ghost:hover{color:var(--text);border-color:var(--muted);}
+.btn-sm-accent{background:var(--accent);color:white;}
+.btn-sm-accent:hover{background:var(--accent-hover);}
+.content{flex:1;overflow-y:auto;padding:24px;}
+
+/* ── METRICS ── */
+.metrics-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:28px;}
+.metric-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden;}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.metric-card.novo::before{background:var(--novo);}
+.metric-card.qualificado::before{background:var(--qualificado);}
+.metric-card.proposta::before{background:var(--proposta);}
+.metric-card.fechado::before{background:var(--fechado);}
+.metric-card.total::before{background:var(--accent);}
+.metric-label{font-size:11px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;}
+.metric-value{font-size:28px;font-weight:700;}
+.metric-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+
+/* ── KANBAN ── */
+.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;height:calc(100vh - 260px);overflow-x:auto;}
+.kanban-col{background:var(--bg2);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;min-width:220px;}
+.col-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.col-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;}
+.col-dot{width:8px;height:8px;border-radius:50%;}
+.col-count{font-size:11px;background:var(--bg3);border-radius:20px;padding:2px 8px;color:var(--muted);}
+.col-cards{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.col-cards::-webkit-scrollbar{width:4px;}
+.col-cards::-webkit-scrollbar-track{background:transparent;}
+.col-cards::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+
+/* ── LEAD CARD ── */
+.lead-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all 0.2s;}
+.lead-card:hover{border-color:var(--accent);transform:translateY(-1px);}
+.lead-card-top{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.lead-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.lead-info .lname{font-size:13px;font-weight:600;}
+.lead-info .ltel{font-size:11px;color:var(--muted);}
+.lead-resumo{font-size:12px;color:var(--muted2);line-height:1.4;margin-bottom:8px;}
+.lead-footer{display:flex;align-items:center;justify-content:space-between;}
+.area-badge{font-size:10px;font-weight:500;padding:3px 8px;border-radius:20px;background:var(--bg);color:var(--muted2);}
+.lead-time{font-size:10px;color:var(--muted);}
+
+/* ── LEAD DRAWER ── */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:none;align-items:center;justify-content:flex-end;}
+.drawer-overlay.open{display:flex;}
+.drawer{background:var(--bg2);width:480px;height:100vh;border-left:1px solid var(--border);display:flex;flex-direction:column;}
+.drawer-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.drawer-header .dname{font-size:16px;font-weight:700;}
+.drawer-header .dtel{font-size:12px;color:var(--muted);margin-top:2px;}
+.btn-close{background:var(--bg3);border:none;color:var(--muted2);font-size:18px;width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.btn-close:hover{color:var(--text);}
+.drawer-info{padding:16px 24px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.dinfo-item .di-label{font-size:10px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;}
+.dinfo-item .di-val{font-size:13px;font-weight:500;}
+.status-select{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--text);font-family:'Inter',sans-serif;cursor:pointer;width:100%;}
+.drawer-chat{flex:1;overflow-y:auto;padding:16px 24px;display:flex;flex-direction:column;gap:8px;}
+.drawer-chat::-webkit-scrollbar{width:4px;}
+.drawer-chat::-webkit-scrollbar-thumb{background:var(--border);}
+.msg-row{display:flex;flex-direction:column;}
+.msg-row.bot{align-items:flex-start;}
+.msg-row.cliente{align-items:flex-end;}
+.msg-bubble{max-width:320px;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.5;}
+.msg-row.bot .msg-bubble{background:var(--bg3);border-bottom-left-radius:4px;}
+.msg-row.cliente .msg-bubble{background:var(--accent);color:white;border-bottom-right-radius:4px;}
+.msg-time{font-size:10px;color:var(--muted);margin-top:4px;padding:0 4px;}
+.drawer-input{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;}
+.drawer-input textarea{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);resize:none;outline:none;height:42px;}
+.drawer-input textarea:focus{border-color:var(--accent);}
+.btn-send{background:var(--accent);border:none;color:white;width:42px;height:42px;border-radius:10px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.btn-send:hover{background:var(--accent-hover);}
+
+/* ── OUTROS PAGES ── */
 .page{display:none;}
 .page.active{display:block;}
-.page-title{font-size:24px;font-weight:700;margin-bottom:4px;}
-.page-sub{font-size:14px;color:var(--muted);margin-bottom:28px;}
-.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:28px;}
-.metric{background:white;border:1px solid var(--border);border-radius:14px;padding:20px;}
-.metric-label{font-size:12px;color:var(--muted);margin-bottom:10px;}
-.metric-value{font-size:30px;font-weight:700;margin-bottom:4px;}
-.metric-delta{font-size:12px;color:var(--success);}
-.card{background:white;border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px;}
-.card-title{font-size:15px;font-weight:600;margin-bottom:18px;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-state .ei{font-size:48px;margin-bottom:16px;}
+.empty-state p{font-size:14px;}
+
+/* ── PROCESSOS PAGE ── */
+.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
 table{width:100%;border-collapse:collapse;}
-th{font-size:11px;color:var(--muted);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;}
-td{font-size:13px;padding:12px;border-bottom:1px solid #f1f5f9;}
+th{font-size:11px;color:var(--muted);text-align:left;padding:12px 16px;border-bottom:1px solid var(--border);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;background:var(--bg3);}
+td{font-size:13px;padding:13px 16px;border-bottom:1px solid var(--border);color:var(--text);}
 tr:last-child td{border-bottom:none;}
-tr:hover td{background:#f8faff;}
+tr:hover td{background:rgba(99,102,241,0.04);}
 .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;}
-.badge-green{background:var(--success-bg);color:var(--success);}
+.badge-novo{background:rgba(59,130,246,0.15);color:var(--novo);}
+.badge-qualificado{background:rgba(168,85,247,0.15);color:var(--qualificado);}
+.badge-proposta{background:rgba(245,158,11,0.15);color:var(--proposta);}
+.badge-fechado{background:rgba(34,197,94,0.15);color:var(--fechado);}
+.badge-perdido{background:rgba(107,122,153,0.2);color:var(--perdido);}
+
+/* ── MODAL NOVO PROCESSO ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px;width:480px;}
+.modal h3{font-size:18px;font-weight:700;margin-bottom:6px;}
+.modal .sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
 .form-group{margin-bottom:16px;}
-.form-group label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;}
-.form-group input,.form-group select{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:'Sora',sans-serif;outline:none;transition:border-color 0.2s;}
-.form-group input:focus{border-color:var(--blue);}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.btn-primary{padding:11px 24px;background:var(--blue);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;}
-.btn-primary:hover{background:var(--blue-dark);}
-.btn-ghost{padding:10px 20px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:'Sora',sans-serif;cursor:pointer;}
-.form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
-.alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-top:14px;display:none;}
-.alert-success{background:var(--success-bg);color:var(--success);}
-.alert-error{background:#fee2e2;color:#dc2626;}
-.msg-item{padding:14px;background:#f8faff;border-radius:12px;border:1px solid var(--border);margin-bottom:10px;}
-.msg-header{display:flex;justify-content:space-between;margin-bottom:6px;}
-.msg-name{font-size:13px;font-weight:600;color:var(--blue);}
-.msg-time{font-size:11px;color:var(--muted);}
-.msg-process{font-size:11px;color:var(--muted);font-family:monospace;margin-bottom:6px;}
-.msg-text{font-size:12px;color:#4a5568;line-height:1.6;}
-.loading{text-align:center;padding:40px;color:var(--muted);font-size:14px;}
-.chat-layout{display:flex;height:calc(100vh - 200px);min-height:400px;border-radius:14px;overflow:hidden;border:1px solid var(--border);}
-.chat-list{width:280px;background:white;border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
-.chat-list-item{padding:14px 16px;cursor:pointer;border-bottom:1px solid #f1f5f9;transition:background 0.15s;}
-.chat-list-item:hover{background:var(--blue-light);}
-.chat-list-item.active{background:var(--blue-light);border-left:3px solid var(--blue);}
-.chat-contact-name{font-size:13px;font-weight:600;color:var(--text);}
-.chat-last-msg{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;}
-.chat-time{font-size:10px;color:var(--muted);}
-.chat-window{flex:1;display:flex;flex-direction:column;background:#f0f2f5;}
-.chat-header{padding:14px 20px;background:white;border-bottom:1px solid var(--border);flex-shrink:0;}
-.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:6px;}
-.bubble{max-width:68%;padding:9px 13px;border-radius:12px;font-size:13px;line-height:1.55;word-break:break-word;}
-.bubble-cliente{background:white;border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px;}
-.bubble-bot,.bubble-advogado{background:var(--blue);color:white;align-self:flex-end;border-bottom-right-radius:4px;}
-.bubble-time{font-size:10px;opacity:0.55;margin-top:3px;text-align:right;}
-.bubble-cliente .bubble-time{text-align:left;color:var(--muted);}
-.chat-input-bar{padding:12px 16px;background:white;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;}
-.chat-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:24px;font-size:13px;font-family:'Sora',sans-serif;outline:none;transition:border-color 0.2s;}
-.chat-input:focus{border-color:var(--blue);}
-.chat-send-btn{padding:10px 20px;background:var(--blue);color:white;border:none;border-radius:24px;font-size:13px;font-weight:600;font-family:'Sora',sans-serif;cursor:pointer;}
-.chat-send-btn:hover{background:var(--blue-dark);}
-.chat-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;}
-.chat-label-remetente{font-size:10px;color:var(--muted);margin-bottom:2px;}
-.chat-label-remetente.right{text-align:right;}
+.form-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500;}
+.form-group input,.form-group select{width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:border-color 0.2s;}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);}
+.form-group select option{background:var(--bg2);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px;}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;font-size:13px;font-weight:500;z-index:999;display:none;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,0.4);}
+.toast.show{display:flex;}
+.toast.success{border-color:var(--success);color:var(--success);}
+.toast.error{border-color:var(--danger);color:var(--danger);}
 </style>
 </head>
 <body>
 
-<div class="login-wrap" id="login-wrap">
-  <div class="login-left">
-    <div class="login-box">
-      <div class="login-icon">⚖️</div>
-      <h1>Praetor AI</h1>
-      <p class="sub">Gestão inteligente de processos jurídicos</p>
-      <div class="tabs">
-        <div class="tab active" id="tab-login" onclick="trocarTab('login')">Entrar</div>
-        <div class="tab" id="tab-cadastro" onclick="trocarTab('cadastro')">Criar conta</div>
-      </div>
-      <div class="form-login active" id="form-login">
-        <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="seu@email.com"></div>
-        <div class="field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••"></div>
-        <button class="btn-login" id="btn-entrar">Entrar</button>
-        <div class="auth-error" id="login-error">Email ou senha incorretos.</div>
-      </div>
-      <div class="form-cadastro" id="form-cadastro">
-        <div class="field-row">
-          <div class="field"><label>Seu nome</label><input type="text" id="cad-nome" placeholder="João Silva"></div>
-          <div class="field"><label>Nome do escritório</label><input type="text" id="cad-escritorio" placeholder="Silva Advocacia"></div>
-        </div>
-        <div class="field"><label>Email</label><input type="email" id="cad-email" placeholder="joao@escritorio.com.br"></div>
-        <div class="field"><label>Senha</label><input type="password" id="cad-senha" placeholder="mínimo 6 caracteres"></div>
-        <button class="btn-login" id="btn-cadastrar-conta">Criar conta</button>
-        <div class="auth-error" id="cad-error"></div>
-        <div class="auth-success" id="cad-success">Conta criada! Faça login para continuar.</div>
-      </div>
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="icon">⚖️</div>
+      <div class="brand">Praetor <span>AI</span></div>
     </div>
-  </div>
-  <div class="login-right">
-    <div class="login-icon">⚖️</div>
-    <h2>Praetor AI</h2>
-    <p>Inteligência processual para escritórios modernos. Acompanhe processos, automatize atualizações e melhore a comunicação com seus clientes.</p>
+    <h2>Bem-vindo de volta</h2>
+    <p class="sub">Acesse seu CRM jurídico inteligente</p>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('login')">Entrar</div>
+      <div class="tab" onclick="switchTab('cadastro')">Criar conta</div>
+    </div>
+    <div class="form-login active" id="formLogin">
+      <div class="field"><label>E-mail</label><input type="email" id="loginEmail" placeholder="seu@email.com"></div>
+      <div class="field"><label>Senha</label><input type="password" id="loginSenha" placeholder="••••••••"></div>
+      <button class="btn-primary" onclick="login()">Entrar</button>
+      <div class="auth-error" id="loginError"></div>
+    </div>
+    <div class="form-cadastro" id="formCadastro">
+      <div class="field-row">
+        <div class="field"><label>Nome</label><input type="text" id="cadNome" placeholder="Seu nome"></div>
+        <div class="field"><label>Escritório</label><input type="text" id="cadEsc" placeholder="Nome do escritório"></div>
+      </div>
+      <div class="field"><label>E-mail</label><input type="email" id="cadEmail" placeholder="seu@email.com"></div>
+      <div class="field"><label>Senha</label><input type="password" id="cadSenha" placeholder="Mínimo 6 caracteres"></div>
+      <button class="btn-primary" onclick="cadastrar()">Criar conta</button>
+      <div class="auth-error" id="cadError"></div>
+    </div>
   </div>
 </div>
 
+<!-- APP -->
 <div class="app" id="app">
-  <div class="topbar">
-    <div class="topbar-left">
-      <div class="logo-box">⚖️</div>
-      <div>
-        <div class="topbar-name">Praetor AI</div>
-        <div class="topbar-sub" id="topbar-escritorio">—</div>
-      </div>
-    </div>
-    <div class="topbar-right">
-      <div class="user-info">
-        <div class="uname" id="topbar-nome">—</div>
-        <div class="uesc" id="topbar-email">—</div>
-      </div>
-      <div class="avatar" id="topbar-avatar">—</div>
-      <button class="btn-sair" id="btn-sair">Sair</button>
-    </div>
-  </div>
-  <div class="layout">
+  <div class="app-body">
+
+    <!-- SIDEBAR -->
     <div class="sidebar">
-      <div class="nav-item active" id="nav-dashboard">◈ Dashboard</div>
-      <div class="nav-item" id="nav-processos">☰ Processos</div>
-      <div class="nav-item" id="nav-cadastrar">＋ Cadastrar</div>
-      <div class="nav-item" id="nav-mensagens">✉ Mensagens</div>
+      <div class="sidebar-brand">
+        <div class="icon">⚖️</div>
+        <div class="name">Praetor <span>AI</span></div>
+      </div>
+      <div class="nav-section">CRM</div>
+      <div class="nav-item active" onclick="navTo('pipeline')" id="nav-pipeline">
+        <span class="ico">📊</span> Pipeline
+      </div>
+      <div class="nav-section">Jurídico</div>
+      <div class="nav-item" onclick="navTo('processos')" id="nav-processos">
+        <span class="ico">📁</span> Processos
+      </div>
+      <div class="nav-item" onclick="navTo('mensagens')" id="nav-mensagens">
+        <span class="ico">💬</span> Mensagens
+      </div>
+      <div class="sidebar-bottom">
+        <div class="user-chip">
+          <div class="avatar" id="sidebarAvatar">A</div>
+          <div class="info">
+            <div class="name" id="sidebarNome">—</div>
+            <div class="esc" id="sidebarEsc">—</div>
+          </div>
+        </div>
+        <button class="btn-sair" onclick="sair()">Sair</button>
+      </div>
     </div>
+
+    <!-- MAIN -->
     <div class="main">
-      <div class="page active" id="page-dashboard">
-        <div class="page-title">Dashboard</div>
-        <div class="page-sub" id="dash-sub">Visão geral do escritório</div>
-        <div class="metrics">
-          <div class="metric"><div class="metric-label">Processos ativos</div><div class="metric-value" id="total-processos">—</div></div>
-          <div class="metric"><div class="metric-label">Mensagens enviadas</div><div class="metric-value" id="total-mensagens">—</div></div>
-          <div class="metric"><div class="metric-label">Clientes notificados</div><div class="metric-value" id="total-clientes">—</div></div>
-          <div class="metric"><div class="metric-label">Verificações</div><div class="metric-value">Auto</div><div class="metric-delta">a cada 6h</div></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Processos recentes</div>
-          <div id="atividade-container"><div class="loading">Carregando...</div></div>
-        </div>
-      </div>
-      <div class="page" id="page-processos">
-        <div class="page-title">Processos</div>
-        <div class="page-sub">Todos os processos monitorados</div>
-        <div class="card"><div id="tabela-processos"><div class="loading">Carregando...</div></div></div>
-      </div>
-      <div class="page" id="page-cadastrar">
-        <div class="page-title">Cadastrar processo</div>
-        <div class="page-sub">Adicionar novo processo ao monitoramento</div>
-        <div class="card" style="max-width:520px">
-          <div class="form-group"><label>Número do processo</label><input type="text" id="numero" placeholder="0000000-00.0000.8.02.0001"></div>
-          <div class="form-row">
-            <div class="form-group"><label>Nome do cliente</label><input type="text" id="nome" placeholder="João da Silva"></div>
-            <div class="form-group"><label>Telefone (WhatsApp)</label><input type="text" id="telefone" placeholder="82999998888"></div>
+
+      <!-- PIPELINE PAGE -->
+      <div id="page-pipeline" class="page active">
+        <div class="topbar">
+          <div>
+            <div class="topbar-title">Pipeline de Leads</div>
+            <div class="topbar-sub" id="pipelineSub">Carregando...</div>
           </div>
-          <div class="form-group">
-            <label>Tribunal</label>
-            <select id="tribunal">
-              <option value="tjal">TJAL — Alagoas</option>
-              <option value="tjsp">TJSP — São Paulo</option>
-              <option value="tjrj">TJRJ — Rio de Janeiro</option>
-              <option value="tjmg">TJMG — Minas Gerais</option>
-              <option value="tjba">TJBA — Bahia</option>
-            </select>
+          <div class="topbar-actions">
+            <button class="btn-sm btn-sm-ghost" onclick="carregarPipeline()">↻ Atualizar</button>
           </div>
-          <div class="form-actions">
-            <button class="btn-ghost" id="btn-limpar">Limpar</button>
-            <button class="btn-primary" id="btn-cadastrar">Salvar e monitorar</button>
-          </div>
-          <div class="alert alert-success" id="msg-ok">Processo cadastrado com sucesso!</div>
-          <div class="alert alert-error" id="msg-erro">Erro ao cadastrar. Verifique os dados.</div>
         </div>
-      </div>
-      <div class="page" id="page-mensagens">
-        <div class="page-title">Mensagens</div>
-        <div class="page-sub">Conversas com clientes via WhatsApp</div>
-        <div class="chat-layout">
-          <div class="chat-list" id="chat-list"><div class="loading">Carregando...</div></div>
-          <div class="chat-window" id="chat-window">
-            <div class="chat-empty">Selecione uma conversa</div>
+        <div class="content" style="padding-top:20px;">
+          <div class="metrics-row" id="metricsRow">
+            <div class="metric-card total"><div class="metric-label">Total de Leads</div><div class="metric-value" id="mTotal">—</div><div class="metric-sub">todos os estágios</div></div>
+            <div class="metric-card novo"><div class="metric-label">Novos</div><div class="metric-value" id="mNovo">—</div><div class="metric-sub">aguardando contato</div></div>
+            <div class="metric-card qualificado"><div class="metric-label">Qualificados</div><div class="metric-value" id="mQual">—</div><div class="metric-sub">potencial confirmado</div></div>
+            <div class="metric-card proposta"><div class="metric-label">Proposta</div><div class="metric-value" id="mProp">—</div><div class="metric-sub">aguardando decisão</div></div>
+            <div class="metric-card fechado"><div class="metric-label">Fechados</div><div class="metric-value" id="mFech">—</div><div class="metric-sub" id="mTaxa">taxa 0%</div></div>
+          </div>
+          <div class="kanban" id="kanban">
+            <div style="color:var(--muted);font-size:13px;padding:20px;">Carregando pipeline...</div>
           </div>
         </div>
       </div>
+
+      <!-- PROCESSOS PAGE -->
+      <div id="page-processos" class="page">
+        <div class="topbar">
+          <div>
+            <div class="topbar-title">Processos</div>
+            <div class="topbar-sub">Gerencie os processos dos seus clientes</div>
+          </div>
+          <div class="topbar-actions">
+            <button class="btn-sm btn-sm-accent" onclick="abrirModalProcesso()">+ Novo Processo</button>
+          </div>
+        </div>
+        <div class="content">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Cliente</th><th>Processo</th><th>Telefone</th><th>Última movimentação</th></tr></thead>
+              <tbody id="tbProcessos"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:32px">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MENSAGENS PAGE -->
+      <div id="page-mensagens" class="page">
+        <div class="topbar">
+          <div>
+            <div class="topbar-title">Mensagens</div>
+            <div class="topbar-sub">Histórico de conversas com clientes</div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Cliente</th><th>Mensagem</th><th>De</th><th>Horário</th></tr></thead>
+              <tbody id="tbMensagens"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:32px">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main -->
+  </div>
+</div>
+
+<!-- LEAD DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="fecharDrawer(event)">
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <div>
+        <div class="dname" id="drawerNome">—</div>
+        <div class="dtel" id="drawerTel">—</div>
+      </div>
+      <button class="btn-close" onclick="fecharDrawerForce()">✕</button>
+    </div>
+    <div class="drawer-info">
+      <div class="dinfo-item">
+        <div class="di-label">Área</div>
+        <div class="di-val" id="drawerArea">—</div>
+      </div>
+      <div class="dinfo-item">
+        <div class="di-label">Status</div>
+        <select class="status-select" id="drawerStatus" onchange="atualizarStatusLead()">
+          <option value="novo">🔵 Novo</option>
+          <option value="qualificado">🟣 Qualificado</option>
+          <option value="proposta">🟡 Proposta enviada</option>
+          <option value="fechado">🟢 Fechado</option>
+          <option value="perdido">⚫ Perdido</option>
+        </select>
+      </div>
+      <div class="dinfo-item" style="grid-column:1/-1">
+        <div class="di-label">Resumo do caso</div>
+        <div class="di-val" id="drawerResumo" style="color:var(--muted2);font-weight:400;">—</div>
+      </div>
+    </div>
+    <div class="drawer-chat" id="drawerChat">
+      <div style="text-align:center;color:var(--muted);font-size:13px;padding:20px">Carregando conversa...</div>
+    </div>
+    <div class="drawer-input">
+      <textarea id="drawerMsgInput" placeholder="Enviar mensagem como escritório..." onkeydown="msgKeydown(event)"></textarea>
+      <button class="btn-send" onclick="enviarMsgDrawer()">➤</button>
     </div>
   </div>
 </div>
+
+<!-- MODAL NOVO PROCESSO -->
+<div class="modal-overlay" id="modalProcesso">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>Novo Processo</h3>
+    <p class="sub">Cadastre um novo cliente e processo</p>
+    <div class="form-row">
+      <div class="form-group"><label>Nome do cliente</label><input type="text" id="pNome" placeholder="Nome completo"></div>
+      <div class="form-group"><label>Telefone (WhatsApp)</label><input type="text" id="pTel" placeholder="11999999999"></div>
+    </div>
+    <div class="form-group"><label>Número do processo (CNJ)</label><input type="text" id="pNum" placeholder="0000000-00.0000.0.00.0000"></div>
+    <div class="form-actions">
+      <button class="btn-sm btn-sm-ghost" onclick="fecharModalProcesso()">Cancelar</button>
+      <button class="btn-sm btn-sm-accent" onclick="salvarProcesso()">Cadastrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
 <script>
-var API = 'https://praetor.preatorai.com';
-var usuario = null;
+const API = window.location.origin;
+let usuarioId = null, usuarioNome = null, usuarioEsc = null;
+let leadAtivo = null;
 
-function trocarTab(tab) {
-  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-  document.getElementById('tab-cadastro').classList.toggle('active', tab === 'cadastro');
-  document.getElementById('form-login').classList.toggle('active', tab === 'login');
-  document.getElementById('form-cadastro').classList.toggle('active', tab === 'cadastro');
+/* ── AUTH ── */
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', (t==='login'&&i===0)||(t==='cadastro'&&i===1)));
+  document.getElementById('formLogin').classList.toggle('active', t==='login');
+  document.getElementById('formCadastro').classList.toggle('active', t==='cadastro');
 }
 
-document.getElementById('btn-entrar').addEventListener('click', function() {
-  var email = document.getElementById('login-email').value.trim();
-  var senha = document.getElementById('login-senha').value;
-  fetch(API + '/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: email, senha: senha })
-  }).then(function(r) { return r.json(); }).then(function(data) {
-    if (data.sucesso) {
-      usuario = data.usuario;
-      document.getElementById('login-wrap').style.display = 'none';
-      document.getElementById('app').style.display = 'block';
-      document.getElementById('topbar-nome').textContent = usuario.nome;
-      document.getElementById('topbar-email').textContent = usuario.email;
-      document.getElementById('topbar-escritorio').textContent = usuario.escritorio;
-      document.getElementById('topbar-avatar').textContent = usuario.nome.charAt(0).toUpperCase();
-      document.getElementById('dash-sub').textContent = 'Bem-vindo, ' + usuario.nome + ' — ' + usuario.escritorio;
-      carregarDashboard();
-    } else {
-      var err = document.getElementById('login-error');
-      err.style.display = 'block';
-      err.textContent = data.erro || 'Email ou senha incorretos.';
-    }
-  }).catch(function() {
-    var err = document.getElementById('login-error');
-    err.style.display = 'block';
-    err.textContent = 'Erro ao conectar. Tente novamente.';
-  });
-});
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  const err = document.getElementById('loginError');
+  err.style.display = 'none';
+  try {
+    const r = await fetch(`${API}/login`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,senha})});
+    const d = await r.json();
+    if (!r.ok || !d.id) { err.textContent = d.detail || 'E-mail ou senha inválidos.'; err.style.display='block'; return; }
+    iniciarApp(d);
+  } catch { err.textContent='Erro de conexão.'; err.style.display='block'; }
+}
 
-document.getElementById('btn-cadastrar-conta').addEventListener('click', function() {
-  var nome = document.getElementById('cad-nome').value.trim();
-  var escritorio = document.getElementById('cad-escritorio').value.trim();
-  var email = document.getElementById('cad-email').value.trim();
-  var senha = document.getElementById('cad-senha').value;
-  var err = document.getElementById('cad-error');
-  var suc = document.getElementById('cad-success');
-  if (!nome || !escritorio || !email || !senha) {
-    err.style.display = 'block'; err.textContent = 'Preencha todos os campos.'; return;
+async function cadastrar() {
+  const nome=document.getElementById('cadNome').value.trim();
+  const escritorio=document.getElementById('cadEsc').value.trim();
+  const email=document.getElementById('cadEmail').value.trim();
+  const senha=document.getElementById('cadSenha').value;
+  const err=document.getElementById('cadError');
+  err.style.display='none';
+  if (!nome||!escritorio||!email||!senha) { err.textContent='Preencha todos os campos.'; err.style.display='block'; return; }
+  try {
+    const r = await fetch(`${API}/cadastro`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome,escritorio,email,senha})});
+    const d = await r.json();
+    if (!r.ok) { err.textContent = d.detail||'Erro ao criar conta.'; err.style.display='block'; return; }
+    iniciarApp(d);
+  } catch { err.textContent='Erro de conexão.'; err.style.display='block'; }
+}
+
+function iniciarApp(user) {
+  usuarioId = user.id; usuarioNome = user.nome; usuarioEsc = user.escritorio;
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('sidebarNome').textContent = user.nome || '—';
+  document.getElementById('sidebarEsc').textContent = user.escritorio || '—';
+  document.getElementById('sidebarAvatar').textContent = (user.nome||'A')[0].toUpperCase();
+  carregarPipeline();
+}
+
+function sair() {
+  usuarioId=null; usuarioNome=null; usuarioEsc=null;
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('loginScreen').style.display='flex';
+}
+
+/* ── NAVEGAÇÃO ── */
+function navTo(page) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById(`nav-${page}`).classList.add('active');
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  if (page==='pipeline') carregarPipeline();
+  if (page==='processos') carregarProcessos();
+  if (page==='mensagens') carregarMensagens();
+}
+
+/* ── PIPELINE ── */
+const COLUNAS = [
+  {key:'novo',    label:'Novos',     cor:'#3b82f6'},
+  {key:'qualificado', label:'Qualificados', cor:'#a855f7'},
+  {key:'proposta',label:'Proposta',  cor:'#f59e0b'},
+  {key:'fechado', label:'Fechados',  cor:'#22c55e'},
+  {key:'perdido', label:'Perdidos',  cor:'#6b7a99'},
+];
+const AREA_LABEL = {trabalhista:'Trabalhista',civil:'Civil',criminal:'Criminal','família':'Família',previdenciário:'Previdenciário',consumidor:'Consumidor',outro:'Outro'};
+const AVATAR_COLORS = ['#6366f1','#a855f7','#3b82f6','#22c55e','#f59e0b','#ef4444','#14b8a6'];
+
+function avatarColor(str) { let h=0; for(let c of (str||'')) h=(h*31+c.charCodeAt(0))%AVATAR_COLORS.length; return AVATAR_COLORS[Math.abs(h)]; }
+function iniciais(nome) { if(!nome) return '?'; const p=nome.trim().split(' '); return p.length>1?p[0][0]+p[p.length-1][0]:p[0].slice(0,2); }
+function tempoAtras(iso) {
+  if(!iso) return '';
+  const diff=(Date.now()-new Date(iso))/1000;
+  if(diff<60) return 'agora';
+  if(diff<3600) return `${Math.floor(diff/60)}min`;
+  if(diff<86400) return `${Math.floor(diff/3600)}h`;
+  return `${Math.floor(diff/86400)}d`;
+}
+
+async function carregarPipeline() {
+  if(!usuarioId) return;
+  try {
+    const [leads, metrics] = await Promise.all([
+      fetch(`${API}/leads?usuario_id=${usuarioId}`).then(r=>r.json()),
+      fetch(`${API}/leads/metrics?usuario_id=${usuarioId}`).then(r=>r.json()),
+    ]);
+    renderMetrics(metrics);
+    renderKanban(leads);
+    document.getElementById('pipelineSub').textContent = `${leads.length} leads no funil`;
+  } catch(e) {
+    console.error(e);
   }
-  if (senha.length < 6) {
-    err.style.display = 'block'; err.textContent = 'Senha deve ter mínimo 6 caracteres.'; return;
-  }
-  fetch(API + '/auth/cadastro', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nome: nome, escritorio: escritorio, email: email, senha: senha })
-  }).then(function(r) { return r.json(); }).then(function(data) {
-    if (data.sucesso) {
-      suc.style.display = 'block'; err.style.display = 'none';
-      setTimeout(function() { trocarTab('login'); }, 2000);
-    } else {
-      err.style.display = 'block'; err.textContent = data.erro || 'Erro ao criar conta.';
-    }
-  }).catch(function() {
-    err.style.display = 'block'; err.textContent = 'Erro ao conectar. Tente novamente.';
-  });
-});
-
-document.getElementById('btn-sair').addEventListener('click', function() {
-  usuario = null;
-  document.getElementById('login-wrap').style.display = 'flex';
-  document.getElementById('app').style.display = 'none';
-});
-
-document.getElementById('nav-dashboard').addEventListener('click', function() { navegar('dashboard'); carregarDashboard(); });
-document.getElementById('nav-processos').addEventListener('click', function() { navegar('processos'); carregarProcessos(); });
-document.getElementById('nav-cadastrar').addEventListener('click', function() { navegar('cadastrar'); });
-document.getElementById('nav-mensagens').addEventListener('click', function() { navegar('mensagens'); carregarMensagens(); });
-
-document.getElementById('btn-limpar').addEventListener('click', function() {
-  document.getElementById('numero').value = '';
-  document.getElementById('nome').value = '';
-  document.getElementById('telefone').value = '';
-});
-
-document.getElementById('btn-cadastrar').addEventListener('click', function() {
-  var numero = document.getElementById('numero').value.trim();
-  var nome = document.getElementById('nome').value.trim();
-  var telefone = document.getElementById('telefone').value.trim();
-  if (!numero || !nome || !telefone) {
-    document.getElementById('msg-erro').style.display = 'block';
-    document.getElementById('msg-ok').style.display = 'none';
-    return;
-  }
-  fetch(API + '/processos', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ numero_processo: numero, nome_cliente: nome, telefone_cliente: telefone, usuario_id: usuario.id })
-  }).then(function(r) { return r.json(); }).then(function(data) {
-    if (data.sucesso) {
-      document.getElementById('msg-ok').style.display = 'block';
-      document.getElementById('msg-erro').style.display = 'none';
-      document.getElementById('numero').value = '';
-      document.getElementById('nome').value = '';
-      document.getElementById('telefone').value = '';
-    } else {
-      document.getElementById('msg-erro').style.display = 'block';
-      document.getElementById('msg-erro').textContent = data.erro || 'Erro ao cadastrar.';
-    }
-  }).catch(function() { document.getElementById('msg-erro').style.display = 'block'; });
-});
-
-function navegar(id) {
-  document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
-  document.getElementById('nav-' + id).classList.add('active');
-  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-  document.getElementById('page-' + id).classList.add('active');
 }
 
-function carregarDashboard() {
-  fetch(API + '/processos?usuario_id=' + usuario.id).then(function(r) { return r.json(); }).then(function(processos) {
-    var lista = processos || [];
-    document.getElementById('total-processos').textContent = lista.length;
-    document.getElementById('total-clientes').textContent = lista.length;
-    var container = document.getElementById('atividade-container');
-    if (!lista.length) { container.innerHTML = '<div class="loading">Nenhum processo cadastrado ainda.</div>'; return; }
-    container.innerHTML = '<table><thead><tr><th>Número</th><th>Cliente</th><th>Telefone</th><th>Cadastrado em</th></tr></thead><tbody>' +
-      lista.slice(0,5).map(function(p) {
-        return '<tr><td style="font-family:monospace;font-size:12px;color:var(--blue)">' + p.numero_processo + '</td><td>' + p.nome_cliente + '</td><td>' + p.telefone_cliente + '</td><td>' + new Date(p.criado_em).toLocaleDateString('pt-BR') + '</td></tr>';
-      }).join('') + '</tbody></table>';
-  }).catch(function() {});
-  fetch(API + '/movimentacoes?usuario_id=' + usuario.id).then(function(r) { return r.json(); }).then(function(movs) {
-    document.getElementById('total-mensagens').textContent = (movs || []).length;
-  }).catch(function() {});
+function renderMetrics(m) {
+  document.getElementById('mTotal').textContent = m.total||0;
+  document.getElementById('mNovo').textContent = (m.por_status||{}).novo||0;
+  document.getElementById('mQual').textContent = (m.por_status||{}).qualificado||0;
+  document.getElementById('mProp').textContent = (m.por_status||{}).proposta||0;
+  document.getElementById('mFech').textContent = (m.por_status||{}).fechado||0;
+  document.getElementById('mTaxa').textContent = `taxa ${m.taxa_conversao||0}%`;
 }
 
-function carregarProcessos() {
-  var container = document.getElementById('tabela-processos');
-  fetch(API + '/processos?usuario_id=' + usuario.id).then(function(r) { return r.json(); }).then(function(processos) {
-    var lista = processos || [];
-    if (!lista.length) { container.innerHTML = '<div class="loading">Nenhum processo cadastrado.</div>'; return; }
-    container.innerHTML = '<table><thead><tr><th>Número</th><th>Cliente</th><th>Telefone</th><th>Status</th><th>Cadastrado em</th></tr></thead><tbody>' +
-      lista.map(function(p) {
-        return '<tr><td style="font-family:monospace;font-size:12px;color:var(--blue)">' + p.numero_processo + '</td><td>' + p.nome_cliente + '</td><td>' + p.telefone_cliente + '</td><td><span class="badge badge-green">Ativo</span></td><td>' + new Date(p.criado_em).toLocaleDateString('pt-BR') + '</td></tr>';
-      }).join('') + '</tbody></table>';
-  }).catch(function() { container.innerHTML = '<div class="loading">Erro ao carregar.</div>'; });
+function renderKanban(leads) {
+  const por = {};
+  COLUNAS.forEach(c => por[c.key] = []);
+  leads.forEach(l => { const s = l.status||'novo'; if(por[s]) por[s].push(l); });
+
+  document.getElementById('kanban').innerHTML = COLUNAS.map(col => `
+    <div class="kanban-col">
+      <div class="col-header">
+        <div class="col-title">
+          <div class="col-dot" style="background:${col.cor}"></div>
+          ${col.label}
+        </div>
+        <div class="col-count">${por[col.key].length}</div>
+      </div>
+      <div class="col-cards">
+        ${por[col.key].length ? por[col.key].map(l => renderCard(l)).join('') : `<div style="text-align:center;padding:24px;font-size:12px;color:var(--muted)">Vazio</div>`}
+      </div>
+    </div>
+  `).join('');
 }
 
-var chatTelAtivo = null;
-var chatNomeAtivo = null;
-var chatPolling = null;
-
-function carregarMensagens() {
-  carregarConversas();
+function renderCard(l) {
+  const nome = l.nome || l.telefone || 'Lead';
+  const cor = avatarColor(nome);
+  const area = AREA_LABEL[l.area] || l.area || '';
+  return `
+    <div class="lead-card" onclick="abrirDrawer(${JSON.stringify(l).replace(/"/g,'&quot;')})">
+      <div class="lead-card-top">
+        <div class="lead-avatar" style="background:${cor}">${iniciais(nome)}</div>
+        <div class="lead-info">
+          <div class="lname">${nome}</div>
+          <div class="ltel">${l.telefone||''}</div>
+        </div>
+      </div>
+      ${l.resumo?`<div class="lead-resumo">${l.resumo}</div>`:''}
+      <div class="lead-footer">
+        ${area?`<div class="area-badge">${area}</div>`:'<div></div>'}
+        <div class="lead-time">${tempoAtras(l.criado_em)}</div>
+      </div>
+    </div>
+  `;
 }
 
-function carregarConversas() {
-  fetch(API + '/mensagens/conversas?usuario_id=' + usuario.id)
-    .then(function(r) { return r.json(); })
-    .then(function(lista) {
-      var el = document.getElementById('chat-list');
-      if (!lista || !lista.length) {
-        el.innerHTML = '<div class="loading">Nenhuma conversa ainda.<br><br>As conversas aparecerão aqui quando clientes enviarem mensagens via WhatsApp.</div>';
-        return;
-      }
-      el.innerHTML = lista.map(function(c) {
-        var ativo = chatTelAtivo === c.telefone ? ' active' : '';
-        var tempo = new Date(c.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        var preview = (c.conteudo || '').length > 38 ? c.conteudo.substring(0, 38) + '…' : (c.conteudo || '');
-        var prefixo = c.remetente !== 'cliente' ? 'Você: ' : '';
-        var nomeEsc = (c.nome_cliente || 'Cliente').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        var previewEsc = (prefixo + preview).replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        var nomeAttr = (c.nome_cliente || 'Cliente').replace(/'/g, '\\\'');
-        return '<div class="chat-list-item' + ativo + '" onclick="abrirConversa(\'' + c.telefone + '\',\'' + nomeAttr + '\')">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">' +
-          '<span class="chat-contact-name">' + nomeEsc + '</span>' +
-          '<span class="chat-time">' + tempo + '</span></div>' +
-          '<div class="chat-last-msg">' + previewEsc + '</div></div>';
-      }).join('');
-    }).catch(function() {});
+/* ── DRAWER ── */
+function abrirDrawer(lead) {
+  leadAtivo = lead;
+  document.getElementById('drawerNome').textContent = lead.nome || lead.telefone || 'Lead';
+  document.getElementById('drawerTel').textContent = lead.telefone || '—';
+  document.getElementById('drawerArea').textContent = AREA_LABEL[lead.area] || lead.area || '—';
+  document.getElementById('drawerResumo').textContent = lead.resumo || 'Sem resumo ainda.';
+  document.getElementById('drawerStatus').value = lead.status || 'novo';
+  document.getElementById('drawerChat').innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px">Carregando...</div>';
+  document.getElementById('drawerOverlay').classList.add('open');
+  carregarChatDrawer(lead.id);
 }
 
-function abrirConversa(telefone, nome) {
-  chatTelAtivo = telefone;
-  chatNomeAtivo = nome;
-  if (chatPolling) clearInterval(chatPolling);
-  renderizarJanela();
-  carregarConversa();
-  chatPolling = setInterval(carregarConversa, 3000);
-  carregarConversas();
+function fecharDrawer(e) { if(e.target===document.getElementById('drawerOverlay')) fecharDrawerForce(); }
+function fecharDrawerForce() { document.getElementById('drawerOverlay').classList.remove('open'); leadAtivo=null; }
+
+async function carregarChatDrawer(leadId) {
+  try {
+    const msgs = await fetch(`${API}/leads/${leadId}/chat`).then(r=>r.json());
+    const el = document.getElementById('drawerChat');
+    if(!msgs.length) { el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px">Sem mensagens ainda.</div>'; return; }
+    el.innerHTML = msgs.map(m => `
+      <div class="msg-row ${m.remetente==='bot'?'bot':'cliente'}">
+        <div class="msg-bubble">${m.conteudo}</div>
+        <div class="msg-time">${m.remetente==='bot'?'Lex':'Lead'} · ${tempoAtras(m.criado_em)}</div>
+      </div>
+    `).join('');
+    el.scrollTop = el.scrollHeight;
+  } catch { }
 }
 
-function renderizarJanela() {
-  var nomeEsc = (chatNomeAtivo || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  document.getElementById('chat-window').innerHTML =
-    '<div class="chat-header"><div style="font-size:14px;font-weight:600">' + nomeEsc + '</div><div style="font-size:11px;color:var(--muted)">' + chatTelAtivo + '</div></div>' +
-    '<div class="chat-messages" id="chat-msgs"><div class="loading">Carregando...</div></div>' +
-    '<div class="chat-input-bar">' +
-    '<input type="text" class="chat-input" id="chat-input" placeholder="Digite uma mensagem…" onkeydown="if(event.key===\'Enter\')enviarChat()">' +
-    '<button class="chat-send-btn" onclick="enviarChat()">Enviar</button></div>';
+async function atualizarStatusLead() {
+  if(!leadAtivo) return;
+  const novoStatus = document.getElementById('drawerStatus').value;
+  try {
+    await fetch(`${API}/leads/${leadAtivo.id}`, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:novoStatus})});
+    toast('Status atualizado', 'success');
+    carregarPipeline();
+  } catch { toast('Erro ao atualizar', 'error'); }
 }
 
-function carregarConversa() {
-  if (!chatTelAtivo) return;
-  fetch(API + '/mensagens/conversa?usuario_id=' + usuario.id + '&telefone=' + chatTelAtivo)
-    .then(function(r) { return r.json(); })
-    .then(function(msgs) {
-      var el = document.getElementById('chat-msgs');
-      if (!el) return;
-      var lista = msgs || [];
-      if (!lista.length) { el.innerHTML = '<div class="loading">Nenhuma mensagem ainda.</div>'; return; }
-      el.innerHTML = lista.map(function(m) {
-        var isCliente = m.remetente === 'cliente';
-        var classe = isCliente ? 'bubble-cliente' : (m.remetente === 'advogado' ? 'bubble-advogado' : 'bubble-bot');
-        var tempo = new Date(m.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        var label = isCliente ? m.nome_cliente : (m.remetente === 'advogado' ? 'Você' : 'Bot');
-        var labelClass = isCliente ? '' : ' right';
-        var texto = (m.conteudo || '').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-        return '<div><div class="chat-label-remetente' + labelClass + '">' + label + '</div>' +
-          '<div class="bubble ' + classe + '">' + texto +
-          '<div class="bubble-time">' + tempo + '</div></div></div>';
-      }).join('');
-      el.scrollTop = el.scrollHeight;
-    }).catch(function() {});
+function msgKeydown(e) { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); enviarMsgDrawer(); } }
+
+async function enviarMsgDrawer() {
+  if(!leadAtivo) return;
+  const input = document.getElementById('drawerMsgInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  input.value='';
+  try {
+    await fetch(`${API}/mensagens/enviar`, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuarioId,telefone:leadAtivo.telefone,conteudo:msg,nome_cliente:leadAtivo.nome||'Lead'})});
+    toast('Mensagem enviada', 'success');
+    await carregarChatDrawer(leadAtivo.id);
+  } catch { toast('Erro ao enviar', 'error'); }
 }
 
-function enviarChat() {
-  var input = document.getElementById('chat-input');
-  if (!input || !input.value.trim()) return;
-  var conteudo = input.value.trim();
-  input.value = '';
-  input.disabled = true;
-  fetch(API + '/mensagens/enviar', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ usuario_id: usuario.id, telefone: chatTelAtivo, conteudo: conteudo, nome_cliente: chatNomeAtivo })
-  }).then(function(r) { return r.json(); }).then(function(data) {
-    input.disabled = false;
-    if (data.sucesso) { carregarConversa(); carregarConversas(); }
-  }).catch(function() { input.disabled = false; });
+/* ── PROCESSOS ── */
+async function carregarProcessos() {
+  if(!usuarioId) return;
+  try {
+    const data = await fetch(`${API}/processos/resumo?usuario_id=${usuarioId}`).then(r=>r.json());
+    const tb = document.getElementById('tbProcessos');
+    if(!data.length) { tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:32px">Nenhum processo cadastrado</td></tr>'; return; }
+    tb.innerHTML = data.map(p => {
+      const ultima = p.ultimas_movimentacoes?.[0];
+      return `<tr>
+        <td><b>${p.nome_cliente}</b></td>
+        <td style="font-size:11px;color:var(--muted)">${p.numero_processo}</td>
+        <td>${p.telefone_cliente||'—'}</td>
+        <td style="color:var(--muted2);font-size:12px">${ultima?ultima.nome+' · '+ultima.data:'—'}</td>
+      </tr>`;
+    }).join('');
+  } catch { }
+}
+
+function abrirModalProcesso() { document.getElementById('modalProcesso').classList.add('open'); }
+function fecharModalProcesso() { document.getElementById('modalProcesso').classList.remove('open'); }
+document.getElementById('modalProcesso').addEventListener('click', e => { if(e.target===document.getElementById('modalProcesso')) fecharModalProcesso(); });
+
+async function salvarProcesso() {
+  const nome=document.getElementById('pNome').value.trim();
+  const telefone=document.getElementById('pTel').value.trim();
+  const numero=document.getElementById('pNum').value.trim();
+  if(!nome||!telefone||!numero) { toast('Preencha todos os campos','error'); return; }
+  try {
+    const r = await fetch(`${API}/processos`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numero_processo:numero,nome_cliente:nome,telefone_cliente:telefone,usuario_id:usuarioId})});
+    if(!r.ok) throw new Error();
+    toast('Processo cadastrado!','success');
+    fecharModalProcesso();
+    document.getElementById('pNome').value='';
+    document.getElementById('pTel').value='';
+    document.getElementById('pNum').value='';
+    carregarProcessos();
+  } catch { toast('Erro ao cadastrar processo','error'); }
+}
+
+/* ── MENSAGENS ── */
+async function carregarMensagens() {
+  if(!usuarioId) return;
+  try {
+    const data = await fetch(`${API}/mensagens?usuario_id=${usuarioId}`).then(r=>r.json());
+    const tb = document.getElementById('tbMensagens');
+    if(!data.length) { tb.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:32px">Nenhuma mensagem</td></tr>'; return; }
+    tb.innerHTML = data.map(m=>`<tr>
+      <td><b>${m.nome_cliente||'—'}</b></td>
+      <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted2)">${m.conteudo||'—'}</td>
+      <td><span class="badge ${m.remetente==='bot'?'badge-qualificado':'badge-novo'}">${m.remetente==='bot'?'Lex':'Cliente'}</span></td>
+      <td style="color:var(--muted);font-size:12px">${tempoAtras(m.criado_em)}</td>
+    </tr>`).join('');
+  } catch { }
+}
+
+/* ── TOAST ── */
+function toast(msg, tipo='success') {
+  const t=document.getElementById('toast');
+  t.textContent=(tipo==='success'?'✓ ':'✕ ')+msg;
+  t.className='toast show '+(tipo==='success'?'success':'error');
+  setTimeout(()=>t.classList.remove('show'),3000);
 }
 </script>
 </body>

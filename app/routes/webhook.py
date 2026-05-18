@@ -164,20 +164,60 @@ async def webhook_zapi(request: Request):
     try:
         procs_res = supabase.from_("processos").select("*").eq("telefone_cliente", telefone).execute()
         processos = procs_res.data or []
-        if not processos:
-            await enviar_whatsapp(telefone, "Olá! Não encontrei seu cadastro. Entre em contato com o escritório.")
-            return 200
 
-        usu_res = supabase.from_("usuarios").select("escritorio").eq("id", processos[0]["usuario_id"]).single().execute()
-        escritorio = usu_res.data.get("escritorio", "nosso escritório") if usu_res.data else "nosso escritório"
-
-        await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "cliente", mensagem)
-        resposta = await _gerar_resposta_whatsapp(mensagem, processos[0]["nome_cliente"], processos, escritorio)
-        await enviar_whatsapp(telefone, resposta)
-        await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "bot", resposta)
+        if processos:
+            usu_res = supabase.from_("usuarios").select("escritorio").eq("id", processos[0]["usuario_id"]).single().execute()
+            escritorio = usu_res.data.get("escritorio", "nosso escritório") if usu_res.data else "nosso escritório"
+            await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "cliente", mensagem)
+            resposta = await _gerar_resposta_whatsapp(mensagem, processos[0]["nome_cliente"], processos, escritorio)
+            await enviar_whatsapp(telefone, resposta)
+            await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "bot", resposta)
+        else:
+            await _tratar_lead(telefone, mensagem)
     except Exception as e:
         print(f"[webhook] erro: {e}")
     return 200
+
+
+async def _tratar_lead(telefone: str, mensagem: str):
+    from app.services.lead_ai import (
+        buscar_ou_criar_lead, buscar_historico_lead,
+        processar_mensagem_lead, atualizar_lead, salvar_mensagem_lead,
+    )
+    try:
+        usuarios = supabase.from_("usuarios").select("id,escritorio").limit(1).execute()
+        if not usuarios.data:
+            return
+        usuario_id = usuarios.data[0]["id"]
+        escritorio = usuarios.data[0].get("escritorio", "nosso escritório")
+
+        lead = buscar_ou_criar_lead(telefone, usuario_id)
+        if not lead:
+            return
+
+        if lead.get("status") in ("fechado", "perdido"):
+            return
+
+        salvar_mensagem_lead(lead["id"], "cliente", mensagem)
+        historico = buscar_historico_lead(lead["id"])
+        resultado = await processar_mensagem_lead(
+            lead["id"], mensagem, historico, escritorio, lead.get("nome")
+        )
+
+        updates = {"status": resultado["status"]}
+        if resultado.get("area"):
+            updates["area"] = resultado["area"]
+        if resultado.get("resumo"):
+            updates["resumo"] = resultado["resumo"]
+        if resultado.get("status") == "fechado":
+            updates["score"] = 100
+        atualizar_lead(lead["id"], updates)
+
+        await enviar_whatsapp(telefone, resultado["mensagem"])
+        salvar_mensagem_lead(lead["id"], "bot", resultado["mensagem"])
+        print(f"[lead] {telefone} status={resultado['status']}")
+    except Exception as e:
+        print(f"[lead] erro: {e}")
 
 
 @router.post("/webhook-spurnow")
@@ -215,18 +255,17 @@ async def webhook_spurnow(request: Request):
 
         procs_res = supabase.from_("processos").select("*").eq("telefone_cliente", telefone).execute()
         processos = procs_res.data or []
-        if not processos:
-            await enviar_whatsapp_spurnow(telefone, "Olá! Não encontrei seu cadastro no sistema.")
-            return 200
 
-        usu_res = supabase.from_("usuarios").select("escritorio").eq("id", processos[0]["usuario_id"]).single().execute()
-        escritorio = usu_res.data.get("escritorio", "nosso escritório") if usu_res.data else "nosso escritório"
-
-        await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "cliente", mensagem)
-        resposta = await _gerar_resposta_whatsapp(mensagem, processos[0]["nome_cliente"], processos, escritorio)
-        await enviar_whatsapp_spurnow(telefone, resposta)
-        await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "bot", resposta)
-        print(f"[spurnow-webhook] ✅ resposta enviada para {processos[0]['nome_cliente']}")
+        if processos:
+            usu_res = supabase.from_("usuarios").select("escritorio").eq("id", processos[0]["usuario_id"]).single().execute()
+            escritorio = usu_res.data.get("escritorio", "nosso escritório") if usu_res.data else "nosso escritório"
+            await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "cliente", mensagem)
+            resposta = await _gerar_resposta_whatsapp(mensagem, processos[0]["nome_cliente"], processos, escritorio)
+            await enviar_whatsapp_spurnow(telefone, resposta)
+            await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "bot", resposta)
+            print(f"[spurnow-webhook] ✅ resposta enviada para {processos[0]['nome_cliente']}")
+        else:
+            await _tratar_lead(telefone, mensagem)
     except Exception as e:
         print(f"[spurnow-webhook] erro: {e}")
     return 200

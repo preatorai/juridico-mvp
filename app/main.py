@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import supabase
-from app.routes import auth, processos, perfil, chat, webhook, mensagens, prazos
+from app.routes import auth, processos, perfil, chat, webhook, mensagens, prazos, leads
 from app.services.codilo import pre_aquecer_cache
 from app.services.scheduler import start_scheduler
 
@@ -23,6 +23,7 @@ app.include_router(chat.router)
 app.include_router(webhook.router)
 app.include_router(mensagens.router)
 app.include_router(prazos.router)
+app.include_router(leads.router)
 
 
 @app.get("/")

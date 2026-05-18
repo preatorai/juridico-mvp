@@ -18,7 +18,7 @@ async def cadastrar_processo(body: ProcessoBody):
         "nome_cliente": body.nome_cliente,
         "telefone_cliente": body.telefone_cliente,
         "usuario_id": body.usuario_id,
-    }).execute()
+    }).select().execute()
     if not res.data:
         raise HTTPException(status_code=400, detail="Erro ao cadastrar processo.")
 
