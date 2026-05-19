@@ -39,7 +39,7 @@ async def cadastrar_processo(body: ProcessoBody):
         print(f"[boas-vindas] erro: {e}")
 
     asyncio.create_task(_prewarm(body.numero_processo))
-    return {"sucesso": True, "data": res.data}
+    return {"sucesso": True}
 
 
 async def _prewarm(numero: str):
