@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Praetor AI</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
   --gold:#d4a017;--gold-2:#e8b84b;--gold-dark:#a07810;--gold-bg:rgba(212,160,23,.08);--gold-border:rgba(212,160,23,.2);
@@ -487,68 +488,103 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <div class="page active" id="page-dashboard">
         <div class="page-header">
           <div>
-            <div class="page-title">Dashboard</div>
-            <div class="page-sub" id="dash-sub">Visão geral do escritório</div>
+            <div class="page-title">Visão Geral</div>
+            <div class="page-sub" id="dash-sub">Acompanhe seus atendimentos e conversões</div>
           </div>
+          <button class="btn-ghost" onclick="carregarDashboard()" style="font-size:13px;">↻ Atualizar</button>
         </div>
 
-        <div class="metrics">
-          <div class="metric">
-            <div class="metric-top">
-              <div>
-                <div class="metric-label">Processos ativos</div>
-              </div>
-              <div class="metric-icon metric-icon-gold">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              </div>
+        <!-- MÉTRICAS TOPO -->
+        <div class="metrics" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px;">
+          <div class="metric" style="border-top:3px solid var(--gold);">
+            <div class="metric-top"><div><div class="metric-label">Total de Leads</div></div>
+              <div class="metric-icon metric-icon-gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            </div>
+            <div class="metric-value" id="dash-total-leads">—</div>
+            <div class="metric-delta-muted">no funil</div>
+          </div>
+          <div class="metric" style="border-top:3px solid #60a5fa;">
+            <div class="metric-top"><div><div class="metric-label">Atendimentos</div></div>
+              <div class="metric-icon metric-icon-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+            </div>
+            <div class="metric-value" id="dash-atendimentos">—</div>
+            <div class="metric-delta-muted">conversas ativas</div>
+          </div>
+          <div class="metric" style="border-top:3px solid #a78bfa;">
+            <div class="metric-top"><div><div class="metric-label">Qualificados</div></div>
+              <div class="metric-icon" style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);"><svg viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            </div>
+            <div class="metric-value" id="dash-qualificados">—</div>
+            <div class="metric-delta-muted">com potencial</div>
+          </div>
+          <div class="metric" style="border-top:3px solid #22c55e;">
+            <div class="metric-top"><div><div class="metric-label">Contratos Fechados</div></div>
+              <div class="metric-icon metric-icon-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><polyline points="9 15 11 17 15 13"/></svg></div>
+            </div>
+            <div class="metric-value" id="dash-fechados">—</div>
+            <div class="metric-delta" id="dash-taxa">taxa 0%</div>
+          </div>
+          <div class="metric" style="border-top:3px solid #fb923c;">
+            <div class="metric-top"><div><div class="metric-label">Processos Ativos</div></div>
+              <div class="metric-icon metric-icon-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
             </div>
             <div class="metric-value" id="total-processos">—</div>
             <div class="metric-delta-muted">monitorados</div>
           </div>
-          <div class="metric">
-            <div class="metric-top">
-              <div><div class="metric-label">Movimentações</div></div>
-              <div class="metric-icon metric-icon-blue">
+        </div>
+
+        <!-- GRÁFICOS -->
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:18px;margin-bottom:18px;">
+          <!-- Evolução de leads -->
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div class="card-title">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Evolução de Atendimentos
               </div>
+              <span style="font-size:11px;color:var(--muted);">últimos 7 dias</span>
             </div>
-            <div class="metric-value" id="total-mensagens">—</div>
-            <div class="metric-delta-muted">registradas</div>
+            <div style="position:relative;height:200px;"><canvas id="chartEvolucao"></canvas></div>
           </div>
-          <div class="metric">
-            <div class="metric-top">
-              <div><div class="metric-label">Clientes</div></div>
-              <div class="metric-icon metric-icon-green">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <!-- Funil de conversão -->
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                Funil de Atendimento
               </div>
             </div>
-            <div class="metric-value" id="total-clientes">—</div>
-            <div class="metric-delta-muted">cadastrados</div>
-          </div>
-          <div class="metric">
-            <div class="metric-top">
-              <div><div class="metric-label">Verificações</div></div>
-              <div class="metric-icon metric-icon-orange">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </div>
-            </div>
-            <div class="metric-value" style="font-size:22px;padding-top:8px">Auto</div>
-            <div class="metric-delta">a cada 6 horas</div>
+            <div id="funil-container" style="display:flex;flex-direction:column;gap:8px;margin-top:4px;"></div>
           </div>
         </div>
 
-        <div>
-            <div class="card">
-              <div class="card-header">
-                <div class="card-title">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  Processos recentes
-                </div>
+        <!-- LINHA INFERIOR -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+          <!-- Leads recentes -->
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Leads Recentes
               </div>
-              <div id="atividade-container"><div class="loading">Carregando...</div></div>
+              <button class="btn-ver" onclick="navegar('pipeline');carregarPipeline()">Ver todos</button>
             </div>
+            <div id="dash-leads-recentes"><div class="loading">Carregando...</div></div>
           </div>
-          <div style="display:none">
+          <!-- Processos recentes -->
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div class="card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Processos Recentes
+              </div>
+            </div>
+            <div id="atividade-container"><div class="loading">Carregando...</div></div>
+          </div>
+        </div>
+      </div>
+
+        <div style="display:none">
             <div class="card" style="margin-bottom:16px">
               <div class="card-title" style="margin-bottom:12px">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -860,21 +896,110 @@ function _movsHtml(movs) {
   }).join('');
 }
 
+var _chartEvolucao = null;
+
 function carregarDashboard() {
-  fetch(API+'/processos/resumo?usuario_id='+usuario.id).then(r=>r.json()).then(lista=>{
-    lista = lista || [];
-    document.getElementById('total-processos').textContent = lista.length;
-    document.getElementById('total-clientes').textContent = lista.length;
-    var c = document.getElementById('atividade-container');
-    if (!lista.length) { c.innerHTML='<div class="loading">Nenhum processo cadastrado ainda.</div>'; return; }
-    c.innerHTML='<div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Últimas movimentações</th><th></th></tr></thead><tbody>'+
+  // Processos
+  fetch(API+'/processos/resumo?usuario_id='+usuario.id).then(r=>r.json()).then(function(lista){
+    lista=lista||[];
+    document.getElementById('total-processos').textContent=lista.length;
+    var c=document.getElementById('atividade-container');
+    if(!lista.length){c.innerHTML='<div class="loading">Nenhum processo cadastrado.</div>';return;}
+    c.innerHTML='<div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Última movimentação</th><th></th></tr></thead><tbody>'+
       lista.slice(0,5).map(function(p){
-        return '<tr><td><div style="font-weight:600;margin-bottom:2px">'+p.nome_cliente+'</div><div class="td-mono" style="font-size:10.5px">'+p.numero_processo+'</div></td>'
+        return '<tr><td><div style="font-weight:600;margin-bottom:1px">'+p.nome_cliente+'</div><div class="td-mono" style="font-size:10px">'+p.numero_processo+'</div></td>'
           +'<td>'+_movsHtml(p.ultimas_movimentacoes)+'</td>'
           +'<td><button class="btn-ver" onclick="abrirDetalheProcesso(this.dataset.n,this.dataset.c)" data-n="'+p.numero_processo+'" data-c="'+p.nome_cliente+'">Ver</button></td></tr>';
       }).join('')+'</tbody></table></div>';
   }).catch(function(){});
-  fetch(API+'/movimentacoes?usuario_id='+usuario.id).then(r=>r.json()).then(function(movs){ document.getElementById('total-mensagens').textContent=(movs||[]).length; }).catch(function(){});
+
+  // Leads + métricas
+  Promise.all([
+    fetch(API+'/leads?usuario_id='+usuario.id).then(r=>r.json()),
+    fetch(API+'/leads/metrics?usuario_id='+usuario.id).then(r=>r.json())
+  ]).then(function(res){
+    var leads=res[0]||[], m=res[1]||{};
+    var por=m.por_status||{};
+    document.getElementById('dash-total-leads').textContent=m.total||0;
+    document.getElementById('dash-qualificados').textContent=(por.qualificado||0)+(por.proposta||0);
+    document.getElementById('dash-fechados').textContent=por.fechado||0;
+    document.getElementById('dash-taxa').textContent='taxa '+(m.taxa_conversao||0)+'%';
+
+    // Atendimentos = total de mensagens de leads
+    fetch(API+'/mensagens?usuario_id='+usuario.id).then(r=>r.json()).then(function(msgs){
+      document.getElementById('dash-atendimentos').textContent=(msgs||[]).length;
+    }).catch(function(){document.getElementById('dash-atendimentos').textContent=leads.length;});
+
+    // Funil
+    var etapas=[
+      {label:'Novos',      val:por.novo||0,      cor:'#60a5fa'},
+      {label:'Qualificados',val:por.qualificado||0,cor:'#a78bfa'},
+      {label:'Proposta',   val:por.proposta||0,  cor:'#fb923c'},
+      {label:'Fechados',   val:por.fechado||0,   cor:'#22c55e'},
+    ];
+    var max=Math.max.apply(null,etapas.map(function(e){return e.val;}));
+    document.getElementById('funil-container').innerHTML=etapas.map(function(e){
+      var pct=max>0?Math.round(e.val/max*100):0;
+      return '<div style="display:flex;align-items:center;gap:10px;">'+
+        '<div style="width:80px;font-size:11px;color:var(--text2);font-weight:500;text-align:right;">'+e.label+'</div>'+
+        '<div style="flex:1;height:22px;background:var(--bg3);border-radius:4px;overflow:hidden;">'+
+          '<div style="width:'+pct+'%;height:100%;background:'+e.cor+';border-radius:4px;transition:width .5s;"></div></div>'+
+        '<div style="width:28px;font-size:12px;font-weight:700;color:var(--text);">'+e.val+'</div>'+
+      '</div>';
+    }).join('');
+
+    // Leads recentes
+    var lr=document.getElementById('dash-leads-recentes');
+    var recentes=leads.slice(0,5);
+    var statusCor={novo:'#60a5fa',qualificado:'#a78bfa',proposta:'#fb923c',fechado:'#22c55e',perdido:'#525c75'};
+    var statusLabel={novo:'Novo',qualificado:'Qualificado',proposta:'Proposta',fechado:'Fechado',perdido:'Perdido'};
+    if(!recentes.length){lr.innerHTML='<div class="loading">Nenhum lead ainda.</div>';return;}
+    lr.innerHTML='<div class="table-wrap"><table><thead><tr><th>Lead</th><th>Área</th><th>Status</th></tr></thead><tbody>'+
+      recentes.map(function(l){
+        var sc=statusCor[l.status]||'#525c75';
+        return '<tr><td><div style="font-weight:600">'+(l.nome||l.telefone||'—')+'</div><div style="font-size:11px;color:var(--muted)">'+(l.telefone||'')+'</div></td>'+
+          '<td style="font-size:12px;color:var(--text2)">'+(l.area||'—')+'</td>'+
+          '<td><span class="badge" style="background:'+sc+'22;color:'+sc+'">'+( statusLabel[l.status]||l.status)+'</span></td></tr>';
+      }).join('')+'</tbody></table></div>';
+
+    // Gráfico evolução (últimos 7 dias)
+    var dias=[], counts=[];
+    for(var i=6;i>=0;i--){
+      var d=new Date(); d.setDate(d.getDate()-i);
+      var label=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+      dias.push(label);
+      var iso=d.toISOString().slice(0,10);
+      var cnt=leads.filter(function(l){return (l.criado_em||'').slice(0,10)===iso;}).length;
+      counts.push(cnt);
+    }
+    var ctx=document.getElementById('chartEvolucao').getContext('2d');
+    if(_chartEvolucao){_chartEvolucao.destroy();}
+    _chartEvolucao=new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:dias,
+        datasets:[{
+          label:'Leads',
+          data:counts,
+          borderColor:'#d4a017',
+          backgroundColor:'rgba(212,160,23,0.08)',
+          borderWidth:2.5,
+          pointBackgroundColor:'#d4a017',
+          pointRadius:4,
+          tension:0.4,
+          fill:true,
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1f2e',titleColor:'#e2e6f0',bodyColor:'#9aa3bc',borderColor:'rgba(255,255,255,.08)',borderWidth:1}},
+        scales:{
+          x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#525c75',font:{size:11}}},
+          y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#525c75',font:{size:11},stepSize:1,precision:0},beginAtZero:true}
+        }
+      }
+    });
+  }).catch(function(e){console.error(e);});
 }
 
 function carregarProcessos() {
