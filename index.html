@@ -954,8 +954,8 @@ document.getElementById('btn-cadastrar').addEventListener('click', function(){
   fetch(API+'/processos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numero_processo:numero,nome_cliente:nome,telefone_cliente:telefone,usuario_id:usuario.id})})
     .then(r=>r.json()).then(data=>{
       if(data.sucesso){document.getElementById('msg-ok').style.display='block';document.getElementById('msg-erro').style.display='none';document.getElementById('numero').value='';document.getElementById('nome').value='';document.getElementById('telefone').value='';}
-      else{document.getElementById('msg-erro').style.display='block';document.getElementById('msg-erro').textContent=data.erro||'Erro ao cadastrar.';}
-    }).catch(()=>{document.getElementById('msg-erro').style.display='block';});
+      else{document.getElementById('msg-erro').style.display='block';document.getElementById('msg-erro').textContent=data.detail||data.erro||'Erro ao cadastrar.';}
+    }).catch(function(e){document.getElementById('msg-erro').style.display='block';document.getElementById('msg-erro').textContent='Erro de conexão: '+e.message;});
 });
 
 function navegar(id) {
