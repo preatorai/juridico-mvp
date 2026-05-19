@@ -13,14 +13,15 @@ router = APIRouter()
 async def cadastrar_processo(body: ProcessoBody):
     if not body.usuario_id:
         raise HTTPException(status_code=400, detail="usuario_id obrigatorio.")
-    res = supabase.from_("processos").insert({
-        "numero_processo": body.numero_processo,
-        "nome_cliente": body.nome_cliente,
-        "telefone_cliente": body.telefone_cliente,
-        "usuario_id": body.usuario_id,
-    }).select().execute()
-    if not res.data:
-        raise HTTPException(status_code=400, detail="Erro ao cadastrar processo.")
+    try:
+        supabase.from_("processos").insert({
+            "numero_processo": body.numero_processo,
+            "nome_cliente": body.nome_cliente,
+            "telefone_cliente": body.telefone_cliente,
+            "usuario_id": body.usuario_id,
+        }).execute()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erro ao cadastrar processo: {e}")
 
     try:
         usu = supabase.from_("usuarios").select("escritorio").eq("id", body.usuario_id).single().execute()
