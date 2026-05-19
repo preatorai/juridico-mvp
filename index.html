@@ -794,6 +794,10 @@ tr:hover td{background:rgba(255,255,255,.015);}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               Segurança
             </div>
+            <div class="config-nav-item" id="cfg-nav-agente" onclick="trocarConfigPanel('agente');carregarConfigAgente()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><circle cx="19" cy="5" r="2" fill="currentColor" stroke="none"/></svg>
+              Agente IA
+            </div>
           </div>
 
           <div>
@@ -854,6 +858,42 @@ tr:hover td{background:rgba(255,255,255,.015);}
                 <button class="btn-primary" onclick="salvarConfigSenha()">Alterar senha</button>
               </div>
               <div id="cfg-senha-msg" class="status-msg"></div>
+            </div>
+
+            <!-- Agente IA -->
+            <div class="config-panel card" id="cfg-panel-agente">
+              <div class="config-section-title">Personalização do Agente IA</div>
+              <p style="color:var(--text2);font-size:13px;margin-bottom:20px">Configure como o agente irá se comunicar com seus clientes e leads no WhatsApp.</p>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Nome do agente</label>
+                  <input type="text" id="cfg-agente-nome" placeholder="Ex: Ana, Lex, Sofia...">
+                </div>
+                <div class="form-group">
+                  <label>Tom de comunicação</label>
+                  <select id="cfg-agente-tom">
+                    <option value="amigavel">Amigável — simples e acolhedor</option>
+                    <option value="formal">Formal — profissional e respeitoso</option>
+                    <option value="direto">Direto — objetivo e sem rodeios</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Nível de detalhe das respostas</label>
+                <select id="cfg-agente-detalhe">
+                  <option value="normal">Normal — respostas curtas e diretas (até 4 linhas)</option>
+                  <option value="resumido">Resumido — muito curto, máximo 2 linhas</option>
+                  <option value="detalhado">Detalhado — explica com mais contexto</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Instruções personalizadas <span style="color:var(--text3);font-weight:400">(opcional)</span></label>
+                <textarea id="cfg-agente-instrucoes" rows="4" placeholder="Ex: Sempre mencione que o escritório atua há 10 anos no mercado. Não discuta honorários pelo WhatsApp. Priorize casos de direito trabalhista..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:10px 12px;font-size:13px;resize:vertical;font-family:inherit"></textarea>
+              </div>
+              <div class="form-actions">
+                <button class="btn-primary" onclick="salvarConfigAgente()">Salvar configurações do agente</button>
+              </div>
+              <div id="cfg-agente-msg" class="status-msg"></div>
             </div>
           </div>
         </div>
@@ -1313,6 +1353,26 @@ function salvarTelefoneAdvogado(){
 }
 
 function salvarConfigTelefone(){salvarConfigWhatsapp();}
+
+function carregarConfigAgente(){
+  if(!usuario) return;
+  fetch(API+'/perfil/agente?usuario_id='+usuario.id)
+    .then(r=>r.json()).then(d=>{
+      if(d.agente_nome) document.getElementById('cfg-agente-nome').value=d.agente_nome;
+      if(d.agente_tom) document.getElementById('cfg-agente-tom').value=d.agente_tom;
+      if(d.agente_detalhe) document.getElementById('cfg-agente-detalhe').value=d.agente_detalhe;
+      if(d.agente_instrucoes) document.getElementById('cfg-agente-instrucoes').value=d.agente_instrucoes;
+    }).catch(()=>{});
+}
+
+function salvarConfigAgente(){
+  var nome=document.getElementById('cfg-agente-nome').value.trim();
+  var tom=document.getElementById('cfg-agente-tom').value;
+  var detalhe=document.getElementById('cfg-agente-detalhe').value;
+  var instrucoes=document.getElementById('cfg-agente-instrucoes').value.trim();
+  fetch(API+'/perfil/agente',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id,agente_nome:nome||null,agente_tom:tom,agente_detalhe:detalhe,agente_instrucoes:instrucoes})})
+    .then(r=>r.json()).then(d=>{if(d.sucesso) _msgConfig('cfg-agente-msg',true,'Configurações do agente salvas!');else _msgConfig('cfg-agente-msg',false,d.detail||d.erro||'Erro ao salvar.');}).catch(()=>_msgConfig('cfg-agente-msg',false,'Erro de conexão.'));
+}
 
 /* ══ CONVERSAS ══ */
 var _convTab = 'leads';
