@@ -30,7 +30,17 @@ def _normalizar_telefone(raw: str) -> str:
     return tel
 
 
-async def _gerar_resposta_whatsapp(mensagem: str, nome: str, processos: list, escritorio: str) -> str:
+def _carregar_config_agente(usuario_id: str) -> dict:
+    try:
+        res = supabase.from_("usuarios").select(
+            "agente_nome,agente_tom,agente_detalhe,agente_instrucoes"
+        ).eq("id", usuario_id).single().execute()
+        return res.data or {}
+    except Exception:
+        return {}
+
+
+async def _gerar_resposta_whatsapp(mensagem: str, nome: str, processos: list, escritorio: str, cfg_agente: dict = None) -> str:
     import httpx, json
     from app.config import OPENAI_KEY
     from app.services.codilo import buscar_movimentacoes_cache
@@ -52,26 +62,42 @@ async def _gerar_resposta_whatsapp(mensagem: str, nome: str, processos: list, es
                 for i, m in enumerate(movs[:3], 1):
                     info += f"{i}. {m['nome']} — {m['data']}\n"
             else:
-                info += "DADOS_INDISPONÍVEIS: não foi possível consultar o tribunal agora.\n"
+                info += "[TRIBUNAL_INDISPONIVEL]\n"
+
+    cfg = cfg_agente or {}
+    agente_nome = cfg.get("agente_nome") or "Lex"
+    tom = cfg.get("agente_tom") or "amigavel"
+    detalhe = cfg.get("agente_detalhe") or "normal"
+    instrucoes_extras = cfg.get("agente_instrucoes") or ""
+
+    tom_texto = {
+        "formal": "Use linguagem formal, respeitosa e profissional.",
+        "amigavel": "Use linguagem simples, acolhedora e tranquilizadora — sem juridiquês.",
+        "direto": "Seja direto e objetivo, sem rodeios. Respostas curtas.",
+    }.get(tom, "Use linguagem simples e acolhedora.")
+
+    detalhe_texto = {
+        "resumido": "Respostas curtíssimas — máximo 2 linhas. Vá direto ao ponto.",
+        "normal": "Respostas curtas e diretas — máximo 4 linhas.",
+        "detalhado": "Explique com mais detalhes, contextualizando bem a situação para o cliente.",
+    }.get(detalhe, "Respostas curtas — máximo 4 linhas.")
 
     system = (
         "PROIBIÇÃO ABSOLUTA E INQUEBRÁVEL: NUNCA, em hipótese alguma, diga ao cliente para entrar em contato "
         "com o advogado, ligar para o escritório, agendar consulta, buscar atendimento presencial, ou qualquer frase "
         "que redirecione o cliente para fora deste chat. Resolva TUDO aqui.\n\n"
-        f"Você é Lex, assistente jurídico virtual do escritório {escritorio or 'de advocacia'}, atendendo o cliente {nome}. "
+        f"Você é {agente_nome}, assistente jurídico virtual do escritório {escritorio or 'de advocacia'}, atendendo o cliente {nome}. "
         "Você tem conhecimento completo do direito brasileiro e responde TODAS as dúvidas você mesmo.\n\n"
+        f"TOM: {tom_texto}\n"
+        f"DETALHE: {detalhe_texto}\n\n"
         "REGRAS:\n"
         "- NUNCA peça número de processo, CPF ou qualquer dado — o cliente já está identificado\n"
-        "- Linguagem simples, acolhedora e tranquilizadora — sem juridiquês\n"
         "- NUNCA diga para verificar em nenhum portal, sistema ou lugar externo\n"
-        "- Quando perguntar sobre o processo: dê um RESUMO SIMPLES do que está acontecendo, em 2-3 frases no máximo, "
-        "como se estivesse explicando para um leigo. Não liste movimentações técnicas. Foque no que importa para o cliente: "
-        "o processo está andando, o que foi decidido, qual o próximo passo esperado.\n"
-        "- Sempre termine com: 'Seu advogado está acompanhando tudo. Qualquer dúvida é só falar aqui! 😊'\n"
-        "- Respostas curtas e diretas — máximo 4 linhas\n"
-        "- Se aparecer DADOS_INDISPONÍVEIS: diga que o sistema está consultando o tribunal e que em instantes traz a atualização — NUNCA invente informações\n\n"
-        f"PROCESSOS DO CLIENTE {nome.upper()}:\n"
-        + (info or "DADOS_INDISPONÍVEIS: não foi possível consultar o tribunal agora.")
+        "- Quando perguntar sobre o processo: explique o que está acontecendo de forma simples para um leigo\n"
+        "- Quando encontrar [TRIBUNAL_INDISPONIVEL] nos dados: responda SOMENTE que o processo está cadastrado e sendo monitorado, e que você avisará assim que houver atualizações. NUNCA repita o código [TRIBUNAL_INDISPONIVEL] na resposta.\n"
+        + (f"\nINSTRUÇÕES PERSONALIZADAS DO ESCRITÓRIO:\n{instrucoes_extras}\n" if instrucoes_extras else "") +
+        f"\nPROCESSOS DO CLIENTE {nome.upper()}:\n"
+        + (info or "[TRIBUNAL_INDISPONIVEL]")
     )
 
     async with httpx.AsyncClient(timeout=20) as client:
@@ -88,7 +114,10 @@ async def _gerar_resposta_whatsapp(mensagem: str, nome: str, processos: list, es
             },
             headers={"Authorization": f"Bearer {OPENAI_KEY}"},
         )
-    return r.json()["choices"][0]["message"]["content"]
+    resposta = r.json()["choices"][0]["message"]["content"]
+    if "[TRIBUNAL_INDISPONIVEL]" in resposta:
+        resposta = "Seu processo já está cadastrado e estamos monitorando o tribunal! Assim que houver movimentações, você será avisado aqui mesmo. 😊"
+    return resposta
 
 
 def _extrair_audio_url(body: dict) -> str | None:
@@ -168,8 +197,9 @@ async def webhook_zapi(request: Request):
         if processos:
             usu_res = supabase.from_("usuarios").select("escritorio").eq("id", processos[0]["usuario_id"]).single().execute()
             escritorio = usu_res.data.get("escritorio", "nosso escritório") if usu_res.data else "nosso escritório"
+            cfg_agente = _carregar_config_agente(processos[0]["usuario_id"])
             await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "cliente", mensagem)
-            resposta = await _gerar_resposta_whatsapp(mensagem, processos[0]["nome_cliente"], processos, escritorio)
+            resposta = await _gerar_resposta_whatsapp(mensagem, processos[0]["nome_cliente"], processos, escritorio, cfg_agente)
             await enviar_whatsapp(telefone, resposta)
             await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "bot", resposta)
         else:
@@ -259,8 +289,9 @@ async def webhook_spurnow(request: Request):
         if processos:
             usu_res = supabase.from_("usuarios").select("escritorio").eq("id", processos[0]["usuario_id"]).single().execute()
             escritorio = usu_res.data.get("escritorio", "nosso escritório") if usu_res.data else "nosso escritório"
+            cfg_agente = _carregar_config_agente(processos[0]["usuario_id"])
             await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "cliente", mensagem)
-            resposta = await _gerar_resposta_whatsapp(mensagem, processos[0]["nome_cliente"], processos, escritorio)
+            resposta = await _gerar_resposta_whatsapp(mensagem, processos[0]["nome_cliente"], processos, escritorio, cfg_agente)
             await enviar_whatsapp_spurnow(telefone, resposta)
             await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "bot", resposta)
             print(f"[spurnow-webhook] ✅ resposta enviada para {processos[0]['nome_cliente']}")
