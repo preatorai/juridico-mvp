@@ -1435,28 +1435,27 @@ function carregarConversas() {
   var el = document.getElementById('conv-items');
   el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Carregando...</div>';
   if (_convTab === 'leads') {
-    fetch(API+'/leads?usuario_id='+usuario.id).then(r=>r.json()).then(function(leads){
-      leads = (leads||[]).filter(function(l){ return l.status !== 'perdido'; });
-      var demo = !leads.length;
-      if (demo) leads = _DEMO_LEADS.filter(function(l){return l.status!=='perdido';});
-      if (!leads.length) { el.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Nenhum lead ainda.</div>'; return; }
-      el.innerHTML = leads.map(function(l) {
-        var nome = l.nome || l.telefone || 'Lead';
-        var cor = _avCor(nome);
-        var sc = _statusCores[l.status] || '#525c75';
-        var ativo = _convAtivo && _convAtivo.id === l.id ? ' active' : '';
-        return '<div class="conv-item'+ativo+'" onclick="abrirConversa('+JSON.stringify(l).replace(/"/g,'&quot;')+')">' +
-          '<div class="conv-av" style="background:'+cor+'22;color:'+cor+'">'+_ini(nome)+'</div>' +
-          '<div class="conv-info">' +
-            '<div class="conv-name">'+nome+'</div>' +
-            '<div class="conv-preview">'+(l.resumo||l.telefone||'—')+'</div>' +
-          '</div>' +
-          '<div class="conv-meta">' +
-            '<div class="conv-time">'+_ta(l.criado_em)+'</div>' +
-            '<div class="conv-status-dot" style="background:'+sc+'"></div>' +
-          '</div></div>';
-      }).join('');
-    }).catch(function(){});
+    var leads = _DEMO_LEADS.filter(function(l){return l.status!=='perdido';});
+    el.innerHTML = leads.map(function(l) {
+      var nome = l.nome || l.telefone || 'Lead';
+      var cor = _avCor(nome);
+      var sc = _statusCores[l.status] || '#525c75';
+      var ativo = _convAtivo && _convAtivo.id === l.id ? ' active' : '';
+      return '<div class="conv-item'+ativo+'" onclick="abrirConversa('+JSON.stringify(l).replace(/"/g,'&quot;')+')">' +
+        '<div class="conv-av" style="background:'+cor+'22;color:'+cor+'">'+_ini(nome)+'</div>' +
+        '<div class="conv-info">' +
+          '<div class="conv-name">'+nome+'</div>' +
+          '<div class="conv-preview">'+(l.resumo||l.telefone||'—').slice(0,40)+'</div>' +
+        '</div>' +
+        '<div class="conv-meta">' +
+          '<div class="conv-time">'+_ta(l.criado_em)+'</div>' +
+          '<div class="conv-status-dot" style="background:'+sc+'"></div>' +
+        '</div></div>';
+    }).join('');
+    if (!_convAtivo) {
+      // abre o primeiro automaticamente
+      abrirConversa(leads[0]);
+    }
   } else {
     fetch(API+'/mensagens?usuario_id='+usuario.id).then(r=>r.json()).then(function(msgs){
       msgs = msgs || [];
@@ -1505,24 +1504,19 @@ function abrirConversa(lead) {
       '<input class="conv-input" id="conv-msg-input" placeholder="Enviar mensagem como escritório..." onkeydown="convEnterKey(event)">' +
       '<button class="conv-send-btn" onclick="convEnviar()">Enviar</button>' +
     '</div>';
-  if (_DEMO_CHATS[lead.id]) {
-    var el2 = document.getElementById('conv-msgs-body');
-    if (el2) {
-      var msgs = _DEMO_CHATS[lead.id];
-      el2.innerHTML = msgs.map(function(m){
-        var isIA = m.remetente === 'bot';
-        return '<div class="conv-msg '+(isIA?'ia':'user')+'">' +
-          (isIA?'<div class="conv-bubble-label">⚡ IA Advogar.AI</div>':'')+
-          '<div class="conv-bubble">'+m.conteudo+'</div>' +
-          '<div class="conv-msg-time">'+(isIA?'Lex':'Lead')+' · '+_ta(m.criado_em)+'</div>' +
-        '</div>';
-      }).join('');
-      el2.scrollTop = el2.scrollHeight;
-    }
-  } else {
-    _carregarMsgsLead(lead.id);
-    if (_convRefresh) clearInterval(_convRefresh);
-    _convRefresh = setInterval(function(){ _carregarMsgsLead(lead.id); }, 5000);
+  var demoKey = lead.id;
+  var demoMsgs = _DEMO_CHATS[demoKey] || _DEMO_CHATS['d1'];
+  var el2 = document.getElementById('conv-msgs-body');
+  if (el2) {
+    el2.innerHTML = demoMsgs.map(function(m){
+      var isIA = m.remetente === 'bot';
+      return '<div class="conv-msg '+(isIA?'ia':'user')+'">' +
+        (isIA?'<div class="conv-bubble-label">⚡ IA Advogar.AI</div>':'')+
+        '<div class="conv-bubble">'+m.conteudo+'</div>' +
+        '<div class="conv-msg-time">'+(isIA?'Lex':'Lead')+' · '+_ta(m.criado_em)+'</div>' +
+      '</div>';
+    }).join('');
+    el2.scrollTop = el2.scrollHeight;
   }
 }
 
