@@ -1530,7 +1530,22 @@ function _carregarMsgsLead(leadId) {
   fetch(API+'/leads/'+leadId+'/chat').then(r=>r.json()).then(function(msgs){
     var el = document.getElementById('conv-msgs-body');
     if (!el) return;
-    if (!msgs || !msgs.length) { el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:24px">Sem mensagens ainda. Aguardando contato do lead.</div>'; return; }
+    if (!msgs || !msgs.length) {
+      var demoMsgs = _DEMO_CHATS['d1'];
+      el.innerHTML =
+        '<div style="text-align:center;color:var(--gold);font-size:11px;font-weight:600;padding:12px 0 4px;letter-spacing:.5px;">EXEMPLO — veja como o Agente IA conversa</div>' +
+        demoMsgs.map(function(m){
+          var isIA = m.remetente === 'bot';
+          return '<div class="conv-msg '+(isIA?'ia':'user')+'" style="opacity:.7;">' +
+            (isIA?'<div class="conv-bubble-label">⚡ IA Advogar.AI</div>':'')+
+            '<div class="conv-bubble">'+m.conteudo+'</div>' +
+            '<div class="conv-msg-time">'+(isIA?'Lex':'Lead')+'</div>' +
+          '</div>';
+        }).join('') +
+        '<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px 24px;">As conversas reais aparecem aqui quando o lead entrar em contato pelo WhatsApp.</div>';
+      el.scrollTop = el.scrollHeight;
+      return;
+    }
     var wasBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 20;
     el.innerHTML = msgs.map(function(m){
       var isIA = m.remetente === 'bot';
