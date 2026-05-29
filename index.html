@@ -1396,6 +1396,33 @@ var _convRefresh = null;
 var _statusCores = {novo:'#60a5fa',qualificado:'#a78bfa',proposta:'#fb923c',fechado:'#22c55e',perdido:'#525c75'};
 var _statusLabels = {novo:'Novo',qualificado:'Qualificado',proposta:'Proposta enviada',fechado:'Fechado ✓',perdido:'Perdido'};
 
+var _DEMO_CHATS = {
+  'd1': [
+    {remetente:'cliente', conteudo:'Oi, vim pelo Instagram de vocês. Fui mandada embora sem justa causa há 2 semanas e não recebi nada ainda.', criado_em: new Date(Date.now()-5*864e5+1e4).toISOString()},
+    {remetente:'bot',     conteudo:'Olá, Maria! Tudo bem? 😊 Sinto muito pela situação. Saiba que você tem direitos importantes a receber. Poderia me contar há quanto tempo estava trabalhando na empresa?', criado_em: new Date(Date.now()-5*864e5+2e4).toISOString()},
+    {remetente:'cliente', conteudo:'Trabalhei 3 anos e 4 meses. Nunca faltei e sempre tive bom desempenho.', criado_em: new Date(Date.now()-5*864e5+3e4).toISOString()},
+    {remetente:'bot',     conteudo:'Com 3 anos e 4 meses você tem direito a: aviso prévio proporcional, saldo de salário, 13º proporcional, férias + 1/3 e multa de 40% do FGTS. Dependendo dos valores, pode ser um montante significativo. Posso preparar uma análise do seu caso sem compromisso?', criado_em: new Date(Date.now()-5*864e5+4e4).toISOString()},
+    {remetente:'cliente', conteudo:'Sim por favor! Quanto vocês cobram?', criado_em: new Date(Date.now()-5*864e5+5e4).toISOString()},
+    {remetente:'bot',     conteudo:'Trabalhamos com honorários só no êxito — você não paga nada agora. Só recebemos se ganharmos a causa. Vou agendar uma análise gratuita com nosso advogado. Posso confirmar seus dados para o contato?', criado_em: new Date(Date.now()-5*864e5+6e4).toISOString()},
+  ],
+  'd3': [
+    {remetente:'cliente', conteudo:'Olá! Meu pai faleceu e meus irmãos estão querendo ficar com tudo. Preciso de ajuda.', criado_em: new Date(Date.now()-3*864e5+1e4).toISOString()},
+    {remetente:'bot',     conteudo:'Olá, Pedro. Meus pêsames pelo falecimento do seu pai. Estou aqui para ajudar. Seu pai deixou testamento ou deixou bens sem inventário?', criado_em: new Date(Date.now()-3*864e5+2e4).toISOString()},
+    {remetente:'cliente', conteudo:'Não tem testamento. Tem um apartamento e uma conta no banco.', criado_em: new Date(Date.now()-3*864e5+3e4).toISOString()},
+    {remetente:'bot',     conteudo:'Entendido. Sem testamento, a divisão segue a lei: cônjuge e filhos têm partes iguais. Nenhum herdeiro pode tomar mais do que lhe é devido. Isso se resolve via inventário judicial ou extrajudicial. Quantos herdeiros são no total?', criado_em: new Date(Date.now()-3*864e5+4e4).toISOString()},
+    {remetente:'cliente', conteudo:'Somos 4 filhos e minha mãe ainda é viva.', criado_em: new Date(Date.now()-3*864e5+5e4).toISOString()},
+    {remetente:'bot',     conteudo:'Com 4 filhos e a mãe viva, ela tem direito à meação (metade) e também participa da herança. Posso passar seu caso para nossa equipe de direito de família fazer uma análise completa?', criado_em: new Date(Date.now()-3*864e5+6e4).toISOString()},
+  ],
+  'd5': [
+    {remetente:'cliente', conteudo:'Bom dia. Sofri assédio moral no trabalho por 2 anos. Meu chefe me humilhava na frente de todos. Tive depressão e tive que me afastar.', criado_em: new Date(Date.now()-2*864e5+1e4).toISOString()},
+    {remetente:'bot',     conteudo:'Bom dia, Carlos. Que situação difícil — lamento muito que você passou por isso. Assédio moral no trabalho é crime e gera direito à indenização por danos morais. Você tem alguma prova: mensagens, e-mails, testemunhas?', criado_em: new Date(Date.now()-2*864e5+2e4).toISOString()},
+    {remetente:'cliente', conteudo:'Tenho prints de mensagens ofensivas pelo whatsapp e vários colegas que presenciaram.', criado_em: new Date(Date.now()-2*864e5+3e4).toISOString()},
+    {remetente:'bot',     conteudo:'Excelente — prints e testemunhas são provas fortes! Somado ao afastamento médico por depressão, seu caso tem base sólida. Nosso escritório trabalha com honorários no êxito. Gostaria que nosso advogado entrasse em contato para uma análise detalhada?', criado_em: new Date(Date.now()-2*864e5+4e4).toISOString()},
+    {remetente:'cliente', conteudo:'Sim! Quando seria?', criado_em: new Date(Date.now()-2*864e5+5e4).toISOString()},
+    {remetente:'bot',     conteudo:'Ótimo! Já registrei seu interesse. Nossa equipe retorna em até 24h úteis pelo WhatsApp para agendar a consulta gratuita. Pode deixar que cuidamos de você! 💪', criado_em: new Date(Date.now()-2*864e5+6e4).toISOString()},
+  ],
+};
+
 function convTab(t) {
   _convTab = t;
   document.getElementById('ctab-leads').classList.toggle('active', t==='leads');
@@ -1410,6 +1437,8 @@ function carregarConversas() {
   if (_convTab === 'leads') {
     fetch(API+'/leads?usuario_id='+usuario.id).then(r=>r.json()).then(function(leads){
       leads = (leads||[]).filter(function(l){ return l.status !== 'perdido'; });
+      var demo = !leads.length;
+      if (demo) leads = _DEMO_LEADS.filter(function(l){return l.status!=='perdido';});
       if (!leads.length) { el.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Nenhum lead ainda.</div>'; return; }
       el.innerHTML = leads.map(function(l) {
         var nome = l.nome || l.telefone || 'Lead';
@@ -1476,9 +1505,25 @@ function abrirConversa(lead) {
       '<input class="conv-input" id="conv-msg-input" placeholder="Enviar mensagem como escritório..." onkeydown="convEnterKey(event)">' +
       '<button class="conv-send-btn" onclick="convEnviar()">Enviar</button>' +
     '</div>';
-  _carregarMsgsLead(lead.id);
-  if (_convRefresh) clearInterval(_convRefresh);
-  _convRefresh = setInterval(function(){ _carregarMsgsLead(lead.id); }, 5000);
+  if (_DEMO_CHATS[lead.id]) {
+    var el2 = document.getElementById('conv-msgs-body');
+    if (el2) {
+      var msgs = _DEMO_CHATS[lead.id];
+      el2.innerHTML = msgs.map(function(m){
+        var isIA = m.remetente === 'bot';
+        return '<div class="conv-msg '+(isIA?'ia':'user')+'">' +
+          (isIA?'<div class="conv-bubble-label">⚡ IA Advogar.AI</div>':'')+
+          '<div class="conv-bubble">'+m.conteudo+'</div>' +
+          '<div class="conv-msg-time">'+(isIA?'Lex':'Lead')+' · '+_ta(m.criado_em)+'</div>' +
+        '</div>';
+      }).join('');
+      el2.scrollTop = el2.scrollHeight;
+    }
+  } else {
+    _carregarMsgsLead(lead.id);
+    if (_convRefresh) clearInterval(_convRefresh);
+    _convRefresh = setInterval(function(){ _carregarMsgsLead(lead.id); }, 5000);
+  }
 }
 
 function _carregarMsgsLead(leadId) {
