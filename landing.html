@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advogar.AI — Inteligência Artificial para Escritórios de Advocacia</title>
+  <meta name="description" content="A Advogar.AI automatiza atendimento, qualificação de leads e monitoramento de processos para escritórios de advocacia. IA jurídica 24 horas pelo WhatsApp.">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --gold:#e8a020;--gold-l:#f0b040;--gold-dim:rgba(232,160,32,.13);--gold-b:rgba(232,160,32,.25);
+      --bg:#07060a;--bg2:#0e0c10;--bg3:#15121a;--bg4:#1c1824;
+      --text:#e2e6f0;--text2:#9aa3bc;--text3:#525c75;
+      --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+      --green:#22c55e;--blue:#60a5fa;--purple:#a78bfa;--orange:#fb923c;
+      --r:12px;--r-lg:20px;--shadow:0 24px 64px rgba(0,0,0,.5);
+    }
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;line-height:1.6;overflow-x:hidden;}
+    h1{font-size:clamp(2.2rem,5vw,3.8rem);font-weight:800;line-height:1.1;letter-spacing:-.03em;}
+    h2{font-size:clamp(1.7rem,3.5vw,2.6rem);font-weight:700;line-height:1.2;letter-spacing:-.02em;}
+    h3{font-size:1.15rem;font-weight:600;}
+    .container{max-width:1100px;margin:0 auto;padding:0 24px;}
+    section{padding:96px 0;}
+
+    /* animations */
+    .fi{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease;}
+    .fi.v{opacity:1;transform:none;}
+    .fi.d1{transition-delay:.1s;}.fi.d2{transition-delay:.2s;}.fi.d3{transition-delay:.3s;}.fi.d4{transition-delay:.4s;}
+
+    /* badge */
+    .badge{display:inline-flex;align-items:center;gap:6px;background:var(--gold-dim);border:1px solid var(--gold-b);color:var(--gold);border-radius:100px;font-size:11px;font-weight:700;letter-spacing:.5px;padding:5px 14px;}
+    .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--gold);}
+    .sec-label{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);background:var(--gold-dim);border:1px solid var(--gold-b);padding:4px 14px;border-radius:100px;}
+
+    /* buttons */
+    .btn-p{display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:#07060a;font-weight:700;font-size:15px;padding:14px 28px;border-radius:var(--r);border:none;cursor:pointer;text-decoration:none;transition:all .2s;}
+    .btn-p:hover{background:var(--gold-l);transform:translateY(-1px);box-shadow:0 8px 24px rgba(232,160,32,.35);}
+    .btn-g{display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--text2);font-weight:500;font-size:15px;padding:14px 24px;border-radius:var(--r);border:1px solid var(--border2);cursor:pointer;text-decoration:none;transition:all .2s;}
+    .btn-g:hover{border-color:var(--gold);color:var(--gold);}
+
+    /* header */
+    header{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(7,6,10,.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;}
+    .hdr{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;}
+    .logo{font-size:20px;font-weight:800;text-decoration:none;color:var(--text);}
+    .logo span{color:var(--gold);}
+    .hnav{display:flex;align-items:center;gap:8px;}
+    .hnav a{color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;padding:8px 14px;border-radius:8px;transition:color .2s;}
+    .hnav a:hover{color:var(--text);}
+    .hact{display:flex;align-items:center;gap:10px;}
+    .h-enter{color:var(--text2);text-decoration:none;font-size:14px;font-weight:500;padding:8px 16px;transition:color .2s;}
+    .h-enter:hover{color:var(--text);}
+    .h-cta{background:var(--gold);color:#07060a;font-weight:700;font-size:13px;padding:9px 20px;border-radius:8px;text-decoration:none;transition:all .2s;}
+    .h-cta:hover{background:var(--gold-l);}
+
+    /* hero */
+    #hero{padding:160px 0 96px;text-align:center;position:relative;overflow:hidden;}
+    .hero-glow{position:absolute;top:0;left:50%;transform:translateX(-50%);width:800px;height:500px;background:radial-gradient(ellipse at center top,rgba(232,160,32,.11) 0%,transparent 70%);pointer-events:none;}
+    #hero h1{max-width:820px;margin:0 auto 24px;}
+    #hero h1 em{font-style:normal;color:var(--gold);}
+    .hero-sub{font-size:1.1rem;color:var(--text2);max-width:560px;margin:0 auto 40px;line-height:1.75;}
+    .hero-act{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+    .hero-note{margin-top:14px;font-size:12px;color:var(--text3);}
+
+    /* hero mock */
+    .hero-mock{margin:60px auto 0;max-width:860px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow),0 0 0 1px rgba(232,160,32,.07);}
+    .mock-bar{background:var(--bg3);padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+    .md{width:10px;height:10px;border-radius:50%;}
+    .mock-body{padding:28px;display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+    .mock-chat{background:var(--bg3);border-radius:12px;padding:16px;}
+    .mock-ch-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+    .mock-av{width:32px;height:32px;border-radius:50%;background:rgba(34,197,94,.18);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--green);flex-shrink:0;}
+    .mock-ch-name{font-size:12px;font-weight:600;}
+    .mock-ch-st{font-size:10px;color:var(--green);}
+    .mock-msg{margin-bottom:9px;}
+    .mock-lbl{font-size:10px;color:var(--text3);margin-bottom:3px;}
+    .mb{display:inline-block;padding:8px 11px;border-radius:10px;font-size:11.5px;line-height:1.5;max-width:88%;}
+    .mb.c{background:var(--bg4);color:var(--text2);}
+    .mb.i{background:rgba(232,160,32,.13);border:1px solid rgba(232,160,32,.2);color:var(--text);}
+    .mock-right{display:flex;flex-direction:column;gap:14px;}
+    .mock-m{background:var(--bg3);border-radius:10px;padding:14px;}
+    .mock-mv{font-size:26px;font-weight:800;color:var(--gold);}
+    .mock-ml{font-size:11px;color:var(--text2);margin-top:2px;}
+    .mock-pipe{background:var(--bg3);border-radius:10px;padding:14px;flex:1;}
+    .mock-pt{font-size:10px;font-weight:600;color:var(--text2);margin-bottom:10px;letter-spacing:.5px;text-transform:uppercase;}
+    .mock-kb{display:flex;gap:7px;}
+    .mk-col{flex:1;}
+    .mk-cl{font-size:9px;color:var(--text3);margin-bottom:5px;font-weight:600;}
+    .mk-card{background:var(--bg4);border-radius:5px;padding:7px;margin-bottom:5px;font-size:10px;border-left:2px solid;}
+    .mk-cn{font-weight:600;color:var(--text);}
+    .mk-ca{font-size:9px;color:var(--text3);margin-top:1px;}
+
+    /* social proof */
+    #sp{padding:48px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+    .sp-lbl{text-align:center;font-size:11px;color:var(--text3);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:28px;}
+    .sp-logos{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+    .sp-logo{font-size:12px;font-weight:700;color:var(--text3);padding:8px 18px;border:1px solid var(--border);border-radius:8px;transition:all .2s;}
+    .sp-logo:hover{color:var(--text2);border-color:var(--border2);}
+
+    /* what is */
+    #what{text-align:center;}
+    #what h2{max-width:660px;margin:0 auto 20px;}
+    #what p{color:var(--text2);max-width:600px;margin:0 auto;font-size:1.05rem;line-height:1.8;}
+
+    /* section header */
+    .sec-hd{text-align:center;margin-bottom:60px;}
+    .sec-hd h2{margin-bottom:16px;}
+    .sec-hd p{color:var(--text2);font-size:1rem;max-width:540px;margin:0 auto;}
+    .sec-ey{display:flex;justify-content:center;margin-bottom:14px;}
+
+    /* casos */
+    #casos{background:var(--bg2);}
+    .casos-list{display:flex;flex-direction:column;gap:80px;}
+    .caso{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+    .caso.rev{direction:rtl;}
+    .caso.rev>*{direction:ltr;}
+    .caso-tag{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+    .caso h3{font-size:1.4rem;font-weight:700;margin-bottom:14px;line-height:1.3;}
+    .caso>div>p{color:var(--text2);line-height:1.8;margin-bottom:18px;}
+    .caso ul{list-style:none;display:flex;flex-direction:column;gap:9px;}
+    .caso ul li{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;color:var(--text2);}
+    .caso ul li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;}
+    .caso-vis{background:var(--bg3);border-radius:var(--r-lg);border:1px solid var(--border);overflow:hidden;}
+    .cv-head{background:var(--bg4);padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+    .cv-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+    .cv-name{font-size:13px;font-weight:600;}
+    .cv-sub{font-size:11px;color:var(--text3);}
+    .cv-body{padding:16px;display:flex;flex-direction:column;gap:10px;}
+    .cv-msg{display:flex;flex-direction:column;}
+    .cv-msg.r{align-items:flex-end;}
+    .cv-lbl{font-size:10px;color:var(--text3);margin-bottom:3px;}
+    .cv-ia-lbl{font-size:10px;color:var(--gold);font-weight:600;margin-bottom:3px;}
+    .cbbl{display:inline-block;padding:9px 13px;border-radius:11px;font-size:12.5px;line-height:1.55;max-width:88%;}
+    .cbbl.l{background:var(--bg4);color:var(--text2);}
+    .cbbl.i{background:rgba(232,160,32,.11);border:1px solid rgba(232,160,32,.2);color:var(--text);}
+
+    /* diferenciais */
+    .dif-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+    .dif-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:34px;transition:all .25s;}
+    .dif-card:hover{border-color:var(--gold-b);transform:translateY(-4px);}
+    .dif-ic{width:50px;height:50px;border-radius:14px;background:var(--gold-dim);border:1px solid var(--gold-b);display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:18px;}
+    .dif-card h3{margin-bottom:10px;}
+    .dif-card p{color:var(--text2);font-size:14px;line-height:1.7;}
+
+    /* funil */
+    #funil{background:var(--bg2);}
+    .funil-in{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;}
+    .funil-in h2{margin-bottom:18px;}
+    .funil-in>div>p{color:var(--text2);line-height:1.8;margin-bottom:28px;}
+    .fsteps{display:flex;flex-direction:column;}
+    .fstep{display:flex;gap:14px;padding:15px 0;border-bottom:1px solid var(--border);}
+    .fstep:last-child{border:none;}
+    .fstep-n{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+    .fstep h4{font-size:13.5px;font-weight:600;margin-bottom:3px;}
+    .fstep p{font-size:12.5px;color:var(--text2);line-height:1.6;}
+    .funil-vis{background:var(--bg3);border-radius:var(--r-lg);border:1px solid var(--border);padding:26px;}
+    .fv-metric{text-align:center;margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border);}
+    .fv-num{font-size:34px;font-weight:800;color:var(--gold);}
+    .fv-lbl{font-size:12px;color:var(--text2);margin-top:3px;}
+    .fv-cols{display:flex;gap:9px;}
+    .fv-col{flex:1;}
+    .fv-cl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
+    .fv-card{background:var(--bg4);border-radius:7px;padding:9px;margin-bottom:7px;border-left:3px solid;}
+    .fv-cn{font-size:11px;font-weight:600;}
+    .fv-ca{font-size:10px;color:var(--text3);margin-top:2px;}
+
+    /* feat */
+    .feat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
+    .feat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:30px;display:flex;gap:18px;transition:border-color .2s;}
+    .feat-card:hover{border-color:var(--border2);}
+    .feat-card.hl{grid-column:span 2;background:linear-gradient(135deg,rgba(232,160,32,.07) 0%,transparent 60%);border-color:var(--gold-b);}
+    .feat-ic{width:42px;height:42px;border-radius:11px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+    .feat-card.hl .feat-ic{background:var(--gold-dim);}
+    .feat-card h3{font-size:.95rem;margin-bottom:7px;}
+    .feat-card p{color:var(--text2);font-size:13.5px;line-height:1.7;}
+
+    /* metrics */
+    #metrics{text-align:center;background:var(--bg2);}
+    .met-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--border);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+    .met-block{background:var(--bg2);padding:44px 20px;}
+    .met-num{font-size:2.8rem;font-weight:800;color:var(--gold);letter-spacing:-.03em;line-height:1;}
+    .met-u{font-size:1.4rem;}
+    .met-lbl{font-size:12.5px;color:var(--text2);margin-top:9px;}
+
+    /* agendamento */
+    .ag-in{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;}
+    .ag-in h2{margin-bottom:18px;}
+    .ag-in>div>p{color:var(--text2);line-height:1.8;margin-bottom:28px;}
+    .ag-buls{display:flex;flex-direction:column;gap:16px;}
+    .ag-bul{display:flex;gap:12px;align-items:flex-start;}
+    .ag-bul-ic{width:36px;height:36px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+    .ag-bul h4{font-size:13.5px;font-weight:600;margin-bottom:3px;}
+    .ag-bul p{font-size:13px;color:var(--text2);line-height:1.6;}
+    .ag-vis{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;}
+    .ag-chat{padding:18px;display:flex;flex-direction:column;gap:11px;}
+    .ag-msg{display:flex;flex-direction:column;}
+    .ag-msg.r{align-items:flex-end;}
+    .ag-ia-lbl{font-size:10px;color:var(--gold);font-weight:600;margin-bottom:3px;}
+    .ag-lbl{font-size:10px;color:var(--text3);margin-bottom:3px;}
+    .ag-b{display:inline-block;padding:9px 13px;border-radius:11px;font-size:12.5px;line-height:1.55;max-width:88%;}
+    .ag-b.l{background:var(--bg3);color:var(--text2);}
+    .ag-b.i{background:rgba(232,160,32,.11);border:1px solid rgba(232,160,32,.2);color:var(--text);}
+    .ag-cal{margin:0 18px 18px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);padding:14px;}
+    .ag-cal-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+    .ag-cal-ti{font-size:12px;font-weight:600;}
+    .ag-cal-badge{background:var(--gold);color:#07060a;font-size:10px;font-weight:700;padding:3px 10px;border-radius:100px;}
+    .ag-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+    .ag-day{aspect-ratio:1;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);}
+    .ag-day.a{background:var(--gold);color:#07060a;font-weight:700;}
+    .ag-day.e{background:rgba(232,160,32,.15);color:var(--gold);}
+
+    /* implementacao */
+    #impl{background:var(--bg2);}
+    .impl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-bottom:40px;}
+    .impl-step{text-align:center;padding:32px 20px;}
+    .impl-n{width:50px;height:50px;border-radius:50%;background:var(--gold-dim);border:1px solid var(--gold-b);color:var(--gold);font-size:18px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;}
+    .impl-step h3{margin-bottom:9px;}
+    .impl-step p{color:var(--text2);font-size:13.5px;line-height:1.7;}
+    .impl-badge{text-align:center;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;font-size:12.5px;color:var(--text2);}
+    .impl-badge strong{color:var(--text);}
+
+    /* alertas */
+    .al-in{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center;}
+    .al-in h2{margin-bottom:18px;}
+    .al-in>div>p{color:var(--text2);line-height:1.8;margin-bottom:28px;}
+    .al-feats{display:flex;flex-direction:column;gap:15px;}
+    .al-feat{display:flex;gap:12px;align-items:flex-start;}
+    .al-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);margin-top:7px;flex-shrink:0;}
+    .al-feat h4{font-size:13.5px;font-weight:600;margin-bottom:3px;}
+    .al-feat p{font-size:13px;color:var(--text2);}
+    .al-notifs{display:flex;flex-direction:column;gap:11px;}
+    .al-notif{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:16px 18px;display:flex;gap:12px;transition:all .2s;}
+    .al-notif:hover{border-color:var(--border2);transform:translateX(4px);}
+    .al-notif.gld{border-color:var(--gold-b);background:rgba(232,160,32,.04);}
+    .al-ic{font-size:19px;flex-shrink:0;margin-top:2px;}
+    .al-ti{font-size:12.5px;font-weight:600;margin-bottom:3px;}
+    .al-de{font-size:12px;color:var(--text2);}
+    .al-tm{font-size:10px;color:var(--text3);margin-top:5px;}
+
+    /* fg */
+    #fg{background:var(--bg2);}
+    .fg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+    .fg-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:26px;transition:border-color .2s;}
+    .fg-card:hover{border-color:var(--border2);}
+    .fg-ic{font-size:22px;margin-bottom:12px;}
+    .fg-card h4{font-size:13.5px;font-weight:600;margin-bottom:7px;}
+    .fg-card p{font-size:12.5px;color:var(--text2);line-height:1.6;}
+
+    /* cta final */
+    #cta{text-align:center;position:relative;overflow:hidden;}
+    .cta-glow{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:600px;height:400px;background:radial-gradient(ellipse at center bottom,rgba(232,160,32,.09) 0%,transparent 70%);pointer-events:none;}
+    #cta h2{max-width:580px;margin:0 auto 18px;}
+    #cta>div>p{color:var(--text2);max-width:460px;margin:0 auto 36px;font-size:1.05rem;line-height:1.75;}
+    .cta-act{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+    .cta-note{margin-top:18px;font-size:12px;color:var(--text3);}
+    .cta-note span{margin:0 7px;}
+
+    /* footer */
+    footer{border-top:1px solid var(--border);padding:44px 0;}
+    .ft-in{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;}
+    .ft-logo{font-size:16px;font-weight:800;color:var(--text2);}
+    .ft-logo span{color:var(--gold);}
+    .ft-links{display:flex;gap:22px;}
+    .ft-links a{font-size:13px;color:var(--text3);text-decoration:none;transition:color .2s;}
+    .ft-links a:hover{color:var(--text2);}
+    .ft-copy{font-size:12px;color:var(--text3);}
+
+    @media(max-width:768px){
+      .mock-body{grid-template-columns:1fr;}.mock-right{display:none;}
+      .caso,.funil-in,.ag-in,.al-in{grid-template-columns:1fr;}
+      .caso.rev{direction:ltr;}
+      .dif-grid,.impl-grid,.fg-grid{grid-template-columns:1fr;}
+      .feat-grid{grid-template-columns:1fr;}.feat-card.hl{grid-column:span 1;}
+      .met-grid{grid-template-columns:repeat(2,1fr);}
+      .hnav{display:none;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr">
+    <a href="/" class="logo">Advogar<span>.AI</span></a>
+    <nav class="hnav">
+      <a href="#casos">Casos de uso</a>
+      <a href="#funcionalidades">Funcionalidades</a>
+      <a href="#impl">Como funciona</a>
+    </nav>
+    <div class="hact">
+      <a href="/app" class="h-enter">Entrar</a>
+      <a href="#cta" class="h-cta">Começar agora →</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-glow"></div>
+  <div class="container">
+    <div class="fi" style="margin-bottom:22px"><span class="badge">IA Jurídica 24 horas</span></div>
+    <h1 class="fi d1">Seu escritório fechando contratos<br><em>enquanto você dorme</em></h1>
+    <p class="hero-sub fi d2">A Advogar.AI atende leads, qualifica clientes, monitora processos e envia contratos — tudo automático pelo WhatsApp, a qualquer hora do dia.</p>
+    <div class="hero-act fi d3">
+      <a href="#cta" class="btn-p">Começar agora →</a>
+      <a href="#casos" class="btn-g">Ver como funciona</a>
+    </div>
+    <p class="hero-note fi d4">Setup em menos de 5 minutos · Sem contrato de fidelidade</p>
+
+    <div class="hero-mock fi d4">
+      <div class="mock-bar">
+        <div class="md" style="background:#ff5f57"></div>
+        <div class="md" style="background:#febc2e"></div>
+        <div class="md" style="background:#28c840"></div>
+        <div style="flex:1;text-align:center;font-size:11px;color:var(--text3)">Advogar.AI — Painel do Escritório</div>
+      </div>
+      <div class="mock-body">
+        <div class="mock-chat">
+          <div class="mock-ch-head">
+            <div class="mock-av">MS</div>
+            <div><div class="mock-ch-name">Maria Silva — Lead novo</div><div class="mock-ch-st">● online agora · 23:47</div></div>
+          </div>
+          <div class="mock-msg"><div class="mock-lbl">Lead</div><div class="mb c">Fui demitida sem justa causa e não recebi nada. Podem me ajudar?</div></div>
+          <div class="mock-msg" style="text-align:right;margin-top:8px"><div class="mock-lbl" style="text-align:right">⚡ Advogar.AI</div><div class="mb i">Olá, Maria! Com quanto tempo de empresa você estava? Isso é fundamental para calcular seus direitos rescisórios.</div></div>
+          <div class="mock-msg" style="margin-top:8px"><div class="mb c">3 anos e 2 meses. Nunca recebi horas extras também.</div></div>
+          <div class="mock-msg" style="text-align:right;margin-top:8px"><div class="mb i">Você tem direito a aviso prévio, 13º proporcional, férias + 1/3, multa de 40% do FGTS e as horas extras. Posso agendar uma análise gratuita amanhã cedo?</div></div>
+        </div>
+        <div class="mock-right">
+          <div class="mock-m"><div class="mock-mv">14</div><div class="mock-ml">leads atendidos hoje</div></div>
+          <div class="mock-m"><div class="mock-mv" style="color:var(--green)">3</div><div class="mock-ml">contratos fechados esta semana</div></div>
+          <div class="mock-pipe">
+            <div class="mock-pt">Pipeline</div>
+            <div class="mock-kb">
+              <div class="mk-col"><div class="mk-cl">Novos</div><div class="mk-card" style="border-color:#60a5fa"><div class="mk-cn">Ana Costa</div><div class="mk-ca">Trabalhista</div></div><div class="mk-card" style="border-color:#60a5fa"><div class="mk-cn">Pedro Lima</div><div class="mk-ca">Família</div></div></div>
+              <div class="mk-col"><div class="mk-cl">Qualif.</div><div class="mk-card" style="border-color:#a78bfa"><div class="mk-cn">João Ramos</div><div class="mk-ca">Civil</div></div></div>
+              <div class="mk-col"><div class="mk-cl">Proposta</div><div class="mk-card" style="border-color:#fb923c"><div class="mk-cn">Maria Silva</div><div class="mk-ca">Trabalhista</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL PROOF -->
+<section id="sp">
+  <div class="container">
+    <p class="sp-lbl">Atende escritórios especializados em todas as áreas</p>
+    <div class="sp-logos">
+      <div class="sp-logo">Direito Trabalhista</div>
+      <div class="sp-logo">Direito de Família</div>
+      <div class="sp-logo">Direito Criminal</div>
+      <div class="sp-logo">Direito Civil</div>
+      <div class="sp-logo">Direito Previdenciário</div>
+      <div class="sp-logo">Direito do Consumidor</div>
+    </div>
+  </div>
+</section>
+
+<!-- O QUE É -->
+<section id="what">
+  <div class="container">
+    <div class="sec-ey fi"><span class="sec-label">A plataforma</span></div>
+    <h2 class="fi d1" style="margin:14px auto 20px;max-width:660px;">A primeira IA desenhada<br>para escritórios de advocacia</h2>
+    <p class="fi d2">A Advogar.AI combina inteligência artificial com automação jurídica para transformar a captação, qualificação e atendimento de clientes. Enquanto sua equipe foca na advocacia, a IA resolve o operacional.</p>
+  </div>
+</section>
+
+<!-- CASOS DE USO -->
+<section id="casos">
+  <div class="container">
+    <div class="sec-hd fi">
+      <div class="sec-ey"><span class="sec-label">Casos de uso reais</span></div>
+      <h2>Como a Advogar.AI trabalha<br>dentro do seu escritório</h2>
+      <p>Situações do dia a dia que a IA resolve completamente — sem nenhuma intervenção da equipe.</p>
+    </div>
+    <div class="casos-list">
+
+      <!-- Caso 1 -->
+      <div class="caso fi">
+        <div>
+          <div class="caso-tag">Captação · Direito Trabalhista</div>
+          <h3>Lead às 23h. Consulta agendada. Contrato fechado pela manhã.</h3>
+          <p>Um potencial cliente manda mensagem fora do horário comercial. A IA atende imediatamente, identifica o caso, explica os direitos, qualifica o lead e agenda a consulta — sem nenhum advogado precisar estar disponível.</p>
+          <ul>
+            <li>Resposta em segundos, qualquer hora</li>
+            <li>Qualificação automática por área do direito</li>
+            <li>Agendamento direto no Google Calendar</li>
+            <li>Lead chega na reunião informado e decidido</li>
+          </ul>
+        </div>
+        <div class="caso-vis">
+          <div class="cv-head">
+            <div class="cv-av" style="background:rgba(96,165,250,.18);color:#60a5fa">RL</div>
+            <div><div class="cv-name">Roberto Lima</div><div class="cv-sub">Lead novo · 23:52</div></div>
+          </div>
+          <div class="cv-body">
+            <div class="cv-msg"><div class="cv-lbl">Lead</div><div class="cbbl l">Fui demitido hoje sem justa causa. Trabalhei 4 anos. Tenho direito a alguma coisa?</div></div>
+            <div class="cv-msg r"><div class="cv-ia-lbl">⚡ Advogar.AI</div><div class="cbbl i">Com 4 anos você tem direito a aviso prévio, multa de 40% do FGTS, 13º e férias proporcionais. Posso calcular uma estimativa do seu caso?</div></div>
+            <div class="cv-msg"><div class="cbbl l">Sim! Tenho horas extras não pagas também.</div></div>
+            <div class="cv-msg r"><div class="cbbl i">Horas extras podem ser cobradas separadamente — fortalece bastante o caso. Nosso advogado tem disponibilidade amanhã às 9h para uma análise gratuita. Confirmo para você?</div></div>
+            <div class="cv-msg"><div class="cbbl l">Pode confirmar!</div></div>
+            <div class="cv-msg r"><div class="cbbl i">✅ Agendado para amanhã às 9h. Você receberá uma confirmação. Até lá, Roberto!</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Caso 2 -->
+      <div class="caso rev fi">
+        <div>
+          <div class="caso-tag">Atendimento · Monitoramento Processual</div>
+          <h3>Cliente pergunta sobre o processo. IA responde com as últimas movimentações.</h3>
+          <p>Clientes ativos mandam mensagens para saber o andamento. A IA consulta o tribunal, interpreta as movimentações e responde em linguagem simples — eliminando até 70% das ligações de acompanhamento.</p>
+          <ul>
+            <li>Consulta automática ao tribunal em tempo real</li>
+            <li>Movimentações traduzidas para linguagem acessível</li>
+            <li>Redução drástica de ligações operacionais</li>
+            <li>Cliente informado sem depender do advogado</li>
+          </ul>
+        </div>
+        <div class="caso-vis">
+          <div class="cv-head">
+            <div class="cv-av" style="background:rgba(167,139,250,.18);color:#a78bfa">FC</div>
+            <div><div class="cv-name">Fernanda Costa</div><div class="cv-sub">Cliente ativa · Processo trabalhista</div></div>
+          </div>
+          <div class="cv-body">
+            <div class="cv-msg"><div class="cv-lbl">Cliente</div><div class="cbbl l">Boa tarde! Alguma novidade no meu processo? Faz tempo que não recebo atualização.</div></div>
+            <div class="cv-msg r"><div class="cv-ia-lbl">⚡ Advogar.AI</div><div class="cbbl i">Boa tarde, Fernanda! Acabei de consultar o tribunal. A última movimentação foi há 3 dias: o juiz determinou uma audiência de instrução. O processo está avançando bem. 📋</div></div>
+            <div class="cv-msg"><div class="cbbl l">Precisarei comparecer à audiência?</div></div>
+            <div class="cv-msg r"><div class="cbbl i">Sim, sua presença será necessária. Mas não se preocupe — o advogado irá prepará-la com antecedência. A data ainda será definida e você será avisada assim que sair.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Caso 3 -->
+      <div class="caso fi">
+        <div>
+          <div class="caso-tag">Contratação · Direito de Família</div>
+          <h3>Da primeira mensagem ao contrato assinado — sem sair do WhatsApp.</h3>
+          <p>Quando o lead está pronto para contratar, a IA envia o contrato de honorários diretamente no WhatsApp. O cliente assina digitalmente com validade jurídica plena — processo 100% digital, sem deslocamentos.</p>
+          <ul>
+            <li>Contrato enviado automaticamente quando lead está qualificado</li>
+            <li>Assinatura digital com validade jurídica garantida</li>
+            <li>Confirmação imediata para escritório e cliente</li>
+            <li>Fim da burocracia de coleta de assinatura física</li>
+          </ul>
+        </div>
+        <div class="caso-vis">
+          <div class="cv-head">
+            <div class="cv-av" style="background:rgba(251,146,60,.18);color:#fb923c">CA</div>
+            <div><div class="cv-name">Carlos Almeida</div><div class="cv-sub">Lead qualificado · Direito de Família</div></div>
+          </div>
+          <div class="cv-body">
+            <div class="cv-msg r"><div class="cv-ia-lbl">⚡ Advogar.AI</div><div class="cbbl i">Carlos, nossa advogada analisou seu caso e está pronta para representá-lo no processo de guarda. Posso enviar o contrato de honorários agora para sua assinatura?</div></div>
+            <div class="cv-msg"><div class="cbbl l">Pode enviar, quero resolver logo isso.</div></div>
+            <div class="cv-msg r"><div class="cbbl i">📄 Contrato enviado! Você pode assinar pelo link — leva menos de 1 minuto. Validade jurídica plena, sem precisar sair de casa.</div></div>
+            <div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.2);border-radius:9px;padding:11px;margin-top:4px;">
+              <div style="font-size:11px;color:var(--green);font-weight:600;margin-bottom:3px;">✅ Contrato assinado digitalmente</div>
+              <div style="font-size:11px;color:var(--text2)">Carlos Almeida · há 2 minutos · Validade jurídica garantida</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIFERENCIAIS -->
+<section id="dif">
+  <div class="container">
+    <div class="sec-hd fi">
+      <div class="sec-ey"><span class="sec-label">Por que Advogar.AI</span></div>
+      <h2>Sua IA jurídica nunca descansa</h2>
+      <p>Enquanto seu escritório fecha às 18h, a Advogar.AI continua atendendo, qualificando e convertendo leads.</p>
+    </div>
+    <div class="dif-grid">
+      <div class="dif-card fi"><div class="dif-ic">⚡</div><h3>Resposta em segundos</h3><p>Nenhum lead espera. A IA responde imediatamente, a qualquer hora, com informações precisas sobre os direitos do cliente e os próximos passos do seu caso.</p></div>
+      <div class="dif-card fi d1"><div class="dif-ic">🎯</div><h3>Qualificação inteligente</h3><p>Identifica a área do direito, avalia o potencial do caso e prioriza os leads mais prontos para contratar — sem desperdiçar tempo da equipe com casos fora do perfil.</p></div>
+      <div class="dif-card fi d2"><div class="dif-ic">🔄</div><h3>Automação completa</h3><p>Do primeiro contato à assinatura do contrato, tudo automatizado. Sua equipe entra em cena apenas quando o cliente já está pronto para fechar.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- FUNIL -->
+<section id="funil">
+  <div class="container">
+    <div class="funil-in">
+      <div class="fi">
+        <div style="margin-bottom:14px"><span class="sec-label">Pipeline automatizado</span></div>
+        <h2>Cada lead no lugar certo, automaticamente</h2>
+        <p>A IA classifica e move seus leads pelo funil conforme a conversa evolui — sem intervenção manual da equipe.</p>
+        <div class="fsteps">
+          <div class="fstep"><div class="fstep-n" style="background:rgba(96,165,250,.15);color:#60a5fa">1</div><div><h4>Novo contato</h4><p>Lead entra pelo WhatsApp. IA inicia atendimento em segundos.</p></div></div>
+          <div class="fstep"><div class="fstep-n" style="background:rgba(167,139,250,.15);color:#a78bfa">2</div><div><h4>Qualificação</h4><p>IA identifica área, complexidade e potencial de conversão do caso.</p></div></div>
+          <div class="fstep"><div class="fstep-n" style="background:rgba(251,146,60,.15);color:#fb923c">3</div><div><h4>Proposta enviada</h4><p>Contrato de honorários enviado automaticamente quando lead está pronto.</p></div></div>
+          <div class="fstep"><div class="fstep-n" style="background:rgba(34,197,94,.15);color:#22c55e">4</div><div><h4>Fechado</h4><p>Contrato assinado. Cliente integrado ao monitoramento processual automático.</p></div></div>
+        </div>
+      </div>
+      <div class="funil-vis fi d2">
+        <div class="fv-metric"><div class="fv-num">+2.400</div><div class="fv-lbl">leads processados automaticamente este mês</div></div>
+        <div class="fv-cols">
+          <div class="fv-col"><div class="fv-cl" style="color:#60a5fa">Novos</div><div class="fv-card" style="border-color:#60a5fa"><div class="fv-cn">Ana Ferreira</div><div class="fv-ca">Trabalhista</div></div><div class="fv-card" style="border-color:#60a5fa"><div class="fv-cn">Marcos Souza</div><div class="fv-ca">Consumidor</div></div></div>
+          <div class="fv-col"><div class="fv-cl" style="color:#a78bfa">Qualif.</div><div class="fv-card" style="border-color:#a78bfa"><div class="fv-cn">Carla Nunes</div><div class="fv-ca">Família</div></div></div>
+          <div class="fv-col"><div class="fv-cl" style="color:#fb923c">Proposta</div><div class="fv-card" style="border-color:#fb923c"><div class="fv-cn">Pedro Melo</div><div class="fv-ca">Civil</div></div></div>
+          <div class="fv-col"><div class="fv-cl" style="color:#22c55e">Fechado</div><div class="fv-card" style="border-color:#22c55e"><div class="fv-cn">Lúcia Ramos</div><div class="fv-ca">Trabalhista</div></div><div class="fv-card" style="border-color:#22c55e"><div class="fv-cn">José Lima</div><div class="fv-ca">Criminal</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FUNCIONALIDADES -->
+<section id="funcionalidades">
+  <div class="container">
+    <div class="sec-hd fi">
+      <div class="sec-ey"><span class="sec-label">Funcionalidades</span></div>
+      <h2>Tudo que seu escritório precisa<br>em uma única plataforma</h2>
+      <p>Desenvolvida especificamente para advogados — sem complexidade desnecessária.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card hl fi">
+        <div class="feat-ic">🤖</div>
+        <div><h3>Agente IA no WhatsApp</h3><p>Atendimento autônomo 24 horas treinado em direito brasileiro. Personalização completa: nome do agente, tom de voz (formal, amigável ou direto), nível de detalhe e instruções específicas do seu escritório. O cliente nunca percebe que é uma IA.</p></div>
+      </div>
+      <div class="feat-card fi"><div class="feat-ic">📊</div><div><h3>CRM com Pipeline Visual</h3><p>Kanban completo para acompanhar cada lead em tempo real. Visualize onde cada potencial cliente está no funil e tome decisões baseadas em dados concretos.</p></div></div>
+      <div class="feat-card fi d1"><div class="feat-ic">⚖️</div><div><h3>Monitoramento Processual</h3><p>Consulta automática de movimentações em tribunais de todo Brasil. Clientes informados automaticamente sobre qualquer atualização no processo.</p></div></div>
+      <div class="feat-card fi d1"><div class="feat-ic">📅</div><div><h3>Agendamento Automático</h3><p>Leads agendam consultas pelo WhatsApp com integração ao Google Calendar. A agenda do advogado sempre atualizada, sem esforço.</p></div></div>
+      <div class="feat-card fi d2"><div class="feat-ic">📄</div><div><h3>Contratos Digitais</h3><p>Envio e assinatura de contratos de honorários pelo WhatsApp. Validade jurídica garantida, 100% digital e rastreável.</p></div></div>
+      <div class="feat-card fi d2"><div class="feat-ic">📈</div><div><h3>Dashboard e Analytics</h3><p>Visão completa do desempenho: leads por área, taxa de conversão, atendimentos e evolução semanal do pipeline.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MÉTRICAS -->
+<section id="metrics">
+  <div class="container">
+    <div class="met-grid fi">
+      <div class="met-block"><div class="met-num"><span class="counter" data-target="24">0</span><span class="met-u">h</span></div><div class="met-lbl">Disponibilidade total — seu escritório nunca fecha</div></div>
+      <div class="met-block"><div class="met-num">&lt;<span class="counter" data-target="3">0</span><span class="met-u">s</span></div><div class="met-lbl">Tempo médio de resposta ao lead</div></div>
+      <div class="met-block"><div class="met-num"><span class="counter" data-target="70">0</span><span class="met-u">%</span></div><div class="met-lbl">Redução em perguntas repetitivas da equipe</div></div>
+      <div class="met-block"><div class="met-num"><span class="counter" data-target="3">0</span><span class="met-u">x</span></div><div class="met-lbl">Mais leads qualificados por semana</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- AGENDAMENTO -->
+<section id="ag">
+  <div class="container">
+    <div class="ag-in">
+      <div class="fi">
+        <div style="margin-bottom:14px"><span class="sec-label">Agendamento inteligente</span></div>
+        <h2>Consultas agendadas automaticamente na sua agenda</h2>
+        <p>Quando um lead está pronto para uma consulta, a IA verifica disponibilidade e confirma o agendamento no Google Calendar — sem secretária, sem idas e vindas.</p>
+        <div class="ag-buls">
+          <div class="ag-bul"><div class="ag-bul-ic">📱</div><div><h4>Direto pelo WhatsApp</h4><p>Lead escolhe data e horário na conversa, sem sair do aplicativo.</p></div></div>
+          <div class="ag-bul"><div class="ag-bul-ic">📅</div><div><h4>Google Calendar integrado</h4><p>Confirmação automática na agenda do advogado responsável.</p></div></div>
+          <div class="ag-bul"><div class="ag-bul-ic">🔔</div><div><h4>Lembrete automático</h4><p>IA envia lembrete 24h antes — reduz cancelamentos e no-shows.</p></div></div>
+        </div>
+      </div>
+      <div class="ag-vis fi d2">
+        <div class="ag-chat">
+          <div class="ag-msg r"><div class="ag-ia-lbl">⚡ Advogar.AI</div><div class="ag-b i">Seu caso tem excelente base jurídica. Gostaria de agendar uma consulta gratuita com nossa advogada?</div></div>
+          <div class="ag-msg"><div class="ag-b l">Sim! Quando ela tem disponibilidade?</div></div>
+          <div class="ag-msg r"><div class="ag-b i">Ela tem horários amanhã às 10h ou 15h, e quinta às 9h. Qual prefere?</div></div>
+          <div class="ag-msg"><div class="ag-b l">Amanhã às 15h!</div></div>
+          <div class="ag-msg r"><div class="ag-b i">✅ Confirmado para amanhã às 15h. Você receberá um lembrete 1h antes. Até lá!</div></div>
+        </div>
+        <div class="ag-cal">
+          <div class="ag-cal-hd"><div class="ag-cal-ti">Junho 2025</div><div class="ag-cal-badge">+1 novo</div></div>
+          <div class="ag-cal-grid">
+            <div class="ag-day">S</div><div class="ag-day">T</div><div class="ag-day">Q</div><div class="ag-day">Q</div><div class="ag-day">S</div><div class="ag-day">S</div><div class="ag-day">D</div>
+            <div class="ag-day">2</div><div class="ag-day">3</div><div class="ag-day">4</div><div class="ag-day">5</div><div class="ag-day e">6</div><div class="ag-day">7</div><div class="ag-day">8</div>
+            <div class="ag-day e">9</div><div class="ag-day">10</div><div class="ag-day a">11</div><div class="ag-day e">12</div><div class="ag-day">13</div><div class="ag-day">14</div><div class="ag-day">15</div>
+            <div class="ag-day">16</div><div class="ag-day e">17</div><div class="ag-day">18</div><div class="ag-day">19</div><div class="ag-day e">20</div><div class="ag-day">21</div><div class="ag-day">22</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPLEMENTAÇÃO -->
+<section id="impl">
+  <div class="container">
+    <div class="sec-hd fi">
+      <div class="sec-ey"><span class="sec-label">Como começar</span></div>
+      <h2>Seu escritório automatizado<br>em menos de 5 minutos</h2>
+      <p>Sem equipe técnica, sem configurações complexas. Qualquer advogado consegue ativar.</p>
+    </div>
+    <div class="impl-grid">
+      <div class="impl-step fi"><div class="impl-n">1</div><h3>Crie sua conta</h3><p>Cadastre seu escritório em 2 minutos. Configure a área de atuação e o perfil do agente IA do jeito que preferir.</p></div>
+      <div class="impl-step fi d1"><div class="impl-n">2</div><h3>Conecte o WhatsApp</h3><p>Escaneie o QR Code com o número do escritório. A IA está pronta para atender em instantes.</p></div>
+      <div class="impl-step fi d2"><div class="impl-n">3</div><h3>Comece a fechar contratos</h3><p>Divulgue seu número. Cada lead que entrar em contato será atendido, qualificado e convertido automaticamente.</p></div>
+    </div>
+    <div class="impl-badge fi"><strong>Setup em menos de 5 minutos</strong> · Sem contrato de fidelidade · Suporte humano incluído · Cancele quando quiser</div>
+  </div>
+</section>
+
+<!-- ALERTAS PROCESSUAIS -->
+<section id="alertas">
+  <div class="container">
+    <div class="al-in">
+      <div class="fi">
+        <div style="margin-bottom:14px"><span class="sec-label">Monitoramento processual</span></div>
+        <h2>Nunca perca uma movimentação importante</h2>
+        <p>A Advogar.AI monitora continuamente os processos cadastrados e notifica advogados e clientes automaticamente quando há qualquer atualização no tribunal.</p>
+        <div class="al-feats">
+          <div class="al-feat"><div class="al-dot"></div><div><h4>Alertas em tempo real</h4><p>Movimentações detectadas e comunicadas em minutos.</p></div></div>
+          <div class="al-feat"><div class="al-dot"></div><div><h4>Linguagem acessível</h4><p>IA traduz termos jurídicos complexos para o cliente entender.</p></div></div>
+          <div class="al-feat"><div class="al-dot"></div><div><h4>Toda a carteira monitorada</h4><p>Acompanhe todos os processos sem esforço adicional da equipe.</p></div></div>
+        </div>
+      </div>
+      <div class="al-notifs fi d2">
+        <div class="al-notif gld"><div class="al-ic">⚖️</div><div><div class="al-ti">Decisão publicada — Processo de Ana Souza</div><div class="al-de">O juiz proferiu sentença favorável. Indenização de R$ 24.800 determinada. Cliente notificada automaticamente.</div><div class="al-tm">há 3 minutos</div></div></div>
+        <div class="al-notif"><div class="al-ic">📋</div><div><div class="al-ti">Nova movimentação — Carlos Lima</div><div class="al-de">Audiência de instrução designada para 15/07/2025. Cliente avisado com 30 dias de antecedência.</div><div class="al-tm">há 1 hora</div></div></div>
+        <div class="al-notif"><div class="al-ic">📨</div><div><div class="al-ti">Intimação recebida — Maria Ramos</div><div class="al-de">Prazo de 15 dias para apresentação de recurso. Advogado responsável notificado com urgência.</div><div class="al-tm">há 4 horas</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE GRID -->
+<section id="fg">
+  <div class="container">
+    <div class="sec-hd fi">
+      <div class="sec-ey"><span class="sec-label">Visão completa</span></div>
+      <h2>Tudo que você precisa, sem o que não precisa</h2>
+    </div>
+    <div class="fg-grid">
+      <div class="fg-card fi"><div class="fg-ic">💬</div><h4>Chat com IA Jurídica</h4><p>Atendimento autônomo com conhecimento em direito brasileiro. Personalizado para cada área de atuação.</p></div>
+      <div class="fg-card fi d1"><div class="fg-ic">🔀</div><h4>Funil Automatizado</h4><p>Leads se movem pelo pipeline conforme a conversa evolui — sem intervenção manual.</p></div>
+      <div class="fg-card fi d2"><div class="fg-ic">🏛️</div><h4>Consulta Processual</h4><p>Integração com tribunais de todo Brasil. Movimentações atualizadas automaticamente.</p></div>
+      <div class="fg-card fi"><div class="fg-ic">✍️</div><h4>Contratos Digitais</h4><p>Envio e assinatura de contratos pelo WhatsApp com validade jurídica plena.</p></div>
+      <div class="fg-card fi d1"><div class="fg-ic">🗓️</div><h4>Agenda Inteligente</h4><p>Agendamentos automáticos integrados ao Google Calendar do advogado.</p></div>
+      <div class="fg-card fi d2"><div class="fg-ic">📊</div><h4>Analytics e Relatórios</h4><p>Dashboard com métricas de conversão, áreas de atuação e evolução do pipeline.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA FINAL -->
+<section id="cta">
+  <div class="cta-glow"></div>
+  <div class="container">
+    <div class="sec-ey fi" style="margin-bottom:18px"><span class="sec-label">Comece hoje</span></div>
+    <h2 class="fi d1">Pronto para transformar<br>seu escritório?</h2>
+    <p class="fi d2">Escritórios que adotam automação jurídica captam até 3x mais clientes com a mesma equipe. Configure em minutos e veja os primeiros resultados ainda esta semana.</p>
+    <div class="cta-act fi d3">
+      <a href="/app" class="btn-p">Começar agora — é gratuito →</a>
+      <a href="https://wa.me/5500000000000" class="btn-g">Falar com especialista</a>
+    </div>
+    <p class="cta-note fi d4">Setup em 5 minutos <span>·</span> Sem cartão de crédito <span>·</span> Suporte humano incluído</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="ft-in">
+      <div class="ft-logo">Advogar<span>.AI</span></div>
+      <div class="ft-links">
+        <a href="#">Termos de uso</a>
+        <a href="#">Privacidade</a>
+        <a href="#">Contato</a>
+      </div>
+      <div class="ft-copy">© 2025 Advogar.AI — Todos os direitos reservados</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // scroll fade-in
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('v'); });
+  },{threshold:.12});
+  document.querySelectorAll('.fi').forEach(function(el){obs.observe(el);});
+
+  // counter
+  var cObs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting && !e.target.dataset.done){
+        e.target.dataset.done='1';
+        var t=parseInt(e.target.dataset.target), s=performance.now();
+        (function tick(now){
+          var p=Math.min((now-s)/1400,1), ease=1-Math.pow(1-p,3);
+          e.target.textContent=Math.round(ease*t);
+          if(p<1) requestAnimationFrame(tick);
+        })(s);
+      }
+    });
+  },{threshold:.5});
+  document.querySelectorAll('.counter').forEach(function(el){cObs.observe(el);});
+
+  // smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener('click',function(e){
+      var t=document.querySelector(this.getAttribute('href'));
+      if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'});}
+    });
+  });
+
+  // header shadow on scroll
+  window.addEventListener('scroll',function(){
+    document.querySelector('header').style.borderBottomColor=
+      window.scrollY>20?'rgba(255,255,255,.11)':'rgba(255,255,255,.07)';
+  });
+</script>
+</body>
+</html>

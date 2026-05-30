@@ -30,10 +30,20 @@ app.include_router(leads.router)
 def root():
     from fastapi.responses import FileResponse
     import os
+    html = os.path.join(os.path.dirname(__file__), "..", "landing.html")
+    if os.path.exists(html):
+        return FileResponse(html)
+    return "Advogar.AI"
+
+
+@app.get("/app")
+def app_page():
+    from fastapi.responses import FileResponse
+    import os
     html = os.path.join(os.path.dirname(__file__), "..", "index.html")
     if os.path.exists(html):
         return FileResponse(html)
-    return "Sistema juridico rodando!"
+    return "Advogar.AI"
 
 
 @app.get("/ping")
