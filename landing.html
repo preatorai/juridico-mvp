@@ -45,7 +45,7 @@
     header{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(7,6,10,.88);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;}
     .hdr{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;}
     .logo{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:800;text-decoration:none;color:var(--text);letter-spacing:.4px;text-transform:uppercase;}
-    .logo span{color:var(--gold);}
+    .logo-txt span{color:var(--gold);}
     .logo-ic{width:30px;height:30px;border-radius:9px;overflow:hidden;flex-shrink:0;animation:logoGlow 3s ease-in-out infinite;}
     .logo-ic img{width:100%;height:100%;object-fit:cover;display:block;}
     @keyframes logoGlow{0%,100%{box-shadow:0 0 0 rgba(232,160,32,0);}50%{box-shadow:0 0 16px rgba(232,160,32,.6);}}
@@ -265,7 +265,7 @@
     footer{border-top:1px solid var(--border);padding:44px 0;}
     .ft-in{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;}
     .ft-logo{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;color:var(--text2);letter-spacing:.4px;text-transform:uppercase;}
-    .ft-logo span{color:var(--gold);}
+    .ft-logo .logo-txt span{color:var(--gold);}
     .ft-logo .logo-ic{width:24px;height:24px;border-radius:7px;}
     .ft-links{display:flex;gap:22px;}
     .ft-links a{font-size:13px;color:var(--text3);text-decoration:none;transition:color .2s;}
@@ -326,7 +326,7 @@
 <!-- HEADER -->
 <header>
   <div class="hdr">
-    <a href="/" class="logo"><div class="logo-ic"><img src="/assets/logo-icon.png" alt="Advogar.AI"></div>Advogar<span>.AI</span></a>
+    <a href="/" class="logo"><div class="logo-ic"><img src="/assets/logo-icon.png" alt="Advogar.AI"></div><span class="logo-txt">Advogar<span>.AI</span></span></a>
     <nav class="hnav">
       <a href="#casos">Casos de uso</a>
       <a href="#funcionalidades">Funcionalidades</a>
@@ -705,7 +705,7 @@
 <footer>
   <div class="container">
     <div class="ft-in">
-      <div class="ft-logo"><div class="logo-ic"><img src="/assets/logo-icon.png" alt="Advogar.AI"></div>Advogar<span>.AI</span></div>
+      <div class="ft-logo"><div class="logo-ic"><img src="/assets/logo-icon.png" alt="Advogar.AI"></div><span class="logo-txt">Advogar<span>.AI</span></span></div>
       <div class="ft-links">
         <a href="#">Termos de uso</a>
         <a href="#">Privacidade</a>
