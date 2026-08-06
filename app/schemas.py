@@ -11,12 +11,6 @@ class LoginBody(BaseModel):
     email: str
     senha: str
 
-class ProcessoBody(BaseModel):
-    numero_processo: str
-    nome_cliente: str
-    telefone_cliente: str
-    usuario_id: str
-
 class TelefoneBody(BaseModel):
     usuario_id: str
     telefone: str
@@ -39,16 +33,8 @@ class SenhaBody(BaseModel):
     senha_atual: str
     senha_nova: str
 
-class ChatBody(BaseModel):
-    usuario_id: str
-    pergunta: str
-    processo_id: Optional[str] = None
-
 class MensagemEnviarBody(BaseModel):
     usuario_id: str
     telefone: str
     conteudo: str
     nome_cliente: Optional[str] = "Cliente"
-
-class PrazoSincBody(BaseModel):
-    usuario_id: str

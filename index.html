@@ -138,9 +138,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .main{flex:1;min-width:0;}
 .page{display:none;}
 .page.active{display:block;}
-#page-pipeline.active,#page-dashboard.active,#page-processos.active,#page-config.active,#page-agenda.active{position:fixed!important;display:block!important;top:var(--topbar-h);left:var(--sidebar-w);right:0;bottom:0;overflow-y:auto;padding:28px 32px;background:var(--bg);z-index:5;}
-#page-cadastrar.active{position:fixed!important;display:flex!important;flex-direction:column;align-items:center;top:var(--topbar-h);left:var(--sidebar-w);right:0;bottom:0;overflow-y:auto;padding:28px 32px;background:var(--bg);z-index:5;}
-#page-mensagens.active{position:fixed!important;display:flex!important;flex-direction:column;top:var(--topbar-h);left:var(--sidebar-w);right:0;bottom:0;padding:24px;background:var(--bg);z-index:5;}
+#page-pipeline.active,#page-dashboard.active,#page-config.active{position:fixed!important;display:block!important;top:var(--topbar-h);left:var(--sidebar-w);right:0;bottom:0;overflow-y:auto;padding:28px 32px;background:var(--bg);z-index:5;}
 
 /* ── PAGE HEADER ── */
 .page-header{margin-bottom:24px;display:flex;align-items:flex-end;justify-content:space-between;}
@@ -213,49 +211,6 @@ tr:hover td{background:rgba(255,255,255,.015);}
 .alert-error{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2);}
 .loading{display:flex;align-items:center;justify-content:center;padding:48px;color:var(--muted);font-size:14px;gap:10px;}
 
-/* ── CHAT ── */
-.ai-split{display:flex;flex:1;gap:16px;min-height:0;width:100%;}
-.ai-proc-list{width:220px;flex-shrink:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow-y:auto;display:flex;flex-direction:column;}
-.ai-proc-header{padding:14px 14px 10px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
-.ai-proc-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.03);transition:background .12s;}
-.ai-proc-item:last-child{border-bottom:none;}
-.ai-proc-item:hover{background:var(--bg3);}
-.ai-proc-item.active{background:var(--gold-bg);border-left:2px solid var(--gold);}
-.ai-proc-item.active .ai-proc-name{color:var(--gold);}
-.ai-proc-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
-.ai-proc-num{font-size:10.5px;color:var(--muted);font-family:monospace;}
-.ai-chat-area{flex:1;display:flex;flex-direction:column;min-width:0;}
-.ai-chat-placeholder{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);font-size:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);gap:10px;}
-.ai-chat-placeholder svg{width:32px;height:32px;opacity:.4;}
-.ai-chat-wrap{display:flex;flex-direction:column;flex:1;min-height:0;}
-.ai-chat-msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;background:var(--bg2);border:1px solid var(--border);border-top:none;border-bottom:none;min-height:0;}
-.ai-chat-header{padding:13px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
-.ai-chat-header-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);}
-.ai-chat-header-name{font-size:13px;font-weight:700;color:var(--text);}
-.ai-chat-header-num{font-size:11px;color:var(--muted);font-family:monospace;}
-.ai-bubble{max-width:80%;padding:12px 16px;border-radius:14px;font-size:13px;line-height:1.65;word-break:break-word;}
-.ai-bubble-user{background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;font-weight:500;align-self:flex-end;border-bottom-right-radius:4px;}
-.ai-bubble-ai{background:var(--bg3);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px;color:var(--text);}
-.ai-typing-dots{display:flex;align-items:center;gap:4px;padding:4px 0;}
-.ai-typing-dots span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gold);animation:typing 1.2s infinite;}
-.ai-typing-dots span:nth-child(2){animation-delay:.2s;}
-.ai-typing-dots span:nth-child(3){animation-delay:.4s;}
-@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:.3;}30%{transform:translateY(-5px);opacity:1;}}
-.ai-input-bar{display:flex;gap:10px;padding:14px;background:var(--bg2);border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);border-top:1px solid var(--border);}
-.ai-input{flex:1;padding:10px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:24px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:all .15s;}
-.ai-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,160,23,.08);}
-.ai-send-btn{padding:10px 22px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;border:none;border-radius:24px;font-size:13px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap;}
-.ai-send-btn:hover{opacity:.9;}
-.ai-send-btn:disabled{opacity:.4;cursor:not-allowed;}
-.ai-preview-card{background:rgba(212,160,23,.06);border:1.5px solid var(--gold-border);border-radius:var(--radius);padding:14px;margin-top:4px;align-self:flex-start;max-width:92%;width:100%;}
-.ai-preview-title{font-size:12px;font-weight:600;color:var(--gold);margin-bottom:10px;}
-.ai-preview-textarea{width:100%;min-height:80px;padding:10px 12px;border:1px solid var(--gold-border);border-radius:var(--radius-sm);font-size:12px;font-family:'Inter',sans-serif;resize:vertical;outline:none;background:var(--bg3);color:var(--text);}
-.ai-preview-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
-.ai-preview-name{font-size:11px;color:var(--muted);}
-.ai-preview-btn{padding:6px 16px;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#0a0c10;border:none;border-radius:6px;font-size:12px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;}
-.ai-preview-btn:hover{opacity:.9;}
-.ai-preview-btn:disabled{opacity:.4;cursor:not-allowed;}
-
 /* ── CONFIG ── */
 .config-wrap{display:grid;grid-template-columns:200px 1fr;gap:24px;max-width:820px;}
 .config-nav{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:8px;align-self:flex-start;}
@@ -290,17 +245,6 @@ tr:hover td{background:rgba(255,255,255,.015);}
 .timeline-content{flex:1;padding-top:4px;}
 .timeline-date{font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
 .timeline-nome{font-size:13px;font-weight:600;color:var(--text);}
-
-/* ── AGENDA ── */
-.prazo-card{background:var(--bg2);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;border-left:3px solid var(--border);}
-.prazo-urgente{border-left-color:var(--red);}
-.prazo-semana{border-left-color:var(--gold);}
-.prazo-normal{border-left-color:var(--blue);}
-.prazo-desc{font-size:14px;font-weight:600;color:var(--text);}
-.prazo-info{font-size:12px;color:var(--muted);margin-top:3px;}
-.prazo-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
-.btn-visto{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;color:var(--muted);transition:all .12s;}
-.btn-visto:hover{border-color:var(--green);color:var(--green);}
 
 /* ── CONVERSAS ── */
 #page-conversas.active{position:fixed!important;display:flex!important;flex-direction:column;top:var(--topbar-h);left:var(--sidebar-w);right:0;bottom:0;background:var(--bg);z-index:5;overflow:hidden;}
@@ -368,7 +312,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
       <div class="login-bullets">
         <div class="login-bullet"><div class="login-bullet-dot">✓</div> Atendimento automatizado via WhatsApp</div>
         <div class="login-bullet"><div class="login-bullet-dot">✓</div> CRM com pipeline de leads inteligente</div>
-        <div class="login-bullet"><div class="login-bullet-dot">✓</div> Monitoramento automático de processos</div>
+        <div class="login-bullet"><div class="login-bullet-dot">✓</div> Qualificação e fechamento de contratos por IA</div>
       </div>
     </div>
     <div class="login-left-copy">© 2025 Advogar.AI. Todos os direitos reservados.</div>
@@ -448,26 +392,10 @@ tr:hover td{background:rgba(255,255,255,.015);}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </div>
-      <div class="nav-item" id="nav-processos">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        Processos
-      </div>
-      <div class="nav-item" id="nav-cadastrar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-        Cadastrar Processo
-      </div>
       <div class="sidebar-section">Ferramentas</div>
       <div class="nav-item" id="nav-conversas">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         Conversas
-      </div>
-      <div class="nav-item" id="nav-mensagens">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/></svg>
-        Assistente IA
-      </div>
-      <div class="nav-item" id="nav-agenda">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        Agenda
       </div>
       <div class="sidebar-section">Conta</div>
       <div class="nav-item" id="nav-config">
@@ -486,10 +414,6 @@ tr:hover td{background:rgba(255,255,255,.015);}
             <div class="conv-list-header">
               <div class="conv-list-title">Conversas</div>
               <button class="btn-ghost" style="padding:5px 10px;font-size:12px;" onclick="carregarConversas()">↻</button>
-            </div>
-            <div class="conv-tabs">
-              <div class="conv-tab active" id="ctab-leads" onclick="convTab('leads')">Leads</div>
-              <div class="conv-tab" id="ctab-clientes" onclick="convTab('clientes')">Clientes</div>
             </div>
             <div class="conv-items" id="conv-items">
               <div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Carregando...</div>
@@ -571,7 +495,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
         </div>
 
         <!-- MÉTRICAS TOPO -->
-        <div class="metrics" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px;">
+        <div class="metrics" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px;">
           <div class="metric" style="border-top:3px solid var(--gold);">
             <div class="metric-top"><div><div class="metric-label">Total de Leads</div></div>
               <div class="metric-icon metric-icon-gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
@@ -599,13 +523,6 @@ tr:hover td{background:rgba(255,255,255,.015);}
             </div>
             <div class="metric-value" id="dash-fechados">—</div>
             <div class="metric-delta" id="dash-taxa">taxa 0%</div>
-          </div>
-          <div class="metric" style="border-top:3px solid #fb923c;">
-            <div class="metric-top"><div><div class="metric-label">Processos Ativos</div></div>
-              <div class="metric-icon metric-icon-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-            </div>
-            <div class="metric-value" id="total-processos">—</div>
-            <div class="metric-delta-muted">monitorados</div>
           </div>
         </div>
 
@@ -635,142 +552,15 @@ tr:hover td{background:rgba(255,255,255,.015);}
         </div>
 
         <!-- LINHA INFERIOR -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
-          <!-- Leads recentes -->
-          <div class="card" style="margin-bottom:0;">
-            <div class="card-header">
-              <div class="card-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Leads Recentes
-              </div>
-              <button class="btn-ver" onclick="navegar('pipeline');carregarPipeline()">Ver todos</button>
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-header">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Leads Recentes
             </div>
-            <div id="dash-leads-recentes"><div class="loading">Carregando...</div></div>
+            <button class="btn-ver" onclick="navegar('pipeline');carregarPipeline()">Ver todos</button>
           </div>
-          <!-- Processos recentes -->
-          <div class="card" style="margin-bottom:0;">
-            <div class="card-header">
-              <div class="card-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Processos Recentes
-              </div>
-            </div>
-            <div id="atividade-container"><div class="loading">Carregando...</div></div>
-          </div>
-        </div>
-      </div>
-
-        <div style="display:none">
-            <div class="card" style="margin-bottom:16px">
-              <div class="card-title" style="margin-bottom:12px">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Alertas WhatsApp
-              </div>
-              <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Receba notificações de prazos, decisões e audiências diretamente no seu WhatsApp.</p>
-              <div class="form-group" style="margin-bottom:10px">
-                <label>Seu número (DDD + número)</label>
-                <input type="text" id="tel-advogado" placeholder="82999998888">
-              </div>
-              <button class="btn-primary" style="width:100%;justify-content:center" onclick="salvarTelefoneAdvogado()">Salvar número</button>
-              <div id="tel-msg" style="font-size:12px;margin-top:8px;display:none"></div>
-            </div>
-            <div class="card">
-              <div class="card-title" style="margin-bottom:12px">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                Status do sistema
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px">
-                <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">Codilo API</span><span class="badge badge-green">Online</span></div>
-                <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">OpenAI</span><span class="badge badge-green">Online</span></div>
-                <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:var(--text2)">WhatsApp Bot</span><span class="badge badge-green">Ativo</span></div>
-              </div>
-            </div>
-          </div>
-      </div>
-
-      <!-- ── PROCESSOS ── -->
-      <div class="page" id="page-processos">
-        <div class="page-header">
-          <div>
-            <div class="page-title">Processos</div>
-            <div class="page-sub">Todos os processos monitorados</div>
-          </div>
-        </div>
-        <div class="card">
-          <div id="tabela-processos"><div class="loading">Carregando...</div></div>
-        </div>
-      </div>
-
-      <!-- ── CADASTRAR ── -->
-      <div class="page" id="page-cadastrar">
-        <div style="width:100%;max-width:560px">
-          <div class="page-header" style="display:block">
-            <div class="page-title">Cadastrar Processo</div>
-            <div class="page-sub">Adicionar novo processo ao monitoramento automático</div>
-          </div>
-          <div class="card" style="margin-bottom:0">
-            <div class="form-group">
-              <label>Número do processo (CNJ)</label>
-              <input type="text" id="numero" placeholder="0000000-00.0000.8.02.0001">
-            </div>
-            <div class="form-row">
-              <div class="form-group">
-                <label>Nome do cliente</label>
-                <input type="text" id="nome" placeholder="João da Silva">
-              </div>
-              <div class="form-group">
-                <label>WhatsApp do cliente</label>
-                <input type="text" id="telefone" placeholder="82999998888">
-              </div>
-            </div>
-            <div class="hint">O tribunal é detectado automaticamente pelo número do processo (TJAL, TJSP, TRT, TRF, STJ, STF e mais).</div>
-            <div class="form-actions" style="border-top:none;padding-top:0;margin-top:16px">
-              <button class="btn-ghost" id="btn-limpar">Limpar</button>
-              <button class="btn-primary" id="btn-cadastrar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                Salvar e monitorar
-              </button>
-            </div>
-            <div class="alert alert-success" id="msg-ok">Processo cadastrado com sucesso!</div>
-            <div class="alert alert-error" id="msg-erro">Erro ao cadastrar. Verifique os dados.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── ASSISTENTE IA ── -->
-      <div class="page" id="page-mensagens">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-shrink:0">
-          <div>
-            <div class="page-title">Assistente IA</div>
-            <div class="page-sub">Selecione um processo para consultar ou enviar mensagens</div>
-          </div>
-        </div>
-        <div class="ai-split">
-          <div class="ai-proc-list" id="ai-proc-list">
-            <div class="ai-proc-header">Processos</div>
-            <div class="loading" style="padding:24px">Carregando...</div>
-          </div>
-          <div class="ai-chat-area" id="ai-chat-area">
-            <div class="ai-chat-placeholder" id="ai-placeholder">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              Selecione um processo para começar
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── AGENDA ── -->
-      <div class="page" id="page-agenda">
-        <div class="page-header">
-          <div>
-            <div class="page-title">Agenda</div>
-            <div class="page-sub">Prazos e audiências dos seus processos</div>
-          </div>
-        </div>
-        <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 32px;text-align:center;gap:16px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" width="48" height="48"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="3"/><line x1="12" y1="13" x2="12" y2="16"/><line x1="12" y1="16" x2="14" y2="16"/></svg>
-          <div style="font-size:20px;font-weight:600;color:var(--text1)">Em breve</div>
-          <div style="font-size:14px;color:var(--text2);max-width:360px;line-height:1.6">Estamos trazendo essa atualização. Em breve você poderá acompanhar prazos e audiências diretamente aqui.</div>
+          <div id="dash-leads-recentes"><div class="loading">Carregando...</div></div>
         </div>
       </div>
 
@@ -785,10 +575,6 @@ tr:hover td{background:rgba(255,255,255,.015);}
             <div class="config-nav-item active" id="cfg-nav-escritorio" onclick="trocarConfigPanel('escritorio')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
               Escritório
-            </div>
-            <div class="config-nav-item" id="cfg-nav-whatsapp" onclick="trocarConfigPanel('whatsapp')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-              WhatsApp
             </div>
             <div class="config-nav-item" id="cfg-nav-senha" onclick="trocarConfigPanel('senha')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -830,21 +616,6 @@ tr:hover td{background:rgba(255,255,255,.015);}
             </div>
 
             <!-- WhatsApp -->
-            <div class="config-panel card" id="cfg-panel-whatsapp">
-              <div class="config-section-title">Número para Alertas</div>
-              <div class="form-row">
-                <div class="form-group"><label>Seu WhatsApp (DDD + número)</label><input type="text" id="cfg-telefone" placeholder="82999998888"></div>
-                <div class="form-group"><label>Horário dos alertas</label><input type="time" id="cfg-horario" value="08:00"></div>
-              </div>
-              <div class="config-section-title" style="margin-top:20px">Tipos de alerta</div>
-              <div class="checkbox-row"><input type="checkbox" id="cfg-alerta-urgente"><label for="cfg-alerta-urgente">Urgente — prazos em até 24h</label></div>
-              <div class="checkbox-row"><input type="checkbox" id="cfg-alerta-semana"><label for="cfg-alerta-semana">Esta semana — prazos em até 7 dias</label></div>
-              <div class="checkbox-row"><input type="checkbox" id="cfg-alerta-normal"><label for="cfg-alerta-normal">Normal — todas as movimentações</label></div>
-              <div class="form-actions">
-                <button class="btn-primary" onclick="salvarConfigWhatsapp()">Salvar configurações</button>
-              </div>
-              <div id="cfg-wp-msg" class="status-msg"></div>
-            </div>
 
             <!-- Segurança -->
             <div class="config-panel card" id="cfg-panel-senha">
@@ -903,22 +674,6 @@ tr:hover td{background:rgba(255,255,255,.015);}
   </div><!-- /layout -->
 </div><!-- /app -->
 
-<!-- ═══════════════ MODAL ═══════════════ -->
-<div class="modal-overlay" id="modal-processo">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-header-info">
-        <h2 id="modal-numero"></h2>
-        <p id="modal-cliente"></p>
-      </div>
-      <button class="modal-close" onclick="fecharModal()">×</button>
-    </div>
-    <div class="modal-body" id="modal-body">
-      <div class="loading">Carregando movimentações...</div>
-    </div>
-  </div>
-</div>
-
 <script>
 var API = window.location.origin;
 var usuario = null;
@@ -932,7 +687,6 @@ function abrirApp(u) {
   document.getElementById('topbar-escritorio').textContent = usuario.escritorio;
   document.getElementById('topbar-avatar').textContent = usuario.nome.charAt(0).toUpperCase();
   document.getElementById('dash-sub').textContent = 'Bem-vindo, ' + usuario.nome + ' — ' + usuario.escritorio;
-  if (usuario.telefone) document.getElementById('tel-advogado').value = usuario.telefone;
   carregarDashboard();
 }
 
@@ -977,40 +731,14 @@ document.getElementById('btn-sair').addEventListener('click', function() {
 
 document.getElementById('nav-pipeline').addEventListener('click', function(){navegar('pipeline');carregarPipeline();});
 document.getElementById('nav-dashboard').addEventListener('click', function(){navegar('dashboard');carregarDashboard();});
-document.getElementById('nav-processos').addEventListener('click', function(){navegar('processos');carregarProcessos();});
-document.getElementById('nav-cadastrar').addEventListener('click', function(){navegar('cadastrar');});
 document.getElementById('nav-conversas').addEventListener('click', function(){navegar('conversas');carregarConversas();});
-document.getElementById('nav-mensagens').addEventListener('click', function(){navegar('mensagens');carregarMensagens();});
-document.getElementById('nav-agenda').addEventListener('click', function(){navegar('agenda');carregarAgenda();});
 document.getElementById('nav-config').addEventListener('click', function(){navegar('config');carregarConfig();});
-
-document.getElementById('btn-limpar').addEventListener('click', function(){
-  document.getElementById('numero').value=''; document.getElementById('nome').value=''; document.getElementById('telefone').value='';
-});
-
-document.getElementById('btn-cadastrar').addEventListener('click', function(){
-  var numero=document.getElementById('numero').value.trim(), nome=document.getElementById('nome').value.trim(), telefone=document.getElementById('telefone').value.trim();
-  if(!numero||!nome||!telefone){document.getElementById('msg-erro').style.display='block';document.getElementById('msg-ok').style.display='none';return;}
-  fetch(API+'/processos',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({numero_processo:numero,nome_cliente:nome,telefone_cliente:telefone,usuario_id:usuario.id})})
-    .then(r=>r.json()).then(data=>{
-      if(data.sucesso){document.getElementById('msg-ok').style.display='block';document.getElementById('msg-erro').style.display='none';document.getElementById('numero').value='';document.getElementById('nome').value='';document.getElementById('telefone').value='';}
-      else{document.getElementById('msg-erro').style.display='block';document.getElementById('msg-erro').textContent=data.detail||data.erro||'Erro ao cadastrar.';}
-    }).catch(function(e){document.getElementById('msg-erro').style.display='block';document.getElementById('msg-erro').textContent='Erro de conexão: '+e.message;});
-});
 
 function navegar(id) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('nav-'+id).classList.add('active');
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-}
-
-function _movsHtml(movs) {
-  if (!movs || !movs.length) return '<span style="color:var(--muted);font-size:11px">Aguardando dados...</span>';
-  return movs.slice(0,2).map(function(m){
-    return '<div style="font-size:11px;color:var(--text2);line-height:1.4;margin-bottom:2px">'
-      +'<span style="color:var(--muted)">'+m.data+'</span> — '+m.nome+'</div>';
-  }).join('');
 }
 
 var _chartEvolucao = null;
@@ -1029,20 +757,6 @@ var _DEMO_METRICS = {total:8,taxa_conversao:29,por_status:{novo:2,qualificado:2,
 var _DEMO_COUNTS = [0,1,0,2,1,2,2];
 
 function carregarDashboard() {
-  // Processos
-  fetch(API+'/processos/resumo?usuario_id='+usuario.id).then(r=>r.json()).then(function(lista){
-    lista=lista||[];
-    document.getElementById('total-processos').textContent=lista.length;
-    var c=document.getElementById('atividade-container');
-    if(!lista.length){c.innerHTML='<div class="loading">Nenhum processo cadastrado.</div>';return;}
-    c.innerHTML='<div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Última movimentação</th><th></th></tr></thead><tbody>'+
-      lista.slice(0,5).map(function(p){
-        return '<tr><td><div style="font-weight:600;margin-bottom:1px">'+p.nome_cliente+'</div><div class="td-mono" style="font-size:10px">'+p.numero_processo+'</div></td>'
-          +'<td>'+_movsHtml(p.ultimas_movimentacoes)+'</td>'
-          +'<td><button class="btn-ver" onclick="abrirDetalheProcesso(this.dataset.n,this.dataset.c)" data-n="'+p.numero_processo+'" data-c="'+p.nome_cliente+'">Ver</button></td></tr>';
-      }).join('')+'</tbody></table></div>';
-  }).catch(function(){});
-
   // Leads + métricas
   Promise.all([
     fetch(API+'/leads?usuario_id='+usuario.id).then(r=>r.json()),
@@ -1134,198 +848,11 @@ function carregarDashboard() {
   }).catch(function(e){console.error(e);});
 }
 
-function carregarProcessos() {
-  var c = document.getElementById('tabela-processos');
-  fetch(API+'/processos/resumo?usuario_id='+usuario.id).then(r=>r.json()).then(function(lista){
-    lista = lista || [];
-    if (!lista.length) { c.innerHTML='<div class="loading">Nenhum processo cadastrado.</div>'; return; }
-    c.innerHTML='<div class="table-wrap"><table><thead><tr><th>Número</th><th>Cliente</th><th>WhatsApp</th><th>Últimas movimentações</th><th>Status</th><th></th></tr></thead><tbody>'+
-      lista.map(function(p){
-        return '<tr><td class="td-mono">'+p.numero_processo+'</td>'
-          +'<td style="font-weight:600">'+p.nome_cliente+'</td>'
-          +'<td style="color:var(--text2)">'+p.telefone_cliente+'</td>'
-          +'<td style="max-width:300px">'+_movsHtml(p.ultimas_movimentacoes)+'</td>'
-          +'<td><span class="badge badge-green">Ativo</span></td>'
-          +'<td><button class="btn-ver" onclick="abrirDetalheProcesso(this.dataset.n,this.dataset.c)" data-n="'+p.numero_processo+'" data-c="'+p.nome_cliente+'">Ver</button></td></tr>';
-      }).join('')+'</tbody></table></div>';
-  }).catch(function(){ c.innerHTML='<div class="loading">Erro ao carregar.</div>'; });
-}
-
-var _chatHistorico={}, _processoAtivo=null, _processosCache=[];
-
-function carregarMensagens() {
-  fetch(API+'/processos?usuario_id='+usuario.id).then(r=>r.json()).then(lista=>{
-    _processosCache=lista||[];
-    var list=document.getElementById('ai-proc-list');
-    if(!_processosCache.length){list.innerHTML='<div class="ai-proc-header">Processos</div><div class="loading" style="padding:24px">Nenhum processo.</div>';return;}
-    list.innerHTML='<div class="ai-proc-header">Processos</div>'+_processosCache.map(p=>'<div class="ai-proc-item" id="proc-item-'+p.id+'" onclick="selecionarProcesso(\''+p.id+'\')">'+'<div class="ai-proc-name">'+p.nome_cliente+'</div><div class="ai-proc-num">'+p.numero_processo+'</div></div>').join('');
-    if(_processosCache.length===1) selecionarProcesso(_processosCache[0].id);
-  }).catch(()=>{document.getElementById('ai-proc-list').innerHTML='<div class="ai-proc-header">Processos</div><div class="loading">Erro.</div>';});
-}
-
-function selecionarProcesso(id) {
-  var proc=_processosCache.find(p=>String(p.id)===String(id));
-  _processoAtivo=proc;
-  document.querySelectorAll('.ai-proc-item').forEach(el=>el.classList.remove('active'));
-  var item=document.getElementById('proc-item-'+proc.id); if(item) item.classList.add('active');
-  var area=document.getElementById('ai-chat-area');
-  if(!_chatHistorico[proc.id]){_chatHistorico[proc.id]='<div class="ai-bubble ai-bubble-ai">Olá! Estou pronto para falar sobre o processo de <b>'+proc.nome_cliente+'</b>.<br>Pergunte sobre movimentações, prazos ou peça para enviar um aviso ao cliente.</div>';}
-  area.innerHTML='<div class="ai-chat-header"><div class="ai-chat-header-dot"></div><div><div class="ai-chat-header-name">'+proc.nome_cliente+'</div><div class="ai-chat-header-num">'+proc.numero_processo+'</div></div></div>'+
-    '<div class="ai-chat-msgs" id="ai-msgs">'+_chatHistorico[proc.id]+'</div>'+
-    '<div class="ai-input-bar"><input type="text" class="ai-input" id="ai-input" placeholder="Pergunte sobre este processo..." onkeydown="if(event.key===\'Enter\')enviarChatAdvogado()"><button class="ai-send-btn" id="ai-send-btn" onclick="enviarChatAdvogado()">Enviar</button></div>';
-  var msgs=document.getElementById('ai-msgs'); msgs.scrollTop=msgs.scrollHeight;
-  document.getElementById('ai-input').focus();
-}
-
-function enviarChatAdvogado() {
-  var input=document.getElementById('ai-input'), btn=document.getElementById('ai-send-btn');
-  if(!input||!input.value.trim()||!_processoAtivo) return;
-  var pergunta=input.value.trim(); input.value=''; input.disabled=true; btn.disabled=true;
-  var msgs=document.getElementById('ai-msgs');
-  var userBubble=document.createElement('div'); userBubble.className='ai-bubble ai-bubble-user'; userBubble.textContent=pergunta; msgs.appendChild(userBubble);
-  var loadingBubble=document.createElement('div'); loadingBubble.className='ai-bubble ai-bubble-ai'; loadingBubble.style.padding='10px 16px'; loadingBubble.innerHTML='<div class="ai-typing-dots"><span></span><span></span><span></span></div>'; msgs.appendChild(loadingBubble);
-  msgs.scrollTop=msgs.scrollHeight;
-  fetch(API+'/chat-advogado',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id,pergunta:pergunta,processo_id:_processoAtivo.id})})
-    .then(function(response){
-      var reader=response.body.getReader(), decoder=new TextDecoder(), buffer='', aiBubble=null, textoCompleto='';
-      function lerChunk(done,value){
-        if(done)return; buffer+=decoder.decode(value,{stream:true});
-        var lines=buffer.split('\n'); buffer=lines.pop();
-        for(var i=0;i<lines.length;i++){
-          var line=lines[i]; if(!line.startsWith('data: ')) continue;
-          try{
-            var parsed=JSON.parse(line.slice(6));
-            if(parsed.token){
-              if(!aiBubble){loadingBubble.remove();aiBubble=document.createElement('div');aiBubble.className='ai-bubble ai-bubble-ai';msgs.appendChild(aiBubble);}
-              textoCompleto+=parsed.token;
-              aiBubble.innerHTML=textoCompleto.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
-              msgs.scrollTop=msgs.scrollHeight;
-            }
-            if(parsed.done){
-              if(parsed.mensagens_pendentes&&parsed.mensagens_pendentes.length){
-                parsed.mensagens_pendentes.forEach(function(mp,idx){
-                  var cardId='preview-'+Date.now()+'-'+idx;
-                  var card=document.createElement('div'); card.className='ai-preview-card'; card.id=cardId;
-                  var textarea=document.createElement('textarea'); textarea.className='ai-preview-textarea'; textarea.id='txt-'+cardId; textarea.value=mp.mensagem;
-                  var btn2=document.createElement('button'); btn2.id='btn-'+cardId; btn2.className='ai-preview-btn'; btn2.textContent='Enviar agora';
-                  btn2.onclick=(function(cid,tel,nome){return function(){confirmarEnvio(cid,tel,nome);};})(cardId,mp.telefone_cliente,mp.nome_cliente);
-                  var footer=document.createElement('div'); footer.className='ai-preview-footer'; footer.innerHTML='<span class="ai-preview-name">📱 '+mp.telefone_cliente+'</span>'; footer.appendChild(btn2);
-                  card.innerHTML='<div class="ai-preview-title">✏️ Mensagem para '+mp.nome_cliente+' — edite antes de enviar</div>'; card.appendChild(textarea); card.appendChild(footer); msgs.appendChild(card);
-                });
-              }
-              if(_processoAtivo) _chatHistorico[_processoAtivo.id]=msgs.innerHTML;
-              msgs.scrollTop=msgs.scrollHeight; input.disabled=false; btn.disabled=false; input.focus(); return;
-            }
-          }catch(e){}
-        }
-        reader.read().then(function(r){lerChunk(r.done,r.value);});
-      }
-      reader.read().then(function(r){lerChunk(r.done,r.value);});
-    }).catch(function(){
-      loadingBubble.remove();
-      var errBubble=document.createElement('div'); errBubble.className='ai-bubble ai-bubble-ai'; errBubble.textContent='Erro ao consultar. Tente novamente.'; msgs.appendChild(errBubble);
-      input.disabled=false; btn.disabled=false;
-    });
-}
-
-function confirmarEnvio(cardId,telefone,nomeCliente){
-  var textarea=document.getElementById('txt-'+cardId), btnEnviar=document.getElementById('btn-'+cardId);
-  if(!textarea||!textarea.value.trim()) return;
-  var conteudo=textarea.value.trim(); btnEnviar.disabled=true; btnEnviar.textContent='Enviando...';
-  fetch(API+'/mensagens/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id,telefone,conteudo,nome_cliente:nomeCliente})})
-    .then(r=>r.json()).then(data=>{
-      if(data.sucesso){var card=document.getElementById(cardId);if(card){card.innerHTML='<div class="ai-preview-title" style="color:var(--green)">Mensagem enviada para '+nomeCliente.replace(/</g,'&lt;')+'</div><div style="font-size:12px;color:var(--text2);margin-top:6px;white-space:pre-wrap">'+conteudo.replace(/</g,'&lt;')+'</div>';card.style.background='var(--green-bg)';card.style.borderColor='var(--green)';}}
-      else{btnEnviar.disabled=false;btnEnviar.textContent='Enviar agora';alert('Erro: '+(data.erro||'Tente novamente.'));}
-    }).catch(()=>{btnEnviar.disabled=false;btnEnviar.textContent='Enviar agora';alert('Erro ao conectar.');});
-}
-
-function abrirDetalheProcesso(numero,cliente){
-  document.getElementById('modal-numero').textContent=numero;
-  document.getElementById('modal-cliente').textContent='Cliente: '+cliente;
-  document.getElementById('modal-body').innerHTML='<div class="loading">Carregando...</div>';
-  document.getElementById('modal-processo').classList.add('open');
-  fetch(API+'/processos/'+encodeURIComponent(numero)+'/detalhes').then(r=>r.json()).then(d=>{
-    var body=document.getElementById('modal-body'), html='';
-    var capaKeys=Object.keys(d.capa||{});
-    if(capaKeys.length){html+='<div style="background:var(--bg3);border-radius:10px;padding:14px 16px;margin-bottom:18px"><div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Dados do Processo</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px">';capaKeys.forEach(k=>{html+='<div><div style="font-size:10px;color:var(--muted);font-weight:600">'+k+'</div><div style="font-size:12px;font-weight:500">'+d.capa[k]+'</div></div>';});html+='</div></div>';}
-    if(d.partes&&d.partes.length){html+='<div style="background:var(--bg3);border-radius:10px;padding:14px 16px;margin-bottom:18px"><div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase">Partes</div>';d.partes.forEach(p=>{html+='<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--muted)">'+p.polo+(p.tipo?' — '+p.tipo:'')+'</div><div style="font-size:13px;font-weight:600">'+p.nome+'</div>'+(p.advogados&&p.advogados.length?'<div style="font-size:11px;color:var(--muted);margin-top:2px">Adv: '+p.advogados.join(', ')+'</div>':'')+'</div>';});html+='</div>';}
-    if(!d.movimentacoes||!d.movimentacoes.length){html+='<div class="loading">Nenhuma movimentação encontrada.</div>';}
-    else{html+='<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:12px;text-transform:uppercase">Movimentações</div>';var meses=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];html+=d.movimentacoes.map((m,i)=>{var pts=m.data.split('/');var dataExt=pts.length===3?pts[0]+' de '+meses[parseInt(pts[1])-1]+' de '+pts[2]:m.data;return'<div class="timeline-item"><div class="timeline-dot">'+(i+1)+'</div><div class="timeline-content"><div class="timeline-date">'+dataExt+'</div><div class="timeline-nome">'+m.nome+'</div>'+(m.resumo?'<div style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.6">'+m.resumo+'</div>':'')+'</div></div>';}).join('');}
-    body.innerHTML=html;
-  }).catch(()=>{document.getElementById('modal-body').innerHTML='<div class="loading">Erro ao carregar.</div>';});
-}
-
-var _agendaMes=new Date().getMonth(), _agendaAno=new Date().getFullYear(), _agendaPrazos=[];
-
-function carregarAgenda(){
-  if(!usuario) return;
-  renderCalendario();
-  fetch(API+'/prazos?usuario_id='+usuario.id).then(r=>r.json()).then(prazos=>{
-    _agendaPrazos=prazos||[];
-    if(_agendaPrazos.length){var datas=_agendaPrazos.map(p=>{if(!p.data_movimentacao||!p.data_movimentacao.includes('/'))return null;var pts=p.data_movimentacao.split('/');return new Date(parseInt(pts[2]),parseInt(pts[1])-1,parseInt(pts[0]));}).filter(Boolean);if(datas.length){var mr=datas.reduce((a,b)=>b>a?b:a);_agendaMes=mr.getMonth();_agendaAno=mr.getFullYear();}}
-    renderCalendario();
-  }).catch(()=>renderCalendario());
-}
-
-function renderCalendario(){
-  try{
-  var c=document.getElementById('lista-prazos'); if(!c)return;
-  var mes=_agendaMes,ano=_agendaAno,hoje=new Date();
-  var nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  var diasSem=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  var porDia={};
-  _agendaPrazos.forEach(p=>{if(!p.data_movimentacao)return;var pts=p.data_movimentacao.split('/');if(pts.length!==3)return;var d=parseInt(pts[0]),m=parseInt(pts[1])-1,a=parseInt(pts[2]);if(m===mes&&a===ano){if(!porDia[d])porDia[d]=[];porDia[d].push(p);}});
-  var primeiroDia=new Date(ano,mes,1).getDay(), totalDias=new Date(ano,mes+1,0).getDate();
-  var html='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><button onclick="mudarMesAgenda(-1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:16px;color:var(--text)">‹</button><span style="font-weight:700;font-size:16px">'+nomesMes[mes]+' '+ano+'</span><button onclick="mudarMesAgenda(1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:16px;color:var(--text)">›</button></div>';
-  html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">';diasSem.forEach(d=>{html+='<div style="text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:4px 0">'+d+'</div>';});html+='</div>';
-  html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">';
-  for(var i=0;i<primeiroDia;i++)html+='<div style="min-height:60px"></div>';
-  for(var dia=1;dia<=totalDias;dia++){var isHoje=(dia===hoje.getDate()&&mes===hoje.getMonth()&&ano===hoje.getFullYear());var pnd=porDia[dia]||[];var temU=pnd.some(p=>p.urgencia==='urgente'),temS=pnd.some(p=>p.urgencia==='esta_semana');var cor=temU?'var(--red)':temS?'var(--gold)':pnd.length?'var(--blue)':'transparent';html+='<div style="min-height:60px;background:'+(isHoje?'var(--gold-bg)':'var(--bg3)')+';border:'+(isHoje?'2px solid var(--gold)':'1px solid var(--border)')+';border-radius:10px;padding:6px;cursor:'+(pnd.length?'pointer':'default')+'" '+(pnd.length?'onclick="verPrazosDia('+dia+','+mes+','+ano+')"':'')+'>'+
-      '<div style="font-size:13px;font-weight:'+(isHoje?700:500)+';color:'+(isHoje?'var(--gold)':'var(--text)')+'">'+dia+'</div>'+
-      (pnd.length?'<div style="margin-top:3px">'+pnd.slice(0,3).map(()=>'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+cor+';margin-right:2px"></span>').join('')+(pnd.length>3?'<span style="font-size:9px;color:var(--muted)">+'+( pnd.length-3)+'</span>':'')+'</div>':'')+'</div>';}
-  html+='</div><div style="display:flex;gap:16px;margin-top:14px;font-size:12px;color:var(--muted)"><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:4px"></span>Urgente</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--gold);margin-right:4px"></span>Esta semana</span><span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:4px"></span>Normal</span></div>';
-  if(!_agendaPrazos.length)html+='<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px;margin-top:16px;background:var(--bg3);border-radius:var(--radius)">Nenhum prazo encontrado. Clique em <strong>Sincronizar processos</strong>.</div>';
-  html+='<div id="painel-dia" style="margin-top:20px"></div>';
-  c.innerHTML=html;
-  }catch(e){var c2=document.getElementById('lista-prazos');if(c2)c2.innerHTML='<div class="loading">Erro: '+e.message+'</div>';}
-}
-
-function mudarMesAgenda(delta){_agendaMes+=delta;if(_agendaMes<0){_agendaMes=11;_agendaAno--;}if(_agendaMes>11){_agendaMes=0;_agendaAno++;}renderCalendario();}
-
-function verPrazosDia(dia,mes,ano){
-  var painel=document.getElementById('painel-dia');
-  var pnd=(_agendaPrazos||[]).filter(p=>{if(!p.data_movimentacao)return false;var pts=p.data_movimentacao.split('/');return parseInt(pts[0])===dia&&parseInt(pts[1])-1===mes&&parseInt(pts[2])===ano;});
-  var nomesMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  var html='<div style="font-weight:700;font-size:14px;margin-bottom:12px">'+dia+' de '+nomesMes[mes]+' de '+ano+'</div>';
-  pnd.forEach(p=>{var cor=p.urgencia==='urgente'?'var(--red)':p.urgencia==='esta_semana'?'var(--gold)':'var(--blue)';html+='<div id="prazo-'+p.id+'" class="prazo-card '+(p.urgencia==='urgente'?'prazo-urgente':p.urgencia==='esta_semana'?'prazo-semana':'prazo-normal')+'"><div class="prazo-desc">'+p.descricao+'</div><div class="prazo-info">'+p.nome_cliente+' — '+p.numero_processo+'</div><div class="prazo-footer"><span></span><button class="btn-visto" data-id="'+p.id+'" onclick="marcarVisto(this)">✓ Marcar como visto</button></div></div>';});
-  painel.innerHTML=html;
-}
-
-function sincronizarPrazos(){
-  var btn=document.getElementById('btn-sync-prazos'), c=document.getElementById('lista-prazos');
-  if(!usuario) return;
-  btn.disabled=true; btn.textContent='Sincronizando...';
-  c.innerHTML='<div class="loading">Buscando movimentações... pode levar até 1 minuto.</div>';
-  fetch(API+'/prazos/sincronizar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id}),signal:AbortSignal.timeout(120000)})
-    .then(r=>r.json()).then(()=>{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="14" height="14"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sincronizar processos';carregarAgenda();})
-    .catch(()=>{btn.disabled=false;btn.textContent='Sincronizar processos';c.innerHTML='<div class="loading">Erro ao sincronizar.</div>';});
-}
-
-function marcarVisto(btn){
-  var id=btn.getAttribute('data-id');
-  fetch(API+'/prazos/'+id+'/visto',{method:'POST'}).then(()=>{var el=document.getElementById('prazo-'+id);if(el){el.style.opacity='.4';btn.disabled=true;btn.textContent='✓ Visto';}});
-}
-
-function fecharModal(){ document.getElementById('modal-processo').classList.remove('open'); }
-
 function carregarConfig(){
   if(!usuario) return;
-  if(usuario.telefone) document.getElementById('cfg-telefone').value=usuario.telefone;
   if(usuario.escritorio) document.getElementById('cfg-escritorio').value=usuario.escritorio;
   if(usuario.oab) document.getElementById('cfg-oab').value=usuario.oab;
   if(usuario.estado) document.getElementById('cfg-estado').value=usuario.estado;
-  if(usuario.horario_alerta) document.getElementById('cfg-horario').value=usuario.horario_alerta;
-  if(usuario.tipos_alerta){var tipos=usuario.tipos_alerta.split(',');document.getElementById('cfg-alerta-urgente').checked=tipos.includes('urgente');document.getElementById('cfg-alerta-semana').checked=tipos.includes('semana');document.getElementById('cfg-alerta-normal').checked=tipos.includes('normal');}
 }
 
 function trocarConfigPanel(id){
@@ -1336,13 +863,6 @@ function trocarConfigPanel(id){
 }
 
 function _msgConfig(id,ok,texto){var el=document.getElementById(id);el.style.display='block';el.style.color=ok?'var(--green)':'var(--red)';el.textContent=texto;setTimeout(()=>{el.style.display='none';},3000);}
-
-function salvarConfigWhatsapp(){
-  var telefone=document.getElementById('cfg-telefone').value.trim(), horario=document.getElementById('cfg-horario').value;
-  var tipos=[];if(document.getElementById('cfg-alerta-urgente').checked)tipos.push('urgente');if(document.getElementById('cfg-alerta-semana').checked)tipos.push('semana');if(document.getElementById('cfg-alerta-normal').checked)tipos.push('normal');
-  fetch(API+'/perfil/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id,telefone,horario_alerta:horario,tipos_alerta:tipos.join(',')})})
-    .then(r=>r.json()).then(d=>{if(d.sucesso){usuario.telefone=telefone;usuario.horario_alerta=horario;usuario.tipos_alerta=tipos.join(',');sessionStorage.setItem('praetor_usuario',JSON.stringify(usuario));_msgConfig('cfg-wp-msg',true,'Configurações salvas!');}else _msgConfig('cfg-wp-msg',false,d.erro||'Erro ao salvar.');}).catch(()=>_msgConfig('cfg-wp-msg',false,'Erro de conexão.'));
-}
 
 function salvarConfigEscritorio(){
   var escritorio=document.getElementById('cfg-escritorio').value.trim(), oab=document.getElementById('cfg-oab').value.trim(), estado=document.getElementById('cfg-estado').value;
@@ -1359,15 +879,6 @@ function salvarConfigSenha(){
   fetch(API+'/perfil/senha',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id,senha_atual:atual,senha_nova:nova})})
     .then(r=>r.json()).then(d=>{if(d.sucesso){document.getElementById('cfg-senha-atual').value='';document.getElementById('cfg-senha-nova').value='';document.getElementById('cfg-senha-confirmar').value='';_msgConfig('cfg-senha-msg',true,'Senha alterada!');}else _msgConfig('cfg-senha-msg',false,d.erro||'Erro ao alterar.');}).catch(()=>_msgConfig('cfg-senha-msg',false,'Erro de conexão.'));
 }
-
-function salvarTelefoneAdvogado(){
-  var telefone=document.getElementById('tel-advogado').value.trim(), msgEl=document.getElementById('tel-msg');
-  if(!telefone){msgEl.style.display='block';msgEl.style.color='var(--red)';msgEl.textContent='Informe o número.';return;}
-  fetch(API+'/perfil/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario_id:usuario.id,telefone})})
-    .then(r=>r.json()).then(d=>{msgEl.style.display='block';if(d.sucesso){usuario.telefone=telefone;sessionStorage.setItem('praetor_usuario',JSON.stringify(usuario));msgEl.style.color='var(--green)';msgEl.textContent='Número salvo!';}else{msgEl.style.color='var(--red)';msgEl.textContent=d.erro||'Erro ao salvar.';}setTimeout(()=>{msgEl.style.display='none';},3000);}).catch(()=>{msgEl.style.display='block';msgEl.style.color='var(--red)';msgEl.textContent='Erro de conexão.';});
-}
-
-function salvarConfigTelefone(){salvarConfigWhatsapp();}
 
 function carregarConfigAgente(){
   if(!usuario) return;
@@ -1390,9 +901,7 @@ function salvarConfigAgente(){
 }
 
 /* ══ CONVERSAS ══ */
-var _convTab = 'leads';
 var _convAtivo = null;
-var _convRefresh = null;
 var _statusCores = {novo:'#60a5fa',qualificado:'#a78bfa',proposta:'#fb923c',fechado:'#22c55e',perdido:'#525c75'};
 var _statusLabels = {novo:'Novo',qualificado:'Qualificado',proposta:'Proposta enviada',fechado:'Fechado ✓',perdido:'Perdido'};
 
@@ -1423,65 +932,30 @@ var _DEMO_CHATS = {
   ],
 };
 
-function convTab(t) {
-  _convTab = t;
-  document.getElementById('ctab-leads').classList.toggle('active', t==='leads');
-  document.getElementById('ctab-clientes').classList.toggle('active', t==='clientes');
-  carregarConversas();
-}
-
 function carregarConversas() {
   if (!usuario) return;
   var el = document.getElementById('conv-items');
   el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Carregando...</div>';
-  if (_convTab === 'leads') {
-    var leads = _DEMO_LEADS.filter(function(l){return l.status!=='perdido';});
-    el.innerHTML = leads.map(function(l) {
-      var nome = l.nome || l.telefone || 'Lead';
-      var cor = _avCor(nome);
-      var sc = _statusCores[l.status] || '#525c75';
-      var ativo = _convAtivo && _convAtivo.id === l.id ? ' active' : '';
-      return '<div class="conv-item'+ativo+'" onclick="abrirConversa('+JSON.stringify(l).replace(/"/g,'&quot;')+')">' +
-        '<div class="conv-av" style="background:'+cor+'22;color:'+cor+'">'+_ini(nome)+'</div>' +
-        '<div class="conv-info">' +
-          '<div class="conv-name">'+nome+'</div>' +
-          '<div class="conv-preview">'+(l.resumo||l.telefone||'—').slice(0,40)+'</div>' +
-        '</div>' +
-        '<div class="conv-meta">' +
-          '<div class="conv-time">'+_ta(l.criado_em)+'</div>' +
-          '<div class="conv-status-dot" style="background:'+sc+'"></div>' +
-        '</div></div>';
-    }).join('');
-    if (!_convAtivo) {
-      // abre o primeiro automaticamente
-      abrirConversa(leads[0]);
-    }
-  } else {
-    fetch(API+'/mensagens?usuario_id='+usuario.id).then(r=>r.json()).then(function(msgs){
-      msgs = msgs || [];
-      var porTel = {};
-      msgs.forEach(function(m){
-        if (!porTel[m.telefone]) porTel[m.telefone] = {nome:m.nome_cliente, telefone:m.telefone, ultima:m, count:0};
-        porTel[m.telefone].ultima = m;
-        if (m.remetente === 'cliente') porTel[m.telefone].count++;
-      });
-      var lista = Object.values(porTel);
-      if (!lista.length) { el.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Nenhuma conversa ainda.</div>'; return; }
-      el.innerHTML = lista.map(function(c){
-        var cor = _avCor(c.nome||c.telefone);
-        var ativo = _convAtivo && _convAtivo.telefone === c.telefone ? ' active' : '';
-        return '<div class="conv-item'+ativo+'" onclick="abrirConversaCliente('+JSON.stringify(c).replace(/"/g,'&quot;')+')">' +
-          '<div class="conv-av" style="background:'+cor+'22;color:'+cor+'">'+_ini(c.nome||c.telefone)+'</div>' +
-          '<div class="conv-info">' +
-            '<div class="conv-name">'+(c.nome||c.telefone)+'</div>' +
-            '<div class="conv-preview">'+(c.ultima.conteudo||'—').slice(0,40)+'</div>' +
-          '</div>' +
-          '<div class="conv-meta">' +
-            '<div class="conv-time">'+_ta(c.ultima.criado_em)+'</div>' +
-            (c.count?'<div class="conv-badge">'+c.count+'</div>':'') +
-          '</div></div>';
-      }).join('');
-    }).catch(function(){});
+  var leads = _DEMO_LEADS.filter(function(l){return l.status!=='perdido';});
+  el.innerHTML = leads.map(function(l) {
+    var nome = l.nome || l.telefone || 'Lead';
+    var cor = _avCor(nome);
+    var sc = _statusCores[l.status] || '#525c75';
+    var ativo = _convAtivo && _convAtivo.id === l.id ? ' active' : '';
+    return '<div class="conv-item'+ativo+'" onclick="abrirConversa('+JSON.stringify(l).replace(/"/g,'&quot;')+')">' +
+      '<div class="conv-av" style="background:'+cor+'22;color:'+cor+'">'+_ini(nome)+'</div>' +
+      '<div class="conv-info">' +
+        '<div class="conv-name">'+nome+'</div>' +
+        '<div class="conv-preview">'+(l.resumo||l.telefone||'—').slice(0,40)+'</div>' +
+      '</div>' +
+      '<div class="conv-meta">' +
+        '<div class="conv-time">'+_ta(l.criado_em)+'</div>' +
+        '<div class="conv-status-dot" style="background:'+sc+'"></div>' +
+      '</div></div>';
+  }).join('');
+  if (!_convAtivo) {
+    // abre o primeiro automaticamente
+    abrirConversa(leads[0]);
   }
 }
 
@@ -1553,42 +1027,7 @@ function _carregarMsgsLead(leadId) {
   }).catch(function(){});
 }
 
-function abrirConversaCliente(c) {
-  _convAtivo = c;
-  carregarConversas();
-  var cor = _avCor(c.nome||c.telefone);
-  var area = document.getElementById('conv-chat-area');
-  area.innerHTML =
-    '<div class="conv-chat-head">' +
-      '<div class="conv-chat-head-av" style="background:'+cor+'22;color:'+cor+'">'+_ini(c.nome||c.telefone)+'</div>' +
-      '<div><div class="conv-chat-head-name">'+(c.nome||c.telefone)+'</div>' +
-      '<div class="conv-chat-head-status">'+c.telefone+' · Cliente</div></div>' +
-      '<span class="conv-chat-head-badge" style="background:var(--green-bg);color:var(--green)">Cliente Ativo</span>' +
-    '</div>' +
-    '<div class="conv-msgs" id="conv-msgs-body"><div style="text-align:center;color:var(--muted);font-size:13px;padding:24px">Carregando...</div></div>' +
-    '<div class="conv-input-bar">' +
-      '<input class="conv-input" id="conv-msg-input" placeholder="Enviar mensagem como escritório..." onkeydown="convEnterKey(event)">' +
-      '<button class="conv-send-btn" onclick="convEnviarCliente(\''+c.telefone+'\',\''+( c.nome||'Cliente')+'\')">Enviar</button>' +
-    '</div>';
-  fetch(API+'/mensagens?usuario_id='+usuario.id+'&telefone='+c.telefone).then(r=>r.json()).then(function(msgs){
-    var el = document.getElementById('conv-msgs-body');
-    if (!el) return;
-    msgs = (msgs||[]).filter(function(m){ return m.telefone === c.telefone; });
-    if (!msgs.length) { el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:24px">Sem mensagens.</div>'; return; }
-    el.innerHTML = msgs.map(function(m){
-      var isIA = m.remetente === 'bot';
-      return '<div class="conv-msg '+(isIA?'ia':'user')+'">' +
-        (isIA?'<div class="conv-bubble-label">⚡ IA Advogar.AI</div>':'')+
-        '<div class="conv-bubble">'+m.conteudo+'</div>' +
-        '<div class="conv-msg-time">'+(isIA?'Lex':'Cliente')+' · '+_ta(m.criado_em)+'</div>' +
-      '</div>';
-    }).join('');
-    el.scrollTop = el.scrollHeight;
-  }).catch(function(){});
-  if (_convRefresh) clearInterval(_convRefresh);
-}
-
-function convEnterKey(e) { if(e.key==='Enter') { if(_convTab==='leads') convEnviar(); } }
+function convEnterKey(e) { if(e.key==='Enter') convEnviar(); }
 
 function convEnviar() {
   if (!_convAtivo || !_convAtivo.id) return;
@@ -1599,16 +1038,6 @@ function convEnviar() {
   fetch(API+'/mensagens/enviar', {method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({usuario_id:usuario.id, telefone:_convAtivo.telefone, conteudo:msg, nome_cliente:_convAtivo.nome||'Lead'})
   }).then(function(){ _carregarMsgsLead(_convAtivo.id); }).catch(function(){});
-}
-
-function convEnviarCliente(tel, nome) {
-  var inp = document.getElementById('conv-msg-input');
-  var msg = (inp||{}).value && inp.value.trim();
-  if (!msg) return;
-  inp.value = '';
-  fetch(API+'/mensagens/enviar', {method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({usuario_id:usuario.id, telefone:tel, conteudo:msg, nome_cliente:nome})
-  }).then(function(){ }).catch(function(){});
 }
 
 /* ══ PIPELINE CRM ══ */
