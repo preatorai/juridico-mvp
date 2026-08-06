@@ -30,96 +30,6 @@ def _normalizar_telefone(raw: str) -> str:
     return tel
 
 
-def _carregar_config_agente(usuario_id: str) -> dict:
-    try:
-        res = supabase.from_("usuarios").select(
-            "agente_nome,agente_tom,agente_detalhe,agente_instrucoes"
-        ).eq("id", usuario_id).single().execute()
-        return res.data or {}
-    except Exception:
-        return {}
-
-
-async def _gerar_resposta_whatsapp(mensagem: str, nome: str, processos: list, escritorio: str, cfg_agente: dict = None) -> str:
-    import httpx, json
-    from app.config import OPENAI_KEY
-    from app.services.codilo import buscar_movimentacoes_cache
-
-    info = ""
-    precisa_dados = bool(re.search(
-        r"processo|moviment|prazo|audiên|decisão|sentença|recurso|andament|atualiz|"
-        r"aconteceu|novidade|status|o que|como (está|tá|ficou)|teve|tem|última|ultimo|"
-        r"recente|passou|ocorreu|andou|julgamento|despacho|intimação|citação",
-        mensagem, re.IGNORECASE
-    ))
-
-    for proc in processos:
-        info += f"\nProcesso — cliente: {proc['nome_cliente']}:\n"
-        if precisa_dados:
-            movs = await buscar_movimentacoes_cache(proc["numero_processo"])
-            if movs:
-                info += "Últimas 3 movimentações:\n"
-                for i, m in enumerate(movs[:3], 1):
-                    info += f"{i}. {m['nome']} — {m['data']}\n"
-            else:
-                info += "[TRIBUNAL_INDISPONIVEL]\n"
-
-    cfg = cfg_agente or {}
-    agente_nome = cfg.get("agente_nome") or "Lex"
-    tom = cfg.get("agente_tom") or "amigavel"
-    detalhe = cfg.get("agente_detalhe") or "normal"
-    instrucoes_extras = cfg.get("agente_instrucoes") or ""
-
-    tom_texto = {
-        "formal": "Use linguagem formal, respeitosa e profissional.",
-        "amigavel": "Use linguagem simples, acolhedora e tranquilizadora — sem juridiquês.",
-        "direto": "Seja direto e objetivo, sem rodeios. Respostas curtas.",
-    }.get(tom, "Use linguagem simples e acolhedora.")
-
-    detalhe_texto = {
-        "resumido": "Respostas curtíssimas — máximo 2 linhas. Vá direto ao ponto.",
-        "normal": "Respostas curtas e diretas — máximo 4 linhas.",
-        "detalhado": "Explique com mais detalhes, contextualizando bem a situação para o cliente.",
-    }.get(detalhe, "Respostas curtas — máximo 4 linhas.")
-
-    system = (
-        "PROIBIÇÃO ABSOLUTA E INQUEBRÁVEL: NUNCA, em hipótese alguma, diga ao cliente para entrar em contato "
-        "com o advogado, ligar para o escritório, agendar consulta, buscar atendimento presencial, ou qualquer frase "
-        "que redirecione o cliente para fora deste chat. Resolva TUDO aqui.\n\n"
-        f"Você é {agente_nome}, assistente jurídico virtual do escritório {escritorio or 'de advocacia'}, atendendo o cliente {nome}. "
-        "Você tem conhecimento completo do direito brasileiro e responde TODAS as dúvidas você mesmo.\n\n"
-        f"TOM: {tom_texto}\n"
-        f"DETALHE: {detalhe_texto}\n\n"
-        "REGRAS:\n"
-        "- NUNCA peça número de processo, CPF ou qualquer dado — o cliente já está identificado\n"
-        "- NUNCA diga para verificar em nenhum portal, sistema ou lugar externo\n"
-        "- Quando perguntar sobre o processo: explique o que está acontecendo de forma simples para um leigo\n"
-        "- Quando encontrar [TRIBUNAL_INDISPONIVEL] nos dados: responda SOMENTE que o processo está cadastrado e sendo monitorado, e que você avisará assim que houver atualizações. NUNCA repita o código [TRIBUNAL_INDISPONIVEL] na resposta.\n"
-        + (f"\nINSTRUÇÕES PERSONALIZADAS DO ESCRITÓRIO:\n{instrucoes_extras}\n" if instrucoes_extras else "") +
-        f"\nPROCESSOS DO CLIENTE {nome.upper()}:\n"
-        + (info or "[TRIBUNAL_INDISPONIVEL]")
-    )
-
-    async with httpx.AsyncClient(timeout=20) as client:
-        r = await client.post(
-            "https://api.openai.com/v1/chat/completions",
-            json={
-                "model": "gpt-4o-mini",
-                "temperature": 0.2,
-                "max_tokens": 500,
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": mensagem},
-                ],
-            },
-            headers={"Authorization": f"Bearer {OPENAI_KEY}"},
-        )
-    resposta = r.json()["choices"][0]["message"]["content"]
-    if "[TRIBUNAL_INDISPONIVEL]" in resposta:
-        resposta = "Seu processo já está cadastrado e estamos monitorando o tribunal! Assim que houver movimentações, você será avisado aqui mesmo. 😊"
-    return resposta
-
-
 def _extrair_audio_url(body: dict) -> str | None:
     # Z-API: audio PTT (voz)
     audio = body.get("audio") or body.get("ptt") or {}
@@ -158,13 +68,6 @@ async def _transcrever_audio(url: str) -> str | None:
         return None
 
 
-async def _salvar_mensagem(usuario_id, telefone, nome_cliente, remetente, conteudo):
-    supabase.from_("mensagens").insert({
-        "usuario_id": usuario_id, "telefone": telefone,
-        "nome_cliente": nome_cliente, "remetente": remetente, "conteudo": conteudo,
-    }).execute()
-
-
 @router.post("/webhook")
 async def webhook_zapi(request: Request):
     body = await request.json()
@@ -191,19 +94,7 @@ async def webhook_zapi(request: Request):
         return 200
 
     try:
-        procs_res = supabase.from_("processos").select("*").eq("telefone_cliente", telefone).execute()
-        processos = procs_res.data or []
-
-        if processos:
-            usu_res = supabase.from_("usuarios").select("escritorio").eq("id", processos[0]["usuario_id"]).single().execute()
-            escritorio = usu_res.data.get("escritorio", "nosso escritório") if usu_res.data else "nosso escritório"
-            cfg_agente = _carregar_config_agente(processos[0]["usuario_id"])
-            await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "cliente", mensagem)
-            resposta = await _gerar_resposta_whatsapp(mensagem, processos[0]["nome_cliente"], processos, escritorio, cfg_agente)
-            await enviar_whatsapp(telefone, resposta)
-            await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "bot", resposta)
-        else:
-            await _tratar_lead(telefone, mensagem)
+        await _tratar_lead(telefone, mensagem)
     except Exception as e:
         print(f"[webhook] erro: {e}")
     return 200
@@ -283,20 +174,7 @@ async def webhook_spurnow(request: Request):
         if not telefone or not mensagem:
             return 200
 
-        procs_res = supabase.from_("processos").select("*").eq("telefone_cliente", telefone).execute()
-        processos = procs_res.data or []
-
-        if processos:
-            usu_res = supabase.from_("usuarios").select("escritorio").eq("id", processos[0]["usuario_id"]).single().execute()
-            escritorio = usu_res.data.get("escritorio", "nosso escritório") if usu_res.data else "nosso escritório"
-            cfg_agente = _carregar_config_agente(processos[0]["usuario_id"])
-            await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "cliente", mensagem)
-            resposta = await _gerar_resposta_whatsapp(mensagem, processos[0]["nome_cliente"], processos, escritorio, cfg_agente)
-            await enviar_whatsapp_spurnow(telefone, resposta)
-            await _salvar_mensagem(processos[0]["usuario_id"], telefone, processos[0]["nome_cliente"], "bot", resposta)
-            print(f"[spurnow-webhook] ✅ resposta enviada para {processos[0]['nome_cliente']}")
-        else:
-            await _tratar_lead(telefone, mensagem)
+        await _tratar_lead(telefone, mensagem)
     except Exception as e:
         print(f"[spurnow-webhook] erro: {e}")
     return 200
@@ -307,7 +185,7 @@ async def testar_whatsapp(body: dict):
     telefone = body.get("telefone", "")
     nome = body.get("nome", "")
     try:
-        await enviar_whatsapp(telefone, f"Olá, {nome}! Teste do sistema Praetor AI.")
+        await enviar_whatsapp(telefone, f"Olá, {nome}! Teste do sistema Advogar.AI.")
         return {"sucesso": True}
     except Exception as e:
         from fastapi import HTTPException

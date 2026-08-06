@@ -1,13 +1,10 @@
-import asyncio
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import supabase
-from app.routes import auth, processos, perfil, chat, webhook, mensagens, prazos, leads
-from app.services.codilo import pre_aquecer_cache
-from app.services.scheduler import start_scheduler
+from app.routes import auth, perfil, webhook, mensagens, leads
 
-app = FastAPI(title="Praetor AI")
+app = FastAPI(title="Advogar.AI")
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,12 +14,9 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
-app.include_router(processos.router)
 app.include_router(perfil.router)
-app.include_router(chat.router)
 app.include_router(webhook.router)
 app.include_router(mensagens.router)
-app.include_router(prazos.router)
 app.include_router(leads.router)
 
 
@@ -65,9 +59,3 @@ async def deploy(request: Request):
         preexec_fn=os.setsid
     )
     return {"ok": True, "msg": "Deploy iniciado"}
-
-
-@app.on_event("startup")
-async def startup():
-    start_scheduler()
-    asyncio.create_task(pre_aquecer_cache())
