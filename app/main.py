@@ -1,5 +1,7 @@
+import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.database import supabase
 from app.routes import auth, perfil, webhook, mensagens, leads
@@ -12,6 +14,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+_assets_dir = os.path.join(os.path.dirname(__file__), "..", "assets")
+if os.path.isdir(_assets_dir):
+    app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
 
 app.include_router(auth.router)
 app.include_router(perfil.router)
