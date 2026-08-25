@@ -127,7 +127,7 @@ def buscar_ou_criar_lead(telefone: str, usuario_id: str) -> dict | None:
             "telefone": telefone,
             "usuario_id": usuario_id,
             "status": "novo",
-        }).select().execute()
+        }).execute()
         return novo.data[0] if novo.data else None
     except Exception as e:
         print(f"[lead-ai] erro buscar/criar lead: {e}")
