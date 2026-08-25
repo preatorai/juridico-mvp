@@ -168,9 +168,18 @@ async def _tratar_lead(telefone: str, mensagem: str):
             return
 
         lead_engine.salvar_mensagem_lead(lead["id"], "cliente", mensagem)
-        # se a pessoa voltou a responder, cancela o follow-up automático pendente
+
+        campos_reset = {}
         if lead.get("follow_up_enviado"):
-            lead_engine.atualizar_lead(lead["id"], {"follow_up_enviado": False})
+            campos_reset["follow_up_enviado"] = False
+        if campos_reset:
+            lead_engine.atualizar_lead(lead["id"], campos_reset)
+
+        if lead.get("atendimento_humano"):
+            # advogado assumiu essa conversa — só registra a mensagem, IA não responde
+            print(f"[lead] {telefone} em atendimento humano, IA nao respondeu")
+            return
+
         historico = lead_engine.buscar_historico_lead(lead["id"])
         resultado = await lead_engine.processar_mensagem_lead(lead, mensagem, historico, escritorio)
 

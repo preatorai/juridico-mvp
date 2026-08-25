@@ -525,6 +525,7 @@ tr:hover td{background:rgba(255,255,255,.015);}
               </select>
             </div>
             <div style="grid-column:1/-1"><div class="dmeta-label">Caso</div><div class="dmeta-val" id="drawer-resumo" style="color:var(--text2);font-weight:400;font-size:12px;">—</div></div>
+            <div style="grid-column:1/-1" id="drawer-atendimento"></div>
           </div>
           <div class="drawer-chat" id="drawer-chat">
             <div style="text-align:center;color:var(--muted);font-size:13px;padding:24px">Carregando conversa...</div>
@@ -993,13 +994,16 @@ function abrirConversa(lead) {
   var sl = _statusLabels[lead.status]||lead.status;
   var area = document.getElementById('conv-chat-area');
   var wrap = document.querySelector('.conv-wrap'); if(wrap) wrap.classList.add('chat-open');
+  var humano = !!lead.atendimento_humano;
   area.innerHTML =
     '<div class="conv-chat-head">' +
       '<button class="conv-back" onclick="fecharConversaMobile()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></button>' +
       '<div class="conv-chat-head-av" style="background:'+cor+'22;color:'+cor+'">'+_ini(lead.nome||lead.telefone||'L')+'</div>' +
       '<div><div class="conv-chat-head-name">'+(lead.nome||lead.telefone||'Lead')+'</div>' +
       '<div class="conv-chat-head-status">'+( lead.telefone||'')+(lead.area?' · '+lead.area:'')+'</div></div>' +
-      '<span class="conv-chat-head-badge" style="background:'+sc+'22;color:'+sc+'">'+sl+'</span>' +
+      (humano
+        ? '<span class="conv-chat-head-badge" style="background:var(--orange-bg);color:var(--orange);margin-left:auto">🧑‍💼 Atendimento manual</span><button class="btn-ghost" style="margin-left:8px;font-size:11px;padding:6px 10px" onclick="retomarIA(\''+lead.id+'\')">Retomar IA</button>'
+        : '<span class="conv-chat-head-badge" style="background:'+sc+'22;color:'+sc+'">'+sl+'</span>') +
     '</div>' +
     '<div class="conv-msgs" id="conv-msgs-body"><div style="text-align:center;color:var(--muted);font-size:13px;padding:24px">Carregando...</div></div>' +
     '<div class="conv-input-bar">' +
@@ -1023,16 +1027,22 @@ function _carregarMsgsLead(leadId) {
       return;
     }
     var wasBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 20;
-    el.innerHTML = msgs.map(function(m){
-      var isIA = m.remetente === 'bot';
-      return '<div class="conv-msg '+(isIA?'ia':'user')+'">' +
-        (isIA?'<div class="conv-bubble-label">⚡ IA Advogar.AI</div>':'')+
-        '<div class="conv-bubble">'+m.conteudo+'</div>' +
-        '<div class="conv-msg-time">'+(isIA?'Lex':'Lead')+' · '+_ta(m.criado_em)+'</div>' +
-      '</div>';
-    }).join('');
+    el.innerHTML = msgs.map(_msgBubbleHtml).join('');
     if (wasBottom) el.scrollTop = el.scrollHeight;
   }).catch(function(){});
+}
+
+function _msgBubbleHtml(m) {
+  var isIA = m.remetente === 'bot';
+  var isAdvogado = m.remetente === 'advogado';
+  var lado = (isIA || isAdvogado) ? 'ia' : 'user';
+  var label = isIA ? '⚡ IA Advogar.AI' : (isAdvogado ? '🧑‍💼 Você' : '');
+  var quem = isIA ? 'Lex' : (isAdvogado ? 'Você' : 'Lead');
+  return '<div class="conv-msg '+lado+'">' +
+    (label?'<div class="conv-bubble-label">'+label+'</div>':'')+
+    '<div class="conv-bubble">'+m.conteudo+'</div>' +
+    '<div class="conv-msg-time">'+quem+' · '+_ta(m.criado_em)+'</div>' +
+  '</div>';
 }
 
 function convEnterKey(e) { if(e.key==='Enter') convEnviar(); }
@@ -1043,9 +1053,22 @@ function convEnviar() {
   var msg = (inp||{}).value && inp.value.trim();
   if (!msg) return;
   inp.value = '';
-  fetch(API+'/mensagens/enviar', {method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({usuario_id:usuario.id, telefone:_convAtivo.telefone, conteudo:msg, nome_cliente:_convAtivo.nome||'Lead'})
-  }).then(function(){ _carregarMsgsLead(_convAtivo.id); }).catch(function(){});
+  fetch(API+'/leads/'+_convAtivo.id+'/mensagem', {method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({conteudo:msg})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(!data.sucesso){alert('Erro: '+(data.detail||'não foi possível enviar.'));return;}
+    _convAtivo.atendimento_humano = true;
+    abrirConversa(_convAtivo);
+  }).catch(function(){alert('Erro ao conectar.');});
+}
+
+function retomarIA(leadId) {
+  fetch(API+'/leads/'+leadId, {method:'PATCH',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({atendimento_humano:false})
+  }).then(function(){
+    if(_convAtivo && _convAtivo.id===leadId){ _convAtivo.atendimento_humano=false; abrirConversa(_convAtivo); }
+    if(_leadAtivo && _leadAtivo.id===leadId){ _leadAtivo.atendimento_humano=false; abrirDrawer(_leadAtivo); }
+  }).catch(function(){});
 }
 
 /* ══ PIPELINE CRM ══ */
@@ -1100,6 +1123,28 @@ function _kcard(l){
     '<div class="kcard-time">'+_ta(l.criado_em)+'</div></div></div>';
 }
 
+function _dchatBubbleHtml(m) {
+  var isIA = m.remetente === 'bot';
+  var isAdvogado = m.remetente === 'advogado';
+  var lado = (isIA || isAdvogado) ? 'bot' : 'cliente';
+  var quem = isIA ? 'Lex' : (isAdvogado ? 'Você' : 'Lead');
+  return '<div class="dchat-msg '+lado+'">'+
+    '<div class="dchat-bubble">'+m.conteudo+'</div>'+
+    '<div class="dchat-time">'+quem+' · '+_ta(m.criado_em)+'</div></div>';
+}
+
+function _renderDrawerAtendimento(lead){
+  var el=document.getElementById('drawer-atendimento');
+  if(!el)return;
+  if(lead.atendimento_humano){
+    el.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;background:var(--orange-bg);border:1px solid rgba(251,146,60,.25);border-radius:8px;padding:8px 10px;margin-top:4px">'+
+      '<span style="font-size:11px;color:var(--orange);font-weight:600">🧑‍💼 Atendimento manual — IA pausada</span>'+
+      '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="retomarIA(\''+lead.id+'\')">Retomar IA</button></div>';
+  } else {
+    el.innerHTML='';
+  }
+}
+
 function abrirDrawer(lead){
   _leadAtivo=lead;
   document.getElementById('drawer-nome').textContent=lead.nome||lead.telefone||'Lead';
@@ -1108,16 +1153,13 @@ function abrirDrawer(lead){
   document.getElementById('drawer-area').textContent=am[lead.area]||lead.area||'—';
   document.getElementById('drawer-resumo').textContent=lead.resumo||'Sem resumo ainda.';
   document.getElementById('drawer-status').value=lead.status||'novo';
+  _renderDrawerAtendimento(lead);
   document.getElementById('drawer-chat').innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:24px">Carregando...</div>';
   document.getElementById('drawer-overlay').classList.add('open');
   fetch(API+'/leads/'+lead.id+'/chat').then(r=>r.json()).then(function(msgs){
     var el=document.getElementById('drawer-chat');
     if(!msgs.length){el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:24px">Sem mensagens ainda.</div>';return;}
-    el.innerHTML=msgs.map(function(m){
-      return '<div class="dchat-msg '+(m.remetente==='bot'?'bot':'cliente')+'">'+
-        '<div class="dchat-bubble">'+m.conteudo+'</div>'+
-        '<div class="dchat-time">'+(m.remetente==='bot'?'Lex':'Lead')+' · '+_ta(m.criado_em)+'</div></div>';
-    }).join('');
+    el.innerHTML=msgs.map(_dchatBubbleHtml).join('');
     el.scrollTop=el.scrollHeight;
   }).catch(function(){});
 }
@@ -1138,19 +1180,19 @@ function enviarDrawer(){
   if(!_leadAtivo)return;
   var inp=document.getElementById('drawer-input'), msg=inp.value.trim();
   if(!msg)return; inp.value='';
-  fetch(API+'/mensagens/enviar',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({usuario_id:usuario.id,telefone:_leadAtivo.telefone,conteudo:msg,nome_cliente:_leadAtivo.nome||'Lead'})
-  }).then(function(){
+  fetch(API+'/leads/'+_leadAtivo.id+'/mensagem',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({conteudo:msg})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(!data.sucesso){alert('Erro: '+(data.detail||'não foi possível enviar.'));return;}
+    _leadAtivo.atendimento_humano = true;
+    _renderDrawerAtendimento(_leadAtivo);
     return fetch(API+'/leads/'+_leadAtivo.id+'/chat').then(r=>r.json());
   }).then(function(msgs){
+    if(!msgs)return;
     var el=document.getElementById('drawer-chat');
-    el.innerHTML=msgs.map(function(m){
-      return '<div class="dchat-msg '+(m.remetente==='bot'?'bot':'cliente')+'">'+
-        '<div class="dchat-bubble">'+m.conteudo+'</div>'+
-        '<div class="dchat-time">'+(m.remetente==='bot'?'Lex':'Lead')+' · '+_ta(m.criado_em)+'</div></div>';
-    }).join('');
+    el.innerHTML=msgs.map(_dchatBubbleHtml).join('');
     el.scrollTop=el.scrollHeight;
-  }).catch(function(){});
+  }).catch(function(){alert('Erro ao conectar.');});
 }
 </script>
 </body>
