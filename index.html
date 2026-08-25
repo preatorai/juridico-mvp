@@ -806,19 +806,6 @@ document.getElementById('btn-hamburger').addEventListener('click', function(){
 
 var _chartEvolucao = null;
 
-var _DEMO_LEADS = [
-  {id:'d1',nome:'Maria Silva',telefone:'82999990001',status:'novo',area:'trabalhista',resumo:'Demitida sem justa causa, busca indenização por verbas rescisórias.',criado_em:new Date(Date.now()-6*864e5).toISOString()},
-  {id:'d2',nome:'João Ferreira',telefone:'82999990002',status:'novo',area:'consumidor',resumo:'Carro comprado com defeito de fábrica, concessionária se recusa a trocar.',criado_em:new Date(Date.now()-5*864e5).toISOString()},
-  {id:'d3',nome:'Pedro Alves',telefone:'82999990003',status:'qualificado',area:'civil',resumo:'Disputa de herança com irmãos após falecimento do pai.',criado_em:new Date(Date.now()-4*864e5).toISOString()},
-  {id:'d4',nome:'Ana Costa',telefone:'82999990004',status:'qualificado',area:'família',resumo:'Divórcio litigioso com discussão de guarda dos filhos.',criado_em:new Date(Date.now()-3*864e5).toISOString()},
-  {id:'d5',nome:'Carlos Mendes',telefone:'82999990005',status:'proposta',area:'trabalhista',resumo:'Assédio moral no trabalho, afastamento por depressão.',criado_em:new Date(Date.now()-2*864e5).toISOString()},
-  {id:'d6',nome:'Fernanda Lima',telefone:'82999990006',status:'fechado',area:'previdenciário',resumo:'Aposentadoria por invalidez negada pelo INSS.',criado_em:new Date(Date.now()-2*864e5).toISOString()},
-  {id:'d7',nome:'Roberto Santos',telefone:'82999990007',status:'fechado',area:'trabalhista',resumo:'Horas extras não pagas por 3 anos de vínculo empregatício.',criado_em:new Date(Date.now()-1*864e5).toISOString()},
-  {id:'d8',nome:'Lucas Oliveira',telefone:'82999990008',status:'perdido',area:'criminal',resumo:'Caso encerrado — cliente optou por outro escritório.',criado_em:new Date(Date.now()-1*864e5).toISOString()},
-];
-var _DEMO_METRICS = {total:8,taxa_conversao:29,por_status:{novo:2,qualificado:2,proposta:1,fechado:2,perdido:1}};
-var _DEMO_COUNTS = [0,1,0,2,1,2,2];
-
 function carregarDashboard() {
   // Leads + métricas
   Promise.all([
@@ -826,8 +813,6 @@ function carregarDashboard() {
     fetch(API+'/leads/metrics?usuario_id='+usuario.id).then(r=>r.json())
   ]).then(function(res){
     var leads=res[0]||[], m=res[1]||{};
-    var demo=!leads.length;
-    if(demo){leads=_DEMO_LEADS;m=_DEMO_METRICS;}
     var por=m.por_status||{};
     document.getElementById('dash-total-leads').textContent=m.total||0;
     document.getElementById('dash-qualificados').textContent=(por.qualificado||0)+(por.proposta||0);
@@ -835,10 +820,9 @@ function carregarDashboard() {
     document.getElementById('dash-taxa').textContent='taxa '+(m.taxa_conversao||0)+'%';
 
     // Atendimentos = total de mensagens de leads
-    if(demo){document.getElementById('dash-atendimentos').textContent=14;}
-    else{fetch(API+'/mensagens?usuario_id='+usuario.id).then(r=>r.json()).then(function(msgs){
+    fetch(API+'/mensagens?usuario_id='+usuario.id).then(r=>r.json()).then(function(msgs){
       document.getElementById('dash-atendimentos').textContent=(msgs||[]).length;
-    }).catch(function(){document.getElementById('dash-atendimentos').textContent=leads.length;});}
+    }).catch(function(){document.getElementById('dash-atendimentos').textContent=leads.length;});
 
     // Funil
     var etapas=[
@@ -863,7 +847,7 @@ function carregarDashboard() {
     var recentes=leads.slice(0,5);
     var statusCor={novo:'#60a5fa',qualificado:'#a78bfa',proposta:'#fb923c',fechado:'#22c55e',perdido:'#525c75'};
     var statusLabel={novo:'Novo',qualificado:'Qualificado',proposta:'Proposta',fechado:'Fechado',perdido:'Perdido'};
-    if(!recentes.length&&!demo){lr.innerHTML='<div class="loading">Nenhum lead ainda.</div>';return;}
+    if(!recentes.length){lr.innerHTML='<div class="loading">Nenhum lead ainda. As conversas aparecem aqui quando alguém escrever pro seu WhatsApp.</div>';return;}
     lr.innerHTML='<div class="table-wrap"><table><thead><tr><th>Lead</th><th>Área</th><th>Status</th></tr></thead><tbody>'+
       recentes.map(function(l){
         var sc=statusCor[l.status]||'#525c75';
@@ -878,8 +862,7 @@ function carregarDashboard() {
       var d=new Date(); d.setDate(d.getDate()-i);
       var label=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
       dias.push(label);
-      if(demo){counts.push(_DEMO_COUNTS[6-i]||0);}
-      else{var iso=d.toISOString().slice(0,10);counts.push(leads.filter(function(l){return (l.criado_em||'').slice(0,10)===iso;}).length);}
+      var iso=d.toISOString().slice(0,10);counts.push(leads.filter(function(l){return (l.criado_em||'').slice(0,10)===iso;}).length);
     }
     var ctx=document.getElementById('chartEvolucao').getContext('2d');
     if(_chartEvolucao){_chartEvolucao.destroy();}
@@ -968,38 +951,9 @@ var _convAtivo = null;
 var _statusCores = {novo:'#60a5fa',qualificado:'#a78bfa',proposta:'#fb923c',fechado:'#22c55e',perdido:'#525c75'};
 var _statusLabels = {novo:'Novo',qualificado:'Qualificado',proposta:'Proposta enviada',fechado:'Fechado ✓',perdido:'Perdido'};
 
-var _DEMO_CHATS = {
-  'd1': [
-    {remetente:'cliente', conteudo:'Oi, vim pelo Instagram de vocês. Fui mandada embora sem justa causa há 2 semanas e não recebi nada ainda.', criado_em: new Date(Date.now()-5*864e5+1e4).toISOString()},
-    {remetente:'bot',     conteudo:'Olá, Maria! Tudo bem? 😊 Sinto muito pela situação. Saiba que você tem direitos importantes a receber. Poderia me contar há quanto tempo estava trabalhando na empresa?', criado_em: new Date(Date.now()-5*864e5+2e4).toISOString()},
-    {remetente:'cliente', conteudo:'Trabalhei 3 anos e 4 meses. Nunca faltei e sempre tive bom desempenho.', criado_em: new Date(Date.now()-5*864e5+3e4).toISOString()},
-    {remetente:'bot',     conteudo:'Com 3 anos e 4 meses você tem direito a: aviso prévio proporcional, saldo de salário, 13º proporcional, férias + 1/3 e multa de 40% do FGTS. Dependendo dos valores, pode ser um montante significativo. Posso preparar uma análise do seu caso sem compromisso?', criado_em: new Date(Date.now()-5*864e5+4e4).toISOString()},
-    {remetente:'cliente', conteudo:'Sim por favor! Quanto vocês cobram?', criado_em: new Date(Date.now()-5*864e5+5e4).toISOString()},
-    {remetente:'bot',     conteudo:'Trabalhamos com honorários só no êxito — você não paga nada agora. Só recebemos se ganharmos a causa. Vou agendar uma análise gratuita com nosso advogado. Posso confirmar seus dados para o contato?', criado_em: new Date(Date.now()-5*864e5+6e4).toISOString()},
-  ],
-  'd3': [
-    {remetente:'cliente', conteudo:'Olá! Meu pai faleceu e meus irmãos estão querendo ficar com tudo. Preciso de ajuda.', criado_em: new Date(Date.now()-3*864e5+1e4).toISOString()},
-    {remetente:'bot',     conteudo:'Olá, Pedro. Meus pêsames pelo falecimento do seu pai. Estou aqui para ajudar. Seu pai deixou testamento ou deixou bens sem inventário?', criado_em: new Date(Date.now()-3*864e5+2e4).toISOString()},
-    {remetente:'cliente', conteudo:'Não tem testamento. Tem um apartamento e uma conta no banco.', criado_em: new Date(Date.now()-3*864e5+3e4).toISOString()},
-    {remetente:'bot',     conteudo:'Entendido. Sem testamento, a divisão segue a lei: cônjuge e filhos têm partes iguais. Nenhum herdeiro pode tomar mais do que lhe é devido. Isso se resolve via inventário judicial ou extrajudicial. Quantos herdeiros são no total?', criado_em: new Date(Date.now()-3*864e5+4e4).toISOString()},
-    {remetente:'cliente', conteudo:'Somos 4 filhos e minha mãe ainda é viva.', criado_em: new Date(Date.now()-3*864e5+5e4).toISOString()},
-    {remetente:'bot',     conteudo:'Com 4 filhos e a mãe viva, ela tem direito à meação (metade) e também participa da herança. Posso passar seu caso para nossa equipe de direito de família fazer uma análise completa?', criado_em: new Date(Date.now()-3*864e5+6e4).toISOString()},
-  ],
-  'd5': [
-    {remetente:'cliente', conteudo:'Bom dia. Sofri assédio moral no trabalho por 2 anos. Meu chefe me humilhava na frente de todos. Tive depressão e tive que me afastar.', criado_em: new Date(Date.now()-2*864e5+1e4).toISOString()},
-    {remetente:'bot',     conteudo:'Bom dia, Carlos. Que situação difícil — lamento muito que você passou por isso. Assédio moral no trabalho é crime e gera direito à indenização por danos morais. Você tem alguma prova: mensagens, e-mails, testemunhas?', criado_em: new Date(Date.now()-2*864e5+2e4).toISOString()},
-    {remetente:'cliente', conteudo:'Tenho prints de mensagens ofensivas pelo whatsapp e vários colegas que presenciaram.', criado_em: new Date(Date.now()-2*864e5+3e4).toISOString()},
-    {remetente:'bot',     conteudo:'Excelente — prints e testemunhas são provas fortes! Somado ao afastamento médico por depressão, seu caso tem base sólida. Nosso escritório trabalha com honorários no êxito. Gostaria que nosso advogado entrasse em contato para uma análise detalhada?', criado_em: new Date(Date.now()-2*864e5+4e4).toISOString()},
-    {remetente:'cliente', conteudo:'Sim! Quando seria?', criado_em: new Date(Date.now()-2*864e5+5e4).toISOString()},
-    {remetente:'bot',     conteudo:'Ótimo! Já registrei seu interesse. Nossa equipe retorna em até 24h úteis pelo WhatsApp para agendar a consulta gratuita. Pode deixar que cuidamos de você! 💪', criado_em: new Date(Date.now()-2*864e5+6e4).toISOString()},
-  ],
-};
-
-function carregarConversas() {
-  if (!usuario) return;
+function _renderConvItems(leads) {
   var el = document.getElementById('conv-items');
-  el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Carregando...</div>';
-  var leads = _DEMO_LEADS.filter(function(l){return l.status!=='perdido';});
+  if (!leads.length) { el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Nenhuma conversa ainda.</div>'; return; }
   el.innerHTML = leads.map(function(l) {
     var nome = l.nome || l.telefone || 'Lead';
     var cor = _avCor(nome);
@@ -1016,10 +970,19 @@ function carregarConversas() {
         '<div class="conv-status-dot" style="background:'+sc+'"></div>' +
       '</div></div>';
   }).join('');
-  if (!_convAtivo) {
-    // abre o primeiro automaticamente
-    abrirConversa(leads[0]);
-  }
+  if (!_convAtivo) abrirConversa(leads[0]);
+}
+
+function carregarConversas() {
+  if (!usuario) return;
+  var el = document.getElementById('conv-items');
+  el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Carregando...</div>';
+  fetch(API+'/leads?usuario_id='+usuario.id).then(function(r){return r.json();}).then(function(leadsReais){
+    var leads = (leadsReais||[]).filter(function(l){return l.status!=='perdido';});
+    _renderConvItems(leads);
+  }).catch(function(){
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Erro ao carregar conversas.</div>';
+  });
 }
 
 function abrirConversa(lead) {
@@ -1043,20 +1006,7 @@ function abrirConversa(lead) {
       '<input class="conv-input" id="conv-msg-input" placeholder="Enviar mensagem como escritório..." onkeydown="convEnterKey(event)">' +
       '<button class="conv-send-btn" onclick="convEnviar()">Enviar</button>' +
     '</div>';
-  var demoKey = lead.id;
-  var demoMsgs = _DEMO_CHATS[demoKey] || _DEMO_CHATS['d1'];
-  var el2 = document.getElementById('conv-msgs-body');
-  if (el2) {
-    el2.innerHTML = demoMsgs.map(function(m){
-      var isIA = m.remetente === 'bot';
-      return '<div class="conv-msg '+(isIA?'ia':'user')+'">' +
-        (isIA?'<div class="conv-bubble-label">⚡ IA Advogar.AI</div>':'')+
-        '<div class="conv-bubble">'+m.conteudo+'</div>' +
-        '<div class="conv-msg-time">'+(isIA?'Lex':'Lead')+' · '+_ta(m.criado_em)+'</div>' +
-      '</div>';
-    }).join('');
-    el2.scrollTop = el2.scrollHeight;
-  }
+  _carregarMsgsLead(lead.id);
 }
 
 function fecharConversaMobile(){
@@ -1069,19 +1019,7 @@ function _carregarMsgsLead(leadId) {
     var el = document.getElementById('conv-msgs-body');
     if (!el) return;
     if (!msgs || !msgs.length) {
-      var demoMsgs = _DEMO_CHATS['d1'];
-      el.innerHTML =
-        '<div style="text-align:center;color:var(--gold);font-size:11px;font-weight:600;padding:12px 0 4px;letter-spacing:.5px;">EXEMPLO — veja como o Agente IA conversa</div>' +
-        demoMsgs.map(function(m){
-          var isIA = m.remetente === 'bot';
-          return '<div class="conv-msg '+(isIA?'ia':'user')+'" style="opacity:.7;">' +
-            (isIA?'<div class="conv-bubble-label">⚡ IA Advogar.AI</div>':'')+
-            '<div class="conv-bubble">'+m.conteudo+'</div>' +
-            '<div class="conv-msg-time">'+(isIA?'Lex':'Lead')+'</div>' +
-          '</div>';
-        }).join('') +
-        '<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px 24px;">As conversas reais aparecem aqui quando o lead entrar em contato pelo WhatsApp.</div>';
-      el.scrollTop = el.scrollHeight;
+      el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:24px">Sem mensagens ainda.</div>';
       return;
     }
     var wasBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 20;
@@ -1131,14 +1069,12 @@ function carregarPipeline(){
     fetch(API+'/leads/metrics?usuario_id='+usuario.id).then(r=>r.json())
   ]).then(function(res){
     var leads=res[0]||[], m=res[1]||{};
-    var demo=!leads.length;
-    if(demo){leads=_DEMO_LEADS;m=_DEMO_METRICS;}
     document.getElementById('pm-novo').textContent=(m.por_status||{}).novo||0;
     document.getElementById('pm-qual').textContent=(m.por_status||{}).qualificado||0;
     document.getElementById('pm-prop').textContent=(m.por_status||{}).proposta||0;
     document.getElementById('pm-fech').textContent=(m.por_status||{}).fechado||0;
     document.getElementById('pm-taxa').textContent=(m.taxa_conversao||0)+'%';
-    document.getElementById('pipeline-sub').textContent=demo?'Dados de exemplo — conecte o WhatsApp para ver leads reais':(leads.length+' leads no funil');
+    document.getElementById('pipeline-sub').textContent=leads.length?(leads.length+' leads no funil'):'Nenhum lead ainda — conecte o WhatsApp e aguarde a primeira mensagem.';
     var por={};_KCOLUNAS.forEach(function(c){por[c.key]=[];});
     leads.forEach(function(l){var s=l.status||'novo';if(por[s])por[s].push(l);});
     document.getElementById('kanban-wrap').innerHTML=_KCOLUNAS.map(function(col){
