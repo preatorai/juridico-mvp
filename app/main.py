@@ -52,6 +52,17 @@ def ping():
     return {"ok": True, "ts": int(time.time() * 1000)}
 
 
+@app.on_event("startup")
+def _iniciar_agendador():
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
+    from app.services.followup import enviar_followups_pendentes
+
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(enviar_followups_pendentes, "interval", minutes=30, id="followup_leads")
+    scheduler.start()
+    print("[agendador] follow-up de leads rodando a cada 30min")
+
+
 @app.post("/deploy")
 async def deploy(request: Request):
     from app.config import DEPLOY_SECRET

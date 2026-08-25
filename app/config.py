@@ -17,3 +17,10 @@ SPURNOW_SECRET      = os.environ.get("SPURNOW_SECRET", "")
 DEPLOY_SECRET       = os.environ.get("DEPLOY_SECRET", "")
 
 ADVOGADO_HANDOFF_TELEFONE = os.environ.get("ADVOGADO_HANDOFF_TELEFONE", "")
+
+# Conta dona do numero de WhatsApp conectado hoje na Z-API (so existe uma
+# instancia compartilhada por enquanto — quando cada escritorio tiver seu
+# proprio numero, isso vira uma tabela em vez de uma env var).
+WHATSAPP_USUARIO_EMAIL = os.environ.get("WHATSAPP_USUARIO_EMAIL", "")
+
+FOLLOWUP_HORAS = float(os.environ.get("FOLLOWUP_HORAS", "6"))

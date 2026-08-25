@@ -2,7 +2,7 @@ import re
 import httpx
 from fastapi import APIRouter, Request, Response
 from app.database import supabase
-from app.config import SPURNOW_SECRET, ZAPI_WEBHOOK_SECRET, OPENAI_KEY
+from app.config import SPURNOW_SECRET, ZAPI_WEBHOOK_SECRET, OPENAI_KEY, WHATSAPP_USUARIO_EMAIL
 from app.services.whatsapp import enviar_whatsapp, enviar_whatsapp_spurnow
 
 router = APIRouter()
@@ -138,14 +138,27 @@ async def webhook_zapi(request: Request):
     return {"ok": True}
 
 
+def _buscar_usuario_whatsapp():
+    """Conta dona do numero de WhatsApp conectado hoje (uma unica instancia
+    compartilhada). Usa WHATSAPP_USUARIO_EMAIL se configurado; senão cai no
+    primeiro usuário cadastrado (comportamento antigo, so como fallback)."""
+    if WHATSAPP_USUARIO_EMAIL:
+        res = supabase.from_("usuarios").select("id,escritorio").eq("email", WHATSAPP_USUARIO_EMAIL).execute()
+        if res.data:
+            return res.data[0]
+        print(f"[webhook] WHATSAPP_USUARIO_EMAIL={WHATSAPP_USUARIO_EMAIL!r} não encontrado — usando fallback")
+    res = supabase.from_("usuarios").select("id,escritorio").limit(1).execute()
+    return res.data[0] if res.data else None
+
+
 async def _tratar_lead(telefone: str, mensagem: str):
     from app.services import lead_engine, handoff
     try:
-        usuarios = supabase.from_("usuarios").select("id,escritorio").limit(1).execute()
-        if not usuarios.data:
+        usuario = _buscar_usuario_whatsapp()
+        if not usuario:
             return
-        usuario_id = usuarios.data[0]["id"]
-        escritorio = usuarios.data[0].get("escritorio", "nosso escritório")
+        usuario_id = usuario["id"]
+        escritorio = usuario.get("escritorio", "nosso escritório")
 
         lead = lead_engine.buscar_ou_criar_lead(telefone, usuario_id)
         if not lead:
@@ -155,6 +168,9 @@ async def _tratar_lead(telefone: str, mensagem: str):
             return
 
         lead_engine.salvar_mensagem_lead(lead["id"], "cliente", mensagem)
+        # se a pessoa voltou a responder, cancela o follow-up automático pendente
+        if lead.get("follow_up_enviado"):
+            lead_engine.atualizar_lead(lead["id"], {"follow_up_enviado": False})
         historico = lead_engine.buscar_historico_lead(lead["id"])
         resultado = await lead_engine.processar_mensagem_lead(lead, mensagem, historico, escritorio)
 
