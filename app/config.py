@@ -6,8 +6,11 @@ load_dotenv()
 SUPABASE_URL        = os.environ["SUPABASE_URL"]
 SUPABASE_KEY        = os.environ["SUPABASE_KEY"]
 OPENAI_KEY          = os.environ["OPENAI_KEY"]
-EVOLUTION_URL       = os.environ.get("EVOLUTION_URL", "")
-EVOLUTION_TOKEN     = os.environ.get("EVOLUTION_CLIENT_TOKEN", "")
+ZAPI_INSTANCE_ID    = os.environ.get("ZAPI_INSTANCE_ID", "")
+ZAPI_TOKEN          = os.environ.get("ZAPI_TOKEN", "")
+ZAPI_BASE_URL       = os.environ.get("ZAPI_BASE_URL", "")
+ZAPI_CLIENT_TOKEN   = os.environ.get("ZAPI_CLIENT_TOKEN", "")
+ZAPI_WEBHOOK_SECRET = os.environ.get("ZAPI_WEBHOOK_SECRET", "")
 SPURNOW_KEY         = os.environ.get("SPURNOW_KEY", "")
 SPURNOW_PHONE       = os.environ.get("SPURNOW_PHONE", "")
 SPURNOW_SECRET      = os.environ.get("SPURNOW_SECRET", "")

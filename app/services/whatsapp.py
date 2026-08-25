@@ -1,21 +1,12 @@
 import httpx
-from app.config import EVOLUTION_URL, EVOLUTION_TOKEN, SPURNOW_KEY, SPURNOW_PHONE
+from app.config import SPURNOW_KEY, SPURNOW_PHONE
+from app.services import zapi_service
 
 
 async def enviar_whatsapp(telefone: str, mensagem: str):
-    nums = "".join(c for c in telefone if c.isdigit())
-    fone = nums if nums.startswith("55") else "55" + nums
-    print(f"[whatsapp] enviando para: {fone}")
-    async with httpx.AsyncClient(timeout=10) as client:
-        r = await client.post(
-            EVOLUTION_URL,
-            json={"phone": fone, "message": mensagem},
-            headers={"Client-Token": EVOLUTION_TOKEN},
-        )
-    data = r.json()
-    if data.get("error"):
-        raise Exception(f"Z-API: {data['error']}")
-    print(f"[whatsapp] Z-API resposta: {r.status_code}")
+    """Envia texto via Z-API. Mantido como wrapper fino sobre zapi_service
+    para não quebrar quem já importa `enviar_whatsapp` (webhook.py, mensagens.py)."""
+    await zapi_service.send_text(telefone, mensagem)
 
 
 async def enviar_whatsapp_spurnow(telefone: str, mensagem: str):

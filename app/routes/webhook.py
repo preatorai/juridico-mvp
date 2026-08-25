@@ -1,8 +1,8 @@
 import re
 import httpx
-from fastapi import APIRouter, Request, Header
+from fastapi import APIRouter, Request, Response
 from app.database import supabase
-from app.config import SPURNOW_SECRET, OPENAI_KEY
+from app.config import SPURNOW_SECRET, ZAPI_WEBHOOK_SECRET, OPENAI_KEY
 from app.services.whatsapp import enviar_whatsapp, enviar_whatsapp_spurnow
 
 router = APIRouter()
@@ -68,36 +68,74 @@ async def _transcrever_audio(url: str) -> str | None:
         return None
 
 
-@router.post("/webhook")
-async def webhook_zapi(request: Request):
-    body = await request.json()
-    if not body or body.get("fromMe") or body.get("isGroup"):
-        return 200
+# ── Z-API: recebimento de mensagens ────────────────────────────────────────
 
-    msg_id = body.get("messageId") or body.get("id") or (body.get("data", {}) or {}).get("key", {}).get("id")
-    if _ja_processada(msg_id):
-        return 200
+def _webhook_autorizado(request: Request) -> bool:
+    """Valida a chamada como vinda de fato da Z-API.
 
+    Se ZAPI_WEBHOOK_SECRET estiver configurado no .env, exige que o mesmo valor
+    venha num header — configure um "Header customizado" com esse valor no
+    painel da Z-API (aba Webhooks). Sem secret configurado, só a validação de
+    formato do payload (abaixo) é aplicada.
+    """
+    if not ZAPI_WEBHOOK_SECRET:
+        return True
+    recebido = request.headers.get("x-zapi-webhook-secret") or request.headers.get("client-token")
+    return recebido == ZAPI_WEBHOOK_SECRET
+
+
+def _parse_zapi_payload(body: dict) -> dict:
+    """Extrai os campos relevantes do payload de webhook da Z-API.
+
+    Retorna: {telefone, mensagem, msg_id, audio_url}
+    - telefone/mensagem vêm None quando o payload não trouxer esses dados
+      (ex: mensagem de áudio chega sem `mensagem`, mas com `audio_url`)
+    """
+    msg_id = (
+        body.get("messageId") or body.get("id")
+        or (body.get("data", {}) or {}).get("key", {}).get("id")
+    )
     telefone = _normalizar_telefone(body.get("phone") or body.get("from") or "")
     mensagem = (
         (body.get("text") or {}).get("message")
         or (body.get("texto") or {}).get("mensagem")
         or body.get("message") or body.get("body")
     )
+    audio_url = _extrair_audio_url(body) if not mensagem else None
+    return {"telefone": telefone or None, "mensagem": mensagem, "msg_id": msg_id, "audio_url": audio_url}
 
-    if not mensagem:
-        audio_url = _extrair_audio_url(body)
-        if audio_url:
-            mensagem = await _transcrever_audio(audio_url)
 
-    if not telefone or not mensagem:
-        return 200
+@router.post("/webhook")
+async def webhook_zapi(request: Request):
+    if not _webhook_autorizado(request):
+        return Response(status_code=401)
 
+    body = await request.json()
+    if not isinstance(body, dict) or not body:
+        return {"ok": True}  # payload em formato inesperado — confirma recebimento e ignora
+    if body.get("fromMe") or body.get("isGroup"):
+        return {"ok": True}
+
+    dados = _parse_zapi_payload(body)
+    if _ja_processada(dados["msg_id"]):
+        return {"ok": True}
+
+    mensagem = dados["mensagem"]
+    if not mensagem and dados["audio_url"]:
+        mensagem = await _transcrever_audio(dados["audio_url"])
+
+    if not dados["telefone"] or not mensagem:
+        return {"ok": True}
+
+    # ── PONTO DE EXTENSÃO ──
+    # É aqui que a lógica de negócio entra depois de já termos telefone + mensagem
+    # normalizados. Hoje isso cai direto no fluxo de qualificação de lead.
     try:
-        await _tratar_lead(telefone, mensagem)
+        await _tratar_lead(dados["telefone"], mensagem)
     except Exception as e:
         print(f"[webhook] erro: {e}")
-    return 200
+
+    return {"ok": True}
 
 
 async def _tratar_lead(telefone: str, mensagem: str):
@@ -190,3 +228,15 @@ async def testar_whatsapp(body: dict):
     except Exception as e:
         from fastapi import HTTPException
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/zapi/status")
+async def zapi_status():
+    """Verifica se a instância Z-API está conectada (útil pra validar as
+    credenciais sem precisar enviar mensagem nenhuma)."""
+    from app.services import zapi_service
+    try:
+        return await zapi_service.get_status()
+    except zapi_service.ZAPIError as e:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=502, detail=str(e))
