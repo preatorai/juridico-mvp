@@ -56,6 +56,7 @@ async def enviar_mensagem_lead(lead_id: str, body: dict):
     atendimento_humano=true (a IA para de responder automaticamente até
     alguém desmarcar isso — ver PATCH /leads/{id})."""
     conteudo = (body.get("conteudo") or "").strip()
+    remetente_nome = (body.get("nome") or "").strip() or None
     if not conteudo:
         raise HTTPException(status_code=400, detail="Mensagem vazia.")
 
@@ -71,6 +72,7 @@ async def enviar_mensagem_lead(lead_id: str, body: dict):
 
     supabase.from_("mensagens_leads").insert({
         "lead_id": lead_id, "remetente": "advogado", "conteudo": conteudo,
+        "remetente_nome": remetente_nome,
     }).execute()
     supabase.from_("leads").update({
         "atendimento_humano": True,

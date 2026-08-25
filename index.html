@@ -1036,8 +1036,9 @@ function _msgBubbleHtml(m) {
   var isIA = m.remetente === 'bot';
   var isAdvogado = m.remetente === 'advogado';
   var lado = (isIA || isAdvogado) ? 'ia' : 'user';
-  var label = isIA ? '⚡ IA Advogar.AI' : (isAdvogado ? '🧑‍💼 Você' : '');
-  var quem = isIA ? 'Lex' : (isAdvogado ? 'Você' : 'Lead');
+  var nomeAdv = m.remetente_nome || 'Escritório';
+  var label = isIA ? '⚡ IA Advogar.AI' : (isAdvogado ? '🧑‍💼 '+nomeAdv : '');
+  var quem = isIA ? 'Lex' : (isAdvogado ? nomeAdv : 'Lead');
   return '<div class="conv-msg '+lado+'">' +
     (label?'<div class="conv-bubble-label">'+label+'</div>':'')+
     '<div class="conv-bubble">'+m.conteudo+'</div>' +
@@ -1054,7 +1055,7 @@ function convEnviar() {
   if (!msg) return;
   inp.value = '';
   fetch(API+'/leads/'+_convAtivo.id+'/mensagem', {method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({conteudo:msg})
+    body:JSON.stringify({conteudo:msg, nome:usuario.nome})
   }).then(function(r){return r.json();}).then(function(data){
     if(!data.sucesso){alert('Erro: '+(data.detail||'não foi possível enviar.'));return;}
     _convAtivo.atendimento_humano = true;
@@ -1127,7 +1128,7 @@ function _dchatBubbleHtml(m) {
   var isIA = m.remetente === 'bot';
   var isAdvogado = m.remetente === 'advogado';
   var lado = (isIA || isAdvogado) ? 'bot' : 'cliente';
-  var quem = isIA ? 'Lex' : (isAdvogado ? 'Você' : 'Lead');
+  var quem = isIA ? 'Lex' : (isAdvogado ? (m.remetente_nome||'Escritório') : 'Lead');
   return '<div class="dchat-msg '+lado+'">'+
     '<div class="dchat-bubble">'+m.conteudo+'</div>'+
     '<div class="dchat-time">'+quem+' · '+_ta(m.criado_em)+'</div></div>';
@@ -1181,7 +1182,7 @@ function enviarDrawer(){
   var inp=document.getElementById('drawer-input'), msg=inp.value.trim();
   if(!msg)return; inp.value='';
   fetch(API+'/leads/'+_leadAtivo.id+'/mensagem',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({conteudo:msg})
+    body:JSON.stringify({conteudo:msg, nome:usuario.nome})
   }).then(function(r){return r.json();}).then(function(data){
     if(!data.sucesso){alert('Erro: '+(data.detail||'não foi possível enviar.'));return;}
     _leadAtivo.atendimento_humano = true;
