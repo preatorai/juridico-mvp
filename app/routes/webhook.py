@@ -139,10 +139,7 @@ async def webhook_zapi(request: Request):
 
 
 async def _tratar_lead(telefone: str, mensagem: str):
-    from app.services.lead_ai import (
-        buscar_ou_criar_lead, buscar_historico_lead,
-        processar_mensagem_lead, atualizar_lead, salvar_mensagem_lead,
-    )
+    from app.services import lead_engine, handoff
     try:
         usuarios = supabase.from_("usuarios").select("id,escritorio").limit(1).execute()
         if not usuarios.data:
@@ -150,31 +147,35 @@ async def _tratar_lead(telefone: str, mensagem: str):
         usuario_id = usuarios.data[0]["id"]
         escritorio = usuarios.data[0].get("escritorio", "nosso escritório")
 
-        lead = buscar_ou_criar_lead(telefone, usuario_id)
+        lead = lead_engine.buscar_ou_criar_lead(telefone, usuario_id)
         if not lead:
             return
 
         if lead.get("status") in ("fechado", "perdido"):
             return
 
-        salvar_mensagem_lead(lead["id"], "cliente", mensagem)
-        historico = buscar_historico_lead(lead["id"])
-        resultado = await processar_mensagem_lead(
-            lead["id"], mensagem, historico, escritorio, lead.get("nome")
-        )
+        lead_engine.salvar_mensagem_lead(lead["id"], "cliente", mensagem)
+        historico = lead_engine.buscar_historico_lead(lead["id"])
+        resultado = await lead_engine.processar_mensagem_lead(lead, mensagem, historico, escritorio)
 
-        updates = {"status": resultado["status"]}
-        if resultado.get("area"):
-            updates["area"] = resultado["area"]
-        if resultado.get("resumo"):
-            updates["resumo"] = resultado["resumo"]
-        if resultado.get("status") == "fechado":
-            updates["score"] = 100
-        atualizar_lead(lead["id"], updates)
+        updates = resultado["updates"]
+        if updates:
+            lead_engine.atualizar_lead(lead["id"], updates)
 
-        await enviar_whatsapp(telefone, resultado["mensagem"])
-        salvar_mensagem_lead(lead["id"], "bot", resultado["mensagem"])
-        print(f"[lead] {telefone} status={resultado['status']}")
+        await enviar_whatsapp(telefone, resultado["resposta"])
+        lead_engine.salvar_mensagem_lead(lead["id"], "bot", resultado["resposta"])
+
+        nome_atual = updates.get("nome", lead.get("nome"))
+        area_atual = updates.get("area", lead.get("area"))
+        dados_atual = updates.get("dados", lead.get("dados") or {})
+
+        if resultado["urgencia_motivo"]:
+            await handoff.notificar_urgente(usuario_id, nome_atual, telefone, area_atual, dados_atual, resultado["urgencia_motivo"])
+
+        if resultado["agendado_label"]:
+            await handoff.notificar_qualificado_agendado(usuario_id, nome_atual, telefone, area_atual, dados_atual, resultado["agendado_label"])
+
+        print(f"[lead] {telefone} etapa={updates.get('etapa', lead.get('etapa'))}")
     except Exception as e:
         print(f"[lead] erro: {e}")
 

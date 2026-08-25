@@ -1,0 +1,9 @@
+{
+  "_comentario": "Horários fixos usados por app/services/scheduling.py enquanto não há integração real de agenda. Edite livremente — formato de data ISO (AAAA-MM-DDTHH:MM). Quando plugar Google Calendar/Calendly, esse arquivo deixa de ser lido.",
+  "horarios": [
+    {"id": "2026-08-27T09:00", "label": "Quinta-feira (27/08), 09h", "tipo": "chamada"},
+    {"id": "2026-08-27T14:00", "label": "Quinta-feira (27/08), 14h", "tipo": "chamada"},
+    {"id": "2026-08-28T10:00", "label": "Sexta-feira (28/08), 10h", "tipo": "chamada"},
+    {"id": "2026-08-28T15:30", "label": "Sexta-feira (28/08), 15h30", "tipo": "presencial"}
+  ]
+}

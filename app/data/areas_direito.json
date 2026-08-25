@@ -1,0 +1,50 @@
+{
+  "_comentario": "Configuração editável do fluxo de qualificação. Ajuste as áreas e perguntas conforme o escritório, sem precisar mexer em código Python. 'campo' é a chave que fica salva em leads.dados (JSON) — evite mudar um 'campo' já usado em produção sem migrar dados antigos.",
+
+  "areas": [
+    {"id": "trabalhista", "label": "Trabalhista"},
+    {"id": "civel_consumidor", "label": "Cível / Consumidor"},
+    {"id": "familia", "label": "Família"},
+    {"id": "criminal", "label": "Criminal"},
+    {"id": "tributario", "label": "Tributário"},
+    {"id": "empresarial", "label": "Empresarial"},
+    {"id": "previdenciario", "label": "Previdenciário"},
+    {"id": "outro", "label": "Outro / não identificado ainda"}
+  ],
+
+  "perguntas_base": [
+    {"campo": "nome_completo", "pergunta": "Pra eu registrar certinho, qual seu nome completo?"},
+    {"campo": "resumo_problema", "pergunta": "Pode me contar em poucas palavras o que está acontecendo?"},
+    {"campo": "tempo_ou_prazo", "pergunta": "Há quanto tempo isso vem acontecendo? Tem algum prazo urgente envolvido?"},
+    {"campo": "processo_existente", "pergunta": "Já existe algum processo em andamento sobre esse assunto, com outro advogado?"},
+    {"campo": "cidade_estado", "pergunta": "Em qual cidade e estado você está?"}
+  ],
+
+  "perguntas_por_area": {
+    "trabalhista": [
+      {"campo": "tempo_empresa", "pergunta": "Há quanto tempo trabalhou (ou ainda trabalha) na empresa?"},
+      {"campo": "motivo_saida", "pergunta": "Como foi a saída — demissão, pediu demissão, ou ainda está empregado?"}
+    ],
+    "civel_consumidor": [
+      {"campo": "valor_causa", "pergunta": "Qual o valor aproximado envolvido no problema?"}
+    ],
+    "familia": [
+      {"campo": "filhos_menores", "pergunta": "Há filhos menores de idade envolvidos na situação?"},
+      {"campo": "tipo_caso_familia", "pergunta": "É sobre divórcio, guarda, pensão alimentícia ou outro assunto de família?"}
+    ],
+    "criminal": [
+      {"campo": "fase_processual", "pergunta": "Já existe inquérito ou processo criminal aberto, ou ainda não?"},
+      {"campo": "situacao_prisional", "pergunta": "Há alguém preso, ou risco de prisão envolvido nisso?"}
+    ],
+    "tributario": [
+      {"campo": "tipo_tributo", "pergunta": "É sobre um débito, uma autuação, ou planejamento tributário?"}
+    ],
+    "empresarial": [
+      {"campo": "tipo_demanda_empresarial", "pergunta": "É sobre contrato, sociedade, recuperação judicial ou outro assunto empresarial?"}
+    ],
+    "previdenciario": [
+      {"campo": "tipo_beneficio", "pergunta": "Qual benefício está envolvido — aposentadoria, auxílio-doença, pensão, outro?"}
+    ],
+    "outro": []
+  }
+}

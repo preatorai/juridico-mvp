@@ -15,3 +15,5 @@ SPURNOW_KEY         = os.environ.get("SPURNOW_KEY", "")
 SPURNOW_PHONE       = os.environ.get("SPURNOW_PHONE", "")
 SPURNOW_SECRET      = os.environ.get("SPURNOW_SECRET", "")
 DEPLOY_SECRET       = os.environ.get("DEPLOY_SECRET", "")
+
+ADVOGADO_HANDOFF_TELEFONE = os.environ.get("ADVOGADO_HANDOFF_TELEFONE", "")
