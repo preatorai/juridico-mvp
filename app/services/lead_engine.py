@@ -83,10 +83,13 @@ def salvar_mensagem_lead(lead_id: str, remetente: str, conteudo: str):
 
 
 def buscar_historico_lead(lead_id: str, limite: int = 20) -> list[dict]:
+    """Retorna as últimas `limite` mensagens, em ordem cronológica (mais
+    antiga primeiro) — pra manter o contexto recente da conversa, não o
+    início dela."""
     try:
         res = supabase.from_("mensagens_leads").select("remetente,conteudo,criado_em") \
-            .eq("lead_id", lead_id).order("criado_em").limit(limite).execute()
-        return res.data or []
+            .eq("lead_id", lead_id).order("criado_em", desc=True).limit(limite).execute()
+        return list(reversed(res.data or []))
     except Exception:
         return []
 
@@ -208,6 +211,7 @@ class _Contexto:
         self.area = lead.get("area")
         self.dados = dict(lead.get("dados") or {})
         self.nome = lead.get("nome")
+        self.horario_agendado = lead.get("horario_agendado")
         self.updates: dict = {}
         self.urgencia_motivo: str | None = None
         self.agendado_label: str | None = None
@@ -313,6 +317,14 @@ def _montar_system_prompt(escritorio: str, ctx: _Contexto) -> str:
         lista = "\n".join(f"- {s['id']}: {s['label']} ({s['tipo']})" for s in slots) or "(nenhum horário livre no momento — avise a pessoa e ofereça retornar em breve)"
         partes.append(f"HORÁRIOS DISPONÍVEIS PRA OFERECER:\n{lista}")
         partes.append("Quando a pessoa escolher, chame agendar_horario(horario_escolhido=<id exato acima>).")
+
+    if ctx.etapa == "finalizado" and ctx.horario_agendado:
+        partes.append(
+            f"AGENDAMENTO JÁ CONFIRMADO para {ctx.horario_agendado}. Se a pessoa perguntar se está "
+            "confirmado, ou perguntar detalhes sobre a reunião, apenas reafirme esse horário em "
+            "linguagem natural (ex: dia da semana, horário). NÃO chame agendar_horario de novo — o "
+            "agendamento já existe. Responda outras dúvidas normalmente, sem dar aconselhamento jurídico."
+        )
 
     partes += [
         "",
