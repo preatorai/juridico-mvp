@@ -1,15 +1,10 @@
 {
   "_comentario": "Configuração editável do fluxo de qualificação. Ajuste as áreas e perguntas conforme o escritório, sem precisar mexer em código Python. 'campo' é a chave que fica salva em leads.dados (JSON) — evite mudar um 'campo' já usado em produção sem migrar dados antigos.",
 
+  "_comentario2": "Por pedido do escritorio, restrito so a Trabalhista por enquanto. As outras areas continuam definidas em perguntas_por_area (nao apagadas) — pra reativar alguma, so adicionar de volta na lista 'areas' abaixo.",
+
   "areas": [
-    {"id": "trabalhista", "label": "Trabalhista"},
-    {"id": "civel_consumidor", "label": "Cível / Consumidor"},
-    {"id": "familia", "label": "Família"},
-    {"id": "criminal", "label": "Criminal"},
-    {"id": "tributario", "label": "Tributário"},
-    {"id": "empresarial", "label": "Empresarial"},
-    {"id": "previdenciario", "label": "Previdenciário"},
-    {"id": "outro", "label": "Outro / não identificado ainda"}
+    {"id": "trabalhista", "label": "Trabalhista"}
   ],
 
   "perguntas_base": [

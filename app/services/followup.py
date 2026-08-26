@@ -3,13 +3,27 @@ Follow-up automático — se o lead parar de responder por algumas horas
 (FOLLOWUP_HORAS no .env, padrão 6h), manda uma mensagem retomando a
 conversa. Só faz isso UMA vez por lead (follow_up_enviado); se a pessoa
 responder de novo, o webhook zera essa flag (ver _tratar_lead em webhook.py).
+
+Só dispara em horário comercial (ver FOLLOWUP_HORA_INICIO/FIM no .env) —
+fora disso a funcao nao faz nada; o lead continua elegivel e e pego no
+proximo ciclo dentro do horario.
 """
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
-from app.config import FOLLOWUP_HORAS
+from app.config import FOLLOWUP_HORAS, FOLLOWUP_HORA_INICIO, FOLLOWUP_HORA_FIM
 from app.database import supabase
 from app.services import zapi_service
 from app.services.lead_engine import salvar_mensagem_lead
+
+_FUSO_BR = ZoneInfo("America/Sao_Paulo")
+
+
+def _em_horario_comercial() -> bool:
+    agora = datetime.now(_FUSO_BR)
+    if agora.weekday() == 6:  # domingo
+        return False
+    return FOLLOWUP_HORA_INICIO <= agora.hour < FOLLOWUP_HORA_FIM
 
 
 def _mensagem_followup(nome: str | None) -> str:
@@ -23,6 +37,9 @@ def _mensagem_followup(nome: str | None) -> str:
 async def enviar_followups_pendentes():
     """Roda periodicamente (ver app/main.py). Busca leads parados há mais de
     FOLLOWUP_HORAS, manda uma mensagem de retomada, e marca follow_up_enviado."""
+    if not _em_horario_comercial():
+        return
+
     limite = (datetime.now(timezone.utc) - timedelta(hours=FOLLOWUP_HORAS)).isoformat()
     try:
         res = supabase.from_("leads").select("id,telefone,nome,usuario_id") \

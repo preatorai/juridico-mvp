@@ -181,8 +181,16 @@ def _auto_avancar(ctx: "_Contexto", teve_historico: bool):
     esperado), mas o progresso do fluxo não trava se ele não chamar.
     """
     if ctx.etapa == "acolhimento" and teve_historico:
-        ctx.etapa = "triagem"
-        ctx.updates["etapa"] = "triagem"
+        areas = _CONFIG["areas"]
+        if len(areas) == 1 and not ctx.area:
+            # só existe uma área configurada — pula a triagem, nem pergunta
+            ctx.area = areas[0]["id"]
+            ctx.updates["area"] = ctx.area
+            ctx.etapa = "qualificacao"
+            ctx.updates["etapa"] = "qualificacao"
+        else:
+            ctx.etapa = "triagem"
+            ctx.updates["etapa"] = "triagem"
     if ctx.etapa == "triagem" and ctx.area:
         ctx.etapa = "qualificacao"
         ctx.updates["etapa"] = "qualificacao"
@@ -262,7 +270,8 @@ def _executar_tool(nome_tool: str, args: dict, ctx: _Contexto) -> dict:
 # ── Prompt ────────────────────────────────────────────────────────────────────
 
 def _montar_system_prompt(escritorio: str, ctx: _Contexto) -> str:
-    areas_lista = ", ".join(f"{a['id']} ({a['label']})" for a in _CONFIG["areas"])
+    areas = _CONFIG["areas"]
+    area_unica = areas[0]["id"] if len(areas) == 1 else None
     partes = [
         f"Você é o assistente virtual de recepção do escritório {escritorio}, atendendo pelo WhatsApp.",
         "Você NÃO é advogado e NUNCA deve dar a entender que é uma pessoa ou um advogado. Se perguntarem, "
@@ -270,22 +279,34 @@ def _montar_system_prompt(escritorio: str, ctx: _Contexto) -> str:
         "",
         "FLUXO (conduza como uma conversa natural, não como formulário — uma ou duas perguntas por vez):",
         "1. Acolhimento: cumprimente, se apresente, pergunte brevemente o que a pessoa precisa.",
-        f"2. Triagem: identifique a área do direito entre: {areas_lista}. Ao identificar, chame "
-        "salvar_dado_lead(campo='area', valor=<id da área, ex: 'trabalhista'>).",
-        "3. Qualificação: colete as informações pendentes listadas abaixo, aos poucos.",
-        "4. Agendamento: com tudo coletado, ofereça os horários disponíveis e confirme a escolha.",
-        "",
-        f"ETAPA ATUAL: {ctx.etapa}",
     ]
+    if area_unica:
+        partes.append(f"2. Qualificação: o escritório atende só a área {area_unica} — colete as informações pendentes listadas abaixo, aos poucos.")
+        partes.append("3. Agendamento: com tudo coletado, ofereça os horários disponíveis e confirme a escolha.")
+    else:
+        areas_lista = ", ".join(f"{a['id']} ({a['label']})" for a in areas)
+        partes.append(f"2. Triagem: identifique a área do direito entre: {areas_lista}. Ao identificar, chame "
+                       "salvar_dado_lead(campo='area', valor=<id da área, ex: 'trabalhista'>).")
+        partes.append("3. Qualificação: colete as informações pendentes listadas abaixo, aos poucos.")
+        partes.append("4. Agendamento: com tudo coletado, ofereça os horários disponíveis e confirme a escolha.")
+
+    partes += ["", f"ETAPA ATUAL: {ctx.etapa}"]
     if ctx.area:
         partes.append(f"ÁREA JÁ IDENTIFICADA: {ctx.area}")
     if ctx.dados:
-        partes.append(f"JÁ COLETADO (não pergunte de novo): {json.dumps(ctx.dados, ensure_ascii=False)}")
+        partes.append(f"JÁ COLETADO — NÃO PERGUNTE DE NOVO NENHUM DESTES: {json.dumps(ctx.dados, ensure_ascii=False)}")
 
     pendentes = _campos_pendentes(ctx.dados, ctx.area)
     if ctx.area and pendentes:
         lista = "\n".join(f"- {q['campo']}: {q['pergunta']}" for q in pendentes)
-        partes.append(f"AINDA FALTA COLETAR (pergunte 1 ou 2 por vez, não a lista toda de uma vez):\n{lista}")
+        partes.append(
+            f"AINDA FALTA COLETAR (pergunte 1 ou 2 por vez, não a lista toda de uma vez):\n{lista}\n\n"
+            "ANTES DE PERGUNTAR QUALQUER COISA: releia a ÚLTIMA MENSAGEM do lead (a mais recente do "
+            "histórico). Se ela já responde algum dos campos acima — mesmo que de forma indireta ou "
+            "misturada com outro assunto — chame salvar_dado_lead PRA CADA CAMPO respondido ANTES de "
+            "formular sua resposta, e só então pergunte o que realmente ainda falta. NUNCA repita uma "
+            "pergunta sobre um campo que já está em 'JÁ COLETADO' ou que a última mensagem já respondeu."
+        )
 
     if ctx.etapa == "agendamento":
         slots = scheduling.get_available_slots(ctx.area)
@@ -304,6 +325,9 @@ def _montar_system_prompt(escritorio: str, ctx: _Contexto) -> str:
         "no meio da qualificação — e tranquilize a pessoa dizendo que um advogado vai priorizar o caso.",
         "- Mensagens curtas (é WhatsApp, não e-mail). Tom profissional e cordial. Evite parágrafos longos.",
         "- Chame salvar_dado_lead assim que a pessoa informar algo da lista de campos.",
+        "- JAMAIS pergunte de novo algo que já está em 'JÁ COLETADO' ou que a pessoa acabou de responder "
+        "na última mensagem — isso irrita o lead e passa impressão de desorganização. Releia o que já foi "
+        "dito antes de perguntar qualquer coisa.",
         "- Chame avancar_etapa quando achar que a etapa atual está completa — o sistema avisa se faltar algo.",
         "- Ao confirmar um agendamento, resuma os dados coletados e avise que um advogado vai atendê-la(o) "
         "naquele horário.",
