@@ -11,7 +11,7 @@ proximo ciclo dentro do horario.
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from app.config import FOLLOWUP_HORAS, FOLLOWUP_HORA_INICIO, FOLLOWUP_HORA_FIM
+from app.config import FOLLOWUP_HORAS, FOLLOWUP_HORA_INICIO, FOLLOWUP_HORA_FIM, IA_ATIVA
 from app.database import supabase
 from app.services import zapi_service
 from app.services.lead_engine import salvar_mensagem_lead
@@ -37,6 +37,8 @@ def _mensagem_followup(nome: str | None) -> str:
 async def enviar_followups_pendentes():
     """Roda periodicamente (ver app/main.py). Busca leads parados há mais de
     FOLLOWUP_HORAS, manda uma mensagem de retomada, e marca follow_up_enviado."""
+    if not IA_ATIVA:
+        return
     if not _em_horario_comercial():
         return
 

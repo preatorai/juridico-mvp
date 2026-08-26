@@ -2,7 +2,7 @@ import re
 import httpx
 from fastapi import APIRouter, Request, Response
 from app.database import supabase
-from app.config import SPURNOW_SECRET, ZAPI_WEBHOOK_SECRET, OPENAI_KEY, WHATSAPP_USUARIO_EMAIL
+from app.config import SPURNOW_SECRET, ZAPI_WEBHOOK_SECRET, OPENAI_KEY, WHATSAPP_USUARIO_EMAIL, IA_ATIVA
 from app.services.whatsapp import enviar_whatsapp, enviar_whatsapp_spurnow
 
 router = APIRouter()
@@ -168,6 +168,11 @@ async def _tratar_lead(telefone: str, mensagem: str):
             return
 
         lead_engine.salvar_mensagem_lead(lead["id"], "cliente", mensagem)
+
+        if not IA_ATIVA:
+            # interruptor geral desligado — so registra a mensagem, ninguem responde
+            print(f"[lead] {telefone} — IA_ATIVA=false, mensagem so registrada")
+            return
 
         campos_reset = {}
         if lead.get("follow_up_enviado"):

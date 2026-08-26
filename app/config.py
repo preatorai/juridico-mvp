@@ -26,3 +26,7 @@ WHATSAPP_USUARIO_EMAIL = os.environ.get("WHATSAPP_USUARIO_EMAIL", "")
 FOLLOWUP_HORAS = float(os.environ.get("FOLLOWUP_HORAS", "6"))
 FOLLOWUP_HORA_INICIO = int(os.environ.get("FOLLOWUP_HORA_INICIO", "8"))   # horario comercial (fuso America/Sao_Paulo)
 FOLLOWUP_HORA_FIM    = int(os.environ.get("FOLLOWUP_HORA_FIM", "19"))
+
+# Interruptor geral — quando "false", nenhuma mensagem recebida gera resposta
+# automatica (continua salvando tudo, so nao responde nem manda follow-up).
+IA_ATIVA = os.environ.get("IA_ATIVA", "true").strip().lower() != "false"
